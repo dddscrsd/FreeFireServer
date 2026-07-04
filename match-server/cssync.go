@@ -253,9 +253,13 @@ func (s *session) giveLoadout(resetCoins bool) {
 		{Slot: message.SlotMelee, Data: 0, Unique: 0},                // fist (melee slot must always exist)
 		{Slot: message.SlotSecondary, Data: uspData, Unique: uspUID}, // USP
 	}
+	s.weapons = map[byte]csWeapon{
+		message.SlotSecondary: {slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo, ammoUID: ammoUID},
+	}
 	s.itemOnHand = uspUID
+	uspMag := ClipSize(uspData, SkinForWeapon(uspData, s.player.Slots)) // was hardcoded 12
 	inv := []message.InvItem{
-		{Unique: uspUID, Data: uspData, Count: 1, Runtime: 12},      // USP weapon
+		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag},  // USP weapon
 		{Unique: ammoUID, Data: pistolAmmo, Count: pistolAmmoCount}, // pistol ammo
 	}
 	equip := append([]message.Equipment(nil), s.equipment...)
@@ -264,6 +268,35 @@ func (s *session) giveLoadout(resetCoins bool) {
 
 	body := message.SyncInventory(s.player.EntityID, inv, nil, equip, onHand)
 	s.sendDataLog(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (USP + ammo)")
+}
+
+// reissueLoadout refills every weapon currently in the loadout to a full magazine (and
+// tops up reserve ammo) at the start of a new round for a SURVIVING player, WITHOUT
+// allocating new item instances: the cmd 174 handler upserts inventory by Unique
+// (SyncInventoryInfo -> OJKKGKBGKMJ sets an existing weapon's clip = InvItem.Runtime via
+// KANLCBHFONB::NKJJELOAGGL), so re-sending the SAME uniques resets ammo, not duplicates.
+func (s *session) reissueLoadout() {
+	s.invMu.Lock()
+	inv := make([]message.InvItem, 0, len(s.weapons)*2)
+	for _, w := range s.weapons {
+		inv = append(inv, message.InvItem{
+			Unique:  w.unique,
+			Data:    w.data,
+			Count:   1,
+			Runtime: ClipSize(w.data, SkinForWeapon(w.data, s.player.Slots)), // full magazine
+		})
+		if w.ammoUID != 0 {
+			inv = append(inv, message.InvItem{Unique: w.ammoUID, Data: w.ammo, Count: ammoCountFor(w.ammo)})
+		}
+	}
+	equip := append([]message.Equipment(nil), s.equipment...)
+	onHand := s.itemOnHand
+	s.invMu.Unlock()
+	if len(inv) == 0 {
+		return
+	}
+	body := message.SyncInventory(s.player.EntityID, inv, nil, equip, onHand)
+	s.sendDataLog(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (round restart — refill mags/ammo)")
 }
 
 // sendCSShop sends the Contra Squad shop item list (cmd 407). The client's LOJA UI

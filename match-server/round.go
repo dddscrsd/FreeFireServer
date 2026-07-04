@@ -99,6 +99,7 @@ func (s *session) roundTransition(revivePlayer bool) {
 		s.giveLoadout(false) // death dropped the weapon to fists — re-give the USP, keep coins
 	} else {
 		pull = &s.player.SpawnPos
+		s.reissueLoadout() // alive: refill every kept weapon's magazine + reserve for the new round
 	}
 	if !s.streamPhase(message.CSPhasePost, postBlackHold, pull, false) {
 		return

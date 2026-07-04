@@ -11,6 +11,19 @@ import (
 	"libmadoka/match-server/packet"
 )
 
+// csWeapon tracks one weapon currently in the loadout so a round restart can refill its
+// magazine (Runtime) and reserve ammo by RE-SENDING THE SAME uniques. The client's cmd
+// 174 handler upserts inventory by Unique (SyncInventoryInfo -> OJKKGKBGKMJ: an existing
+// Unique updates in place — for a weapon it sets the loaded clip = InvItem.Runtime via
+// KANLCBHFONB::NKJJELOAGGL), so reusing the uniques resets ammo without duplicating.
+type csWeapon struct {
+	slot    byte
+	data    uint32 // weapon DataID
+	unique  uint32 // weapon InvItem Unique
+	ammo    uint32 // ammo DataID
+	ammoUID uint32 // ammo InvItem Unique
+}
+
 // session is one client's connection state (keyed by remote UDP address).
 type session struct {
 	conn   *net.UDPConn
@@ -53,6 +66,7 @@ type session struct {
 	award      uint32              // coins awarded for the round (kills + win bonus) — added to coins at the next buy phase
 	uidCounter uint32              // allocates unique item instance ids
 	equipment  []message.Equipment // full loadout slot map (re-sent whole each sync)
+	weapons    map[byte]csWeapon   // current loadout weapons keyed by slot (2-primary placement + round-restart ammo refill)
 	itemOnHand uint32              // unique of the currently held item
 
 	// Per-entity current HP (entity game id -> HP), guarded by hpMu. Damage reports

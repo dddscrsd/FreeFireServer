@@ -35,19 +35,21 @@ var armorSlot = map[uint32]byte{
 
 // csItemPlacement describes how a purchased item enters the loadout.
 type csItemPlacement struct {
-	slot     byte   // equipment slot, or slotNone
-	ammo     uint32 // ammo DataID for a weapon (0 otherwise)
-	isWeapon bool
+	slot      byte   // equipment slot, or slotNone; for a primary weapon resolved live
+	ammo      uint32 // ammo DataID for a weapon (0 otherwise)
+	isWeapon  bool
+	isPrimary bool // non-pistol weapon: Primary1/Primary2 chosen against live loadout state
 }
 
-// placeItem resolves where a shop item goes in the loadout.
+// placeItem resolves the item TYPE + fixed slot. A primary weapon's concrete slot
+// (Primary1 vs Primary2 vs override) depends on live state, so it is left slotNone here
+// and resolved by pickPrimarySlotLocked in addPurchasedItemLocked.
 func placeItem(item *message.ShopItem) csItemPlacement {
 	if ammo, ok := weaponAmmo[item.ItemID]; ok {
-		slot := message.SlotPrimary1
 		if ammo == 202 { // pistols equip in the secondary slot
-			slot = message.SlotSecondary
+			return csItemPlacement{slot: message.SlotSecondary, ammo: ammo, isWeapon: true}
 		}
-		return csItemPlacement{slot: slot, ammo: ammo, isWeapon: true}
+		return csItemPlacement{slot: slotNone, ammo: ammo, isWeapon: true, isPrimary: true}
 	}
 	if slot, ok := armorSlot[item.ItemID]; ok {
 		return csItemPlacement{slot: slot}
@@ -56,6 +58,24 @@ func placeItem(item *message.ShopItem) csItemPlacement {
 		return csItemPlacement{slot: message.SlotExplosive} // grenades share the explosive slot
 	}
 	return csItemPlacement{slot: slotNone} // consumables (repair kit, mushroom): no slot
+}
+
+// pickPrimarySlotLocked chooses the slot a newly bought primary weapon fills: an EMPTY
+// SlotPrimary1/SlotPrimary2 if either is free; else the slot of the currently HELD primary
+// (itemOnHand maps to Primary1/Primary2); else SlotPrimary1. Caller holds invMu.
+func (s *session) pickPrimarySlotLocked() byte {
+	if _, ok := s.weapons[message.SlotPrimary1]; !ok {
+		return message.SlotPrimary1
+	}
+	if _, ok := s.weapons[message.SlotPrimary2]; !ok {
+		return message.SlotPrimary2
+	}
+	for _, slot := range [...]byte{message.SlotPrimary1, message.SlotPrimary2} {
+		if w, ok := s.weapons[slot]; ok && w.unique == s.itemOnHand {
+			return slot // override the primary currently in hand
+		}
+	}
+	return message.SlotPrimary1
 }
 
 const (
@@ -133,12 +153,17 @@ const (
 // map. Caller holds invMu.
 func (s *session) addPurchasedItemLocked(item *message.ShopItem, qty uint32) ([]message.InvItem, []message.Equipment) {
 	place := placeItem(item)
+	if place.isPrimary {
+		place.slot = s.pickPrimarySlotLocked()
+	}
 	uid := s.nextUIDLocked()
 	inv := []message.InvItem{{Unique: uid, Data: item.ItemID, Count: qty}}
 	if place.isWeapon {
+		inv[0].Runtime = ClipSize(item.ItemID, SkinForWeapon(item.ItemID, s.player.Slots)) // loaded magazine
 		ammoUID := s.nextUIDLocked()
 		inv = append(inv, message.InvItem{Unique: ammoUID, Data: place.ammo, Count: ammoCountFor(place.ammo)})
 		s.itemOnHand = uid // switch to the newly bought weapon
+		s.weapons[place.slot] = csWeapon{slot: place.slot, data: item.ItemID, unique: uid, ammo: place.ammo, ammoUID: ammoUID}
 	}
 	if place.slot != slotNone {
 		s.setEquipLocked(place.slot, item.ItemID, uid)
