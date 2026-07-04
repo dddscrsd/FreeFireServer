@@ -46,6 +46,8 @@ func (s *session) csSyncLoop() {
 
 	time.Sleep(150 * time.Millisecond) // BindPRI must arrive after cmd 101 created the entities
 	s.bindPRIs()
+
+	time.Sleep(1000 * time.Millisecond) // BindPRI must arrive after cmd 101 created the entities
 	s.shopWarmup()
 
 	for s.round <= maxRound && s.teamScore[0] < roundsToWin {
@@ -55,6 +57,7 @@ func (s *session) csSyncLoop() {
 		if !s.streamPhase(message.CSPhasePrepare, cfg.buyPhase, nil, false) {
 			return
 		}
+
 		if cfg.holdPrepare { // dev shop-testing mode: never leave Prepare
 			s.streamPhase(message.CSPhasePrepare, 6*time.Hour, nil, false)
 			return
@@ -104,6 +107,7 @@ func (s *session) csSyncLoop() {
 		s.roundResult(winnerTeam) // cmd 409 round-result (non-deciding rounds only)
 		// Dead player -> revive via cmd 388; alive/won player -> teleport in the black window.
 		s.roundTransition(!localWon) // Post banner + fade-to-black -> reposition -> Introduction (bumps s.round)
+		time.Sleep(time.Second)      // let the Introduction fade settle before the next buy phase opens the shop (else it cuts the transition)
 	}
 	log.Printf("[mm-udp] match over — local team wins %d-%d %v", s.teamScore[0], s.teamScore[1], s.remote)
 	s.streamPhase(message.CSPhasePost, 6*time.Hour, nil, false)
@@ -132,6 +136,12 @@ func (s *session) streamPhase(phase uint16, dur time.Duration, pull *message.Vec
 		s.sendVar(packet.CmdPRISync, s.priPayload(), 1)
 		s.sendVar(packet.CmdGRISync, gri, 1)
 		s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
+		point := 0
+		if s.teamScore[0] == roundsToWin-1 || s.teamScore[1] == roundsToWin-1 {
+			point = 1 // next round is the decider
+		}
+
+		s.sendVar(packet.CmdGRISync, message.CSGRIMatchPoint(uint8(point)), 1)
 
 		if untilBotDead && (s.entityHP(s.botEntity) == 0 || s.entityHP(playerEntityID) == 0) {
 			return true
