@@ -212,7 +212,7 @@ func SyncPRI(entities []PRIEntity) []byte {
 // top-HUD myWinNum/oppoWinNum (the client re-resolves my/oppo from the entity's team).
 // SetData is a no-op when unchanged, so the number only moves when the value actually
 // changes. See PackScore + [[bot-networkaipawn]].
-func PRIHPBlock(curHP, maxHP, coins, score uint16, faction byte) []byte {
+func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction byte) []byte {
 	return ReplicationBlock([]RepEntry{
 		{RepU16, 0, uint64(curHP)}, // CUR_HP
 		{RepU16, 1, uint64(maxHP)}, // MAX_HP
@@ -243,15 +243,15 @@ func PRIHPBlock(curHP, maxHP, coins, score uint16, faction byte) []byte {
 		{RepU16, 22, 0}, // MAX_HYPE
 		{RepU32, 26, 0},
 		{RepU64, 27, 0},
-		{RepU16, 28, uint64(score)},  // SCORE (CS round wins, packed own|oppo<<8)
-		{RepU8, 29, 0},               // DEAD_COUNT
-		{RepU8, 30, 0},               // ASSIST_COUNT
-		{RepU32, 31, 0},              // TOTAL_DAMAGE
-		{RepU16, 32, uint64(coins)},  // CUR_COIN (buy-phase money shown in the shop)
-		{RepU16, 33, 0},              // EARNED_COIN
-		{RepU8, 34, uint64(faction)}, // FACTION_ID (0/1 = which gate team)
-		{RepU32, 36, 0},              // THROW_KNIFE_PHASE
-		{RepU8, 37, 0},               // TRAINING_ZONE_TYPE
+		{RepU16, 28, uint64(score)},      // SCORE (CS round wins, packed own|oppo<<8)
+		{RepU8, 29, 0},                   // DEAD_COUNT
+		{RepU8, 30, 0},                   // ASSIST_COUNT
+		{RepU32, 31, 0},                  // TOTAL_DAMAGE
+		{RepU16, 32, uint64(coins)},      // CUR_COIN (buy-phase money shown in the shop)
+		{RepU16, 33, uint64(earnedCoin)}, // EARNED_COIN
+		{RepU8, 34, uint64(faction)},     // FACTION_ID (0/1 = which gate team)
+		{RepU32, 36, 0},                  // THROW_KNIFE_PHASE
+		{RepU8, 37, 0},                   // TRAINING_ZONE_TYPE
 		{RepU8, 38, 0},
 	})
 }

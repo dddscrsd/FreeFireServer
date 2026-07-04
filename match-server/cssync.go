@@ -86,6 +86,7 @@ func (s *session) csSyncLoop() {
 		}
 		s.invMu.Lock()
 		s.coins += award
+		s.award = award
 		coins := s.coins
 		s.invMu.Unlock()
 		log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d) +%d coins (=%d) %v",
@@ -115,6 +116,12 @@ func (s *session) streamPhase(phase uint16, dur time.Duration, pull *message.Vec
 	gri := message.CSGRIInit(maxRound, uint8(s.round-1))
 	param := s.gameParam(dur) // fixed phase-end deadline so the client countdown ticks
 	start := time.Now()
+
+	if pull != nil {
+		s.tpSeq++
+		s.sendData(packet.CmdTeleport, message.ForceTeleport(playerEntityID, s.tpSeq, *pull, s.player.SpawnFace, 0))
+	}
+
 	for time.Since(start) < dur {
 		if s.stopped.Load() {
 			log.Printf("[mm-udp] CS sync loop stopped (player quit) %v", s.remote)
@@ -123,10 +130,7 @@ func (s *session) streamPhase(phase uint16, dur time.Duration, pull *message.Vec
 		s.sendVar(packet.CmdPRISync, s.priPayload(), 1)
 		s.sendVar(packet.CmdGRISync, gri, 1)
 		s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
-		if pull != nil {
-			s.tpSeq++
-			s.sendData(packet.CmdTeleport, message.ForceTeleport(playerEntityID, s.tpSeq, *pull, s.player.SpawnFace, 0))
-		}
+
 		if untilBotDead && (s.entityHP(s.botEntity) == 0 || s.entityHP(playerEntityID) == 0) {
 			return true
 		}
@@ -174,16 +178,17 @@ func (s *session) gameParam(hold time.Duration) uint16 {
 func (s *session) priPayload() []byte {
 	s.invMu.Lock()
 	coins := uint16(s.coins)
+	award := uint16(s.award)
 	s.invMu.Unlock()
 	// CS round-win score (field 28), packed from each entity's OWN team perspective so
 	// the client resolves my/oppo consistently whichever player's score changes.
 	localScore := message.PackScore(s.teamScore[0], s.teamScore[1])
 	botScore := message.PackScore(s.teamScore[1], s.teamScore[0])
 	ents := []message.PRIEntity{
-		{RepID: playerRepID, Block: message.PRIHPBlock(s.entityHP(playerEntityID), maxHP, coins, localScore, localFaction)},
+		{RepID: playerRepID, Block: message.PRIHPBlock(s.entityHP(playerEntityID), maxHP, coins, award, localScore, localFaction)},
 	}
 	if s.entityHP(s.botEntity) > 0 {
-		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(s.entityHP(s.botEntity), maxHP, 0, botScore, botFaction)})
+		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(s.entityHP(s.botEntity), maxHP, 0, 0, botScore, botFaction)})
 	}
 	return message.SyncPRI(ents)
 }

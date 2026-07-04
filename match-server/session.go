@@ -44,6 +44,7 @@ type session struct {
 	// the current equipment slot map so purchases (cmd 408) can deduct and add items.
 	invMu      sync.Mutex
 	coins      uint32              // buy-phase money
+	award      uint32              // coins awarded for the round (kills + win bonus) — added to coins at the next buy phase
 	uidCounter uint32              // allocates unique item instance ids
 	equipment  []message.Equipment // full loadout slot map (re-sent whole each sync)
 	itemOnHand uint32              // unique of the currently held item

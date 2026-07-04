@@ -102,7 +102,11 @@ func (s *session) killEntity(victim, killer uint32, bodyPart uint8) {
 	var weapon int32
 	switch killer {
 	case playerEntityID: // only the local player's loadout is tracked so far
-		weapon = int32(s.heldWeaponData())
+		if (s.heldWeaponData()) == 0 {
+			weapon = 1 // fists
+		} else {
+			weapon = int32(s.heldWeaponData()) // the held weapon's ID
+		}
 	case 0: // out-of-zone environment death
 		weapon = killCauseDamageZone
 	}
