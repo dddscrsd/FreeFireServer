@@ -17,10 +17,20 @@ const (
 	zoneMargin      = 45.0             // metres of buffer beyond the gates for the outer circle
 	zoneInnerRatio  = 0.01             // fully-shrunk radius as a fraction of the outer
 	zoneDefaultR    = 70.0             // outer radius when there is no arena (fixed MATCH_SPAWN)
-	zoneWaitDur     = 20 * time.Second // Fight time before the zone starts shrinking
+	zoneWaitDur     = 30 * time.Second // Fight time before the zone starts shrinking
 	zoneShrinkDur   = 25 * time.Second // time to shrink outer -> inner
 	zoneDamage      = 50               // HP lost per tick outside the zone (CS fixed)
 	zoneDamageEvery = 2 * time.Second  // damage interval (CS fixed)
+
+	// zoneClientLag compensates for the client rendering the shrinking circle a little
+	// behind our real-time damage clock. The client lerps its radius over [StartTime,
+	// EndTime] using CurrentServerTime (SafeZone::OnFixedUpdate) — a local sim clock
+	// re-anchored only every cmd-1000 tick — so it trails our clock by the network latency
+	// plus sim jitter, leaving its VISIBLE radius larger than a same-instant lerp. We
+	// evaluate the damage radius this far in the past so it never shrinks past the circle
+	// the player still sees; otherwise you take damage while visibly inside the zone. Tune
+	// up if damage still lands inside the circle, down if you can stand safely outside it.
+	zoneClientLag = 300 * time.Millisecond
 )
 
 // zoneGeometry returns the circle centre + outer radius for the current round: the
@@ -70,7 +80,9 @@ func (s *session) runSafeZone(stop chan struct{}) {
 		case <-stop:
 			return
 		case <-ticker.C:
-			curR := lerpRadius(outerR, innerR, time.Since(shrinkStart))
+			// Damage against the radius the client is STILL rendering (a touch in the past),
+			// not the bang-up-to-date one, so it matches the visible circle. See zoneClientLag.
+			curR := lerpRadius(outerR, innerR, time.Since(shrinkStart)-zoneClientLag)
 			s.hpMu.Lock()
 			pos := s.playerPos
 			s.hpMu.Unlock()

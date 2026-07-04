@@ -81,9 +81,11 @@ func (s *session) csSyncLoop() {
 		// Award round coins: 500 per kill by the local player + 500 for winning the round.
 		// s.coins streams as PRI field 32, so the shop shows the new balance next buy phase.
 		award := 500 * s.roundKills.Swap(0)
+		award += 500 * uint32(s.round)
 		if localWon {
-			award += 500 * uint32(s.round)
+			award += 500 // win bonus
 		}
+
 		s.invMu.Lock()
 		s.coins += award
 		s.award = award
@@ -152,7 +154,10 @@ func (s *session) serverTimeLoop() {
 			Flags:      0,
 			Payload:    message.SyncServerTime(tick),
 		})
-		time.Sleep(500 * time.Millisecond)
+		// Re-anchor the client clock often: between ticks the client advances CurrentServerTime
+		// on its own (local sim), so a slow interval lets it drift behind and the safe-zone
+		// circle it renders lags our shrink. 250ms keeps that drift small (see zoneClientLag).
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
