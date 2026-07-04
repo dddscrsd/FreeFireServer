@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"strings"
 )
 
 // JoinMatchReq is the subset of C2S_RUDP_JoinMatch_Req (cmd 440) we consume.
@@ -91,4 +92,48 @@ func ExtractJWT(b []byte) string {
 		j++
 	}
 	return string(b[i:j])
+}
+
+// hs256SigLen is the base64url length of an HS256 signature (32 bytes -> 43 chars, no
+// padding). A JWT whose last segment is at least this long has its whole signature.
+const hs256SigLen = 43
+
+// IsCompleteJWT reports whether t is a whole HS256 JWT: three dot-separated segments with
+// a full-length signature. A prepare_token split across cmd 439/440 leaves the 439 chunk
+// short of this (fewer dots, or a truncated signature), which is the signal to append the
+// tail from cmd 440.
+func IsCompleteJWT(t string) bool {
+	if strings.Count(t, ".") != 2 {
+		return false
+	}
+	return len(t)-strings.LastIndexByte(t, '.')-1 >= hs256SigLen
+}
+
+// LastJWTField returns the content of the LAST length-prefixed (u32 LE) field in b whose
+// bytes are all JWT/base64url characters. When a large prepare_token is split, its tail
+// (often just the remaining signature chars) is appended to the cmd 440 payload as such a
+// field, AFTER the metadata (version, nick, host), so it is the JWT-char field that ends
+// latest. Returns "" if none is found.
+func LastJWTField(b []byte) string {
+	bestEnd, bestStart, bestLen := -1, 0, 0
+	for i := 0; i+4 <= len(b); i++ {
+		n := int(binary.LittleEndian.Uint32(b[i:]))
+		if n < 1 || n > maxTokenLen || i+4+n > len(b) {
+			continue
+		}
+		allJWT := true
+		for _, c := range b[i+4 : i+4+n] {
+			if !isJWTChar(c) {
+				allJWT = false
+				break
+			}
+		}
+		if allJWT && i+4+n > bestEnd {
+			bestEnd, bestStart, bestLen = i+4+n, i+4, n
+		}
+	}
+	if bestEnd < 0 {
+		return ""
+	}
+	return string(b[bestStart : bestStart+bestLen])
 }

@@ -24,9 +24,15 @@ type session struct {
 	joined      bool
 	syncStarted bool        // csSyncLoop already running for this session (guard)
 	stopped     atomic.Bool // set on player quit (cmd 191); the CS sync loop exits when true
-	player      joinPlayer  // resolved from the cmd 440 prepare_token
+	player      joinPlayer  // resolved from the prepare_token (cmd 439/440)
 	bot         joinPlayer  // the current-round enemy bot
 	arena       csArena     // CS spawn city for the current round (re-picked each round)
+
+	// prepare_token reassembly: a large token (many cosmetics) is split across cmd 439
+	// (JOIN_MATCH_PREPARE, [u32 chunkLen][chunk], the bigger half) and cmd 440
+	// (JOIN_MATCH_POST, the tail). prep439 buffers the 439 chunk; handleJoinMatchPost
+	// appends the 440 tail to reassemble the full JWT.
+	prep439 []byte
 
 	// Round state. round is 1-based; botEntity is the (fixed) enemy bot entity id,
 	// revived+repositioned each round rather than replaced; tpSeq sequences the

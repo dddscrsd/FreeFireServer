@@ -54,7 +54,8 @@ const (
 	CmdNotifyRevive      = 388  // server -> client: MJCMIMNHILD (typed) — revive an EXISTING dead player at a position (keeps team/faction/loadout)
 	CmdPRISync           = 900  // server -> client: PRI replication (per-player), 0x384. (1.70.1; ref's 500 is an unrelated typed handler AJNCGCHMNIP)
 	CmdGRISync           = 901  // server -> client: GRI replication (game-wide match state), single block, 0x385. (1.70.1; ref's 501 is an unrelated typed handler JPKINIIHOFP)
-	CmdJoinMatchPost     = 440  // client -> server: RUDP_JOIN_MATCH_POST
+	CmdJoinMatchPrepare  = 439  // client -> server: RUDP_JOIN_MATCH_PREPARE — [u32 totalLen][token chunk] (big prepare_token, bigger half)
+	CmdJoinMatchPost     = 440  // client -> server: RUDP_JOIN_MATCH_POST (match metadata + small/tail prepare_token)
 	CmdSyncServerTime    = 1000 // server -> client: uint32 ServerGameTickCount; client clock = tick/30s (drives the CS timers)
 	CmdClientPos         = 1001 // client -> server: per-tick position/state update (carries the local player's world pos)
 )

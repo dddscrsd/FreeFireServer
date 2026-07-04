@@ -21,6 +21,8 @@ func (s *session) handle(p *packet.Packet) {
 	case packet.CmdAck: // 2 — client's ACK of our reliable packets; stub does not resend.
 	case packet.CmdPing: // 3
 		s.handlePing(p)
+	case packet.CmdJoinMatchPrepare: // 439 — buffers the (bigger) prepare_token chunk
+		s.handleJoinMatchPrepare(p)
 	case packet.CmdJoinMatchPost: // 440
 		s.handleJoinMatchPost(p)
 	case packet.CmdCSPurchase: // 408
@@ -69,7 +71,7 @@ func (s *session) handlePing(p *packet.Packet) {
 // client reconnect without unlocking movement. The GRI (cmd 901) is the movement
 // driver; the authoritative spawn is the position in cmd 101 (see choosePlayerSpawn).
 func (s *session) handleJoinMatchPost(p *packet.Packet) {
-	pl := resolvePlayer(extractPrepareToken(p.Payload))
+	pl := resolvePlayer(s.prepareToken(p.Payload))
 	s.arena = choosePlayerSpawn(&pl)
 	s.player = pl
 	s.joined = true
@@ -93,19 +95,56 @@ func (s *session) handleJoinMatchPost(p *packet.Packet) {
 	s.startCSSync()
 }
 
-// extractPrepareToken pulls the JWT prepare_token out of a cmd 440 payload. The live
-// 1.70 struct layout does NOT match the reference offsets, so scanning for the JWT
-// header marker is the reliable path; the struct Token field is only a fallback.
-func extractPrepareToken(payload []byte) string {
-	if tok := message.ExtractJWT(payload); tok != "" {
-		log.Printf("[mm-udp] JOIN_MATCH_POST prepare_token found by scan (%dB)", len(tok))
+// handleJoinMatchPrepare handles cmd 439 (JOIN_MATCH_PREPARE): the client sends the
+// prepare_token (JWT) here as [u32 totalLen][token chunk] when it is large. A small token
+// skips 439 and rides entirely in cmd 440; a token too big for one packet is split, the
+// bigger half here and the tail in cmd 440. We buffer this chunk (and its declared total
+// length); handleJoinMatchPost reassembles the full token.
+func (s *session) handleJoinMatchPrepare(p *packet.Packet) {
+	if len(p.Payload) < 4 {
+		return
+	}
+	chunkLen := binary.LittleEndian.Uint32(p.Payload[0:])
+	chunk := p.Payload[4:]
+	if chunkLen > 0 && int(chunkLen) < len(chunk) { // never keep more than declared
+		chunk = chunk[:chunkLen]
+	}
+	s.prep439 = append([]byte(nil), chunk...)
+	log.Printf("[mm-udp] JOIN_MATCH_PREPARE cmd=439 token chunk=%dB (declared %d) %v", len(s.prep439), chunkLen, s.remote)
+}
+
+// prepareToken reassembles the prepare_token (JWT) from the buffered cmd 439 chunk and
+// the cmd 440 payload. It can arrive wholly in cmd 440 (small token), wholly in cmd 439,
+// or split across 439 (bigger chunk) + 440 (tail). The 1.70 cmd 440 struct offsets don't
+// line up, so scanning for the fixed JWT header marker is the reliable path.
+func (s *session) prepareToken(payload440 []byte) string {
+	if len(s.prep439) > 0 {
+		tok := message.ExtractJWT(s.prep439) // chunk starts at the JWT header
+		if tok == "" {
+			tok = string(s.prep439) // no marker (raw token bytes) — take as-is
+		}
+		// The 439 chunk is the bigger half; when it isn't already a whole JWT the tail (the
+		// rest of the signature) rides in cmd 440 as the last length-prefixed base64url
+		// field, after the metadata. Append it to complete the token.
+		if !message.IsCompleteJWT(tok) {
+			tail := message.LastJWTField(payload440)
+			tok += tail
+			log.Printf("[mm-udp] JOIN prepare_token split: 439(%dB)+440 tail(%dB) -> %dB %v",
+				len(s.prep439), len(tail), len(tok), s.remote)
+		} else {
+			log.Printf("[mm-udp] JOIN prepare_token whole in cmd 439 (%dB) %v", len(tok), s.remote)
+		}
 		return tok
 	}
-	if req, err := message.ParseJoinMatchReq(payload); err == nil && req.Token != "" {
-		log.Printf("[mm-udp] JOIN_MATCH_POST prepare_token from struct field (%dB)", len(req.Token))
+	if tok := message.ExtractJWT(payload440); tok != "" {
+		log.Printf("[mm-udp] JOIN prepare_token found in cmd 440 by scan (%dB) %v", len(tok), s.remote)
+		return tok
+	}
+	if req, err := message.ParseJoinMatchReq(payload440); err == nil && req.Token != "" {
+		log.Printf("[mm-udp] JOIN prepare_token from cmd 440 struct field (%dB) %v", len(req.Token), s.remote)
 		return req.Token
 	}
-	log.Printf("[mm-udp] JOIN_MATCH_POST no prepare_token; payload(%dB)=%x", len(payload), payload)
+	log.Printf("[mm-udp] JOIN no prepare_token; cmd440(%dB)=%x %v", len(payload440), payload440, s.remote)
 	return ""
 }
 
