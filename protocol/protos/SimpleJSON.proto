@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package SimpleJSON;
+
+enum Type {
+  Type_None = 0;
+  Type_Array = 1;
+  Type_Object = 2;
+}
+
+enum JSONNodeType {
+  JSONNodeType_UNSPECIFIED = 0;
+  JSONNodeType_Array = 1;
+  JSONNodeType_Object = 2;
+  JSONNodeType_String = 3;
+  JSONNodeType_Number = 4;
+  JSONNodeType_NullValue = 5;
+  JSONNodeType_Boolean = 6;
+  JSONNodeType_None = 7;
+  JSONNodeType_Custom = 255;
+}
+
+enum JSONTextMode {
+  JSONTextMode_Compact = 0;
+  JSONTextMode_Indent = 1;
+}

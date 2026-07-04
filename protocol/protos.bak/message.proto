@@ -1,0 +1,3556 @@
+syntax = "proto3";
+
+package message;
+
+enum AAAIAPOBKND {
+  AAAIAPOBKND_EPRI_ENTITY_TAG_NONE = 0;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_PLAYER = 1;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_DOOR = 2;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_VEHICLE = 3;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_PVESAFEDOOR = 4;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_OILDRUM = 5;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_REDENVELOPE = 6;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_SMOKEDRUM = 7;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_GIANTEASTEREGG = 8;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_SHOOTINGTARGET = 9;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_MINISENTRY = 10;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_Emote = 11;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_ReviveTower = 12;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_IceWall = 13;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_DUMMY = 14;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_REACTOR = 15;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_ControlBoxBuff = 16;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_ITEMPLANT = 17;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_CONTROLPOINT = 18;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_ESCORT_BOSS = 19;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_SHIELD = 20;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_BOUNTYTELEPORTMACHINE = 21;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_TELEPORTDOOR = 22;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_PHYXSHIELD = 23;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_DYNAMICCOLLIDER = 24;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_RevivePoint = 25;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_WeaponBox = 26;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_Warehouse = 27;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_DestructiblePart = 28;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_Cannon = 29;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_LEVELOBJECT_TREASURY = 30;
+  AAAIAPOBKND_EPRI_ENTITY_TAG_TEAM = 31;
+}
+
+enum ABDONPHCKLK {
+  ABDONPHCKLK_ERoomGameAchievementType_None = 0;
+  ABDONPHCKLK_ERoomGameAchievementType_FirstBlood = 1;
+  ABDONPHCKLK_ERoomGameAchievementType_SingleKill = 2;
+  ABDONPHCKLK_ERoomGameAchievementType_DoubleKill = 3;
+  ABDONPHCKLK_ERoomGameAchievementType_TripleKill = 4;
+  ABDONPHCKLK_ERoomGameAchievementType_QuadroKill = 5;
+  ABDONPHCKLK_ERoomGameAchievementType_PentaKill = 6;
+  ABDONPHCKLK_ERoomGameAchievementType_Unstoppable = 7;
+  ABDONPHCKLK_ERoomGameAchievementType_KingOfKiller_Team = 8;
+  ABDONPHCKLK_ERoomGameAchievementType_KingSlayer = 9;
+  ABDONPHCKLK_ERoomGameAchievementType_TeamAce = 10;
+  ABDONPHCKLK_ERoomGameAchievementType_KingOfKiller_Player_Add = 11;
+  ABDONPHCKLK_ERoomGameAchievementType_KingOfKiller_Player_Refresh = 12;
+}
+
+enum ABJOEEKFICC {
+  ABJOEEKFICC_EDropInventoryReason_ByUser = 0;
+  ABJOEEKFICC_EDropInventoryReason_BagIsFull = 1;
+  ABJOEEKFICC_EDropInventoryReason_Broken = 2;
+  ABJOEEKFICC_EDropInventoryReason_PlayerDead = 3;
+  ABJOEEKFICC_EDropInventoryReason_BySystem = 4;
+  ABJOEEKFICC_EDropInventoryReason_InGameShopCost = 5;
+}
+
+enum ADJCOBLNFDJ {
+  ADJCOBLNFDJ_EMissileDataType_Vehicle = 0;
+  ADJCOBLNFDJ_EMissileDataType_Grenade = 1;
+}
+
+enum AEMDCMEGBPB {
+  AEMDCMEGBPB_ENPCInteractType_Chat = 0;
+  AEMDCMEGBPB_ENPCInteractType_Photo = 1;
+}
+
+enum AENOMPGJPOP {
+  AENOMPGJPOP_EROOMTYPE_WAITINGROOM = 0;
+  AENOMPGJPOP_EROOMTYPE_BATTLE = 1;
+}
+
+enum AINCKFDILJP {
+  AINCKFDILJP_EWarningZoneState_Start = 0;
+  AINCKFDILJP_EWarningZoneState_Live = 1;
+  AINCKFDILJP_EWarningZoneState_End = 2;
+}
+
+enum AJKGBJOJEAF {
+  AJKGBJOJEAF_EHITBODYPART_NONE = 0;
+  AJKGBJOJEAF_EHITBODYPART_HEAD = 1;
+  AJKGBJOJEAF_EHITBODYPART_BODY = 2;
+  AJKGBJOJEAF_EHITBODYPART_LIMB = 3;
+  AJKGBJOJEAF_EHITBODYPART_VEHICLE = 4;
+  AJKGBJOJEAF_EHITBODYPART_PROTECTION = 5;
+  AJKGBJOJEAF_EHITBODYPART_UAV = 6;
+  AJKGBJOJEAF_EHITBODYPART_SHOAL = 7;
+  AJKGBJOJEAF_EHITBODYPART_OILDRUM = 8;
+  AJKGBJOJEAF_EHITBODYPART_ICEWALL = 9;
+  AJKGBJOJEAF_EHITBODYPART_LANDMINE = 10;
+  AJKGBJOJEAF_EHITBODYPART_MINISENTRY = 11;
+  AJKGBJOJEAF_EHITBODYPART_SHIELD = 12;
+  AJKGBJOJEAF_EHITBODYPART_SNIPER_EXTENSION = 13;
+  AJKGBJOJEAF_EHITBODYPART_DUMMY = 14;
+  AJKGBJOJEAF_EHITBODYPART_SHOOTING_TARGET = 15;
+  AJKGBJOJEAF_EHITBODYPART_SHOOTING_TARGET_HEAD = 16;
+  AJKGBJOJEAF_EHITBODYPART_WEAPON_SHIELD = 17;
+  AJKGBJOJEAF_EHITBODYPART_REACTOR = 18;
+  AJKGBJOJEAF_EHITBODYPART_ESCORT_BOSS_UPPER = 19;
+  AJKGBJOJEAF_EHITBODYPART_ESCORT_BOSS_LOWER = 20;
+  AJKGBJOJEAF_EHITBODYPART_HAYATO_PROTECTION = 21;
+  AJKGBJOJEAF_EHITBODYPART_VEHICLE_SHIELD = 22;
+}
+
+enum ALAHNGGPDIE {
+  ALAHNGGPDIE_ESTARTFIRESTATE_NONE = 0;
+  ALAHNGGPDIE_ESTARTFIRESTATE_READY = 1;
+  ALAHNGGPDIE_ESTARTFIRESTATE_FIRE = 2;
+  ALAHNGGPDIE_ESTARTFIRESTATE_CHARGE = 3;
+  ALAHNGGPDIE_ESTARTFIRESTATE_CANCEL = 4;
+  ALAHNGGPDIE_ESTARTFIRESTATE_WARMUP = 5;
+  ALAHNGGPDIE_ESTARTFIRESTATE_COMBINED_DOUBLE_FIRE = 6;
+  ALAHNGGPDIE_ESTARTFIRESTATE_COMBINED_LEFT_FIRE = 7;
+}
+
+enum ALDKJAJDJAN {
+  ALDKJAJDJAN_EStartRescureFailReason_None = 0;
+  ALDKJAJDJAN_EStartRescureFailReason_TargetSelfRescure = 1;
+  ALDKJAJDJAN_EStartRescureFailReason_UseRescureZone = 2;
+}
+
+enum ALJLEADECAA {
+  ALJLEADECAA_UNSPECIFIED = 0;
+  ALJLEADECAA_EPVEHyakkiGRI_CURRENT_ROUND = 1;
+  ALJLEADECAA_EPVEHyakkiGRI_CURRENT_AICOUNT = 2;
+  ALJLEADECAA_EPVEHyakkiGRI_MAX_ROUND = 3;
+  ALJLEADECAA_EPVEHyakkiGRI_BOSS_PHASE = 4;
+  ALJLEADECAA_EPVEHyakkiGRI_GameTotalTime = 5;
+  ALJLEADECAA_EPVEHyakkiGRI_RuleTipBitData = 6;
+  ALJLEADECAA_EPVEHyakkiGRI_NB = 7;
+}
+
+enum ANFNJOMMPKH {
+  ANFNJOMMPKH_EADSMatchPhase_Waiting = 0;
+  ANFNJOMMPKH_EADSMatchPhase_Prepare = 1;
+  ANFNJOMMPKH_EADSMatchPhase_Normal = 2;
+  ANFNJOMMPKH_EADSMatchPhase_1V1 = 3;
+  ANFNJOMMPKH_EADSMatchPhase_SuddenDeath = 4;
+  ANFNJOMMPKH_EADSMatchPhase_Post = 5;
+}
+
+enum ANHHGHMGALA {
+  ANHHGHMGALA_UNSPECIFIED = 0;
+  ANHHGHMGALA_EPRI_PHYXSHIELD_HP = 1;
+  ANHHGHMGALA_EPRI_PHYXSHIELD_NB = 2;
+}
+
+enum ANPKMCHINPM {
+  ANPKMCHINPM_UNSPECIFIED = 0;
+  ANPKMCHINPM_EPRI_REACTOR_HP = 1;
+  ANPKMCHINPM_EPRI_REACTOR_NB = 2;
+}
+
+enum AOMEJIDCIJK {
+  AOMEJIDCIJK_EPRI_Plant_GrowthRate = 0;
+  AOMEJIDCIJK_EPRI_Plant_GrowthSpeed = 1;
+  AOMEJIDCIJK_EPRI_Plant_NB = 2;
+}
+
+enum BBLCOPNLLKL {
+  BBLCOPNLLKL_EPRI_Icewall_State = 0;
+  BBLCOPNLLKL_EPRI_Icewall_NB = 1;
+}
+
+enum BCEANCAIDDI {
+  BCEANCAIDDI_UNSPECIFIED = 0;
+  BCEANCAIDDI_EReaperGRI_AliveCount = 1;
+  BCEANCAIDDI_EReaperGRI_Phase = 2;
+  BCEANCAIDDI_EReaperGRI_FirstSecondScore = 3;
+  BCEANCAIDDI_EReaperGRI_NB = 4;
+}
+
+enum BCMMNPDBCLB {
+  BCMMNPDBCLB_UNSPECIFIED = 0;
+  BCMMNPDBCLB_EDMMMatchPhase_Prepare = 1;
+  BCMMNPDBCLB_EDMMMatchPhase_Fight = 2;
+  BCMMNPDBCLB_EDMMMatchPhase_Fever = 3;
+  BCMMNPDBCLB_EDMMMatchPhase_Post = 4;
+}
+
+enum BGHDNMJJJEN {
+  BGHDNMJJJEN_EBombMatchBombRemoveReason_Explode = 0;
+  BGHDNMJJJEN_EBombMatchBombRemoveReason_ByUser = 1;
+}
+
+enum BHFJMPMMLHN {
+  BHFJMPMMLHN_ETeleportDoorEventState_Start = 0;
+  BHFJMPMMLHN_ETeleportDoorEventState_End = 1;
+  BHFJMPMMLHN_ETeleportDoorEventState_ReSend = 2;
+}
+
+enum BHLBBILAHHI {
+  BHLBBILAHHI_ECSStrikeOutMatchPhase_MatchMaking = 0;
+  BHLBBILAHHI_ECSStrikeOutMatchPhase_Fight = 1;
+}
+
+enum BIFKDICBOGO {
+  BIFKDICBOGO_ETDMMatchPhase_Waiting = 0;
+  BIFKDICBOGO_ETDMMatchPhase_Prepare = 1;
+  BIFKDICBOGO_ETDMMatchPhase_Normal = 2;
+  BIFKDICBOGO_ETDMMatchPhase_Overtime = 3;
+  BIFKDICBOGO_ETDMMatchPhase_SuddenDeath = 4;
+  BIFKDICBOGO_ETDMMatchPhase_Post = 5;
+}
+
+enum BIIKKGCCFJF {
+  BIIKKGCCFJF_EPRI_DestructiblePartInfo_HP = 0;
+  BIIKKGCCFJF_EPRI_DestructiblePartInfo_State = 1;
+  BIIKKGCCFJF_EPRI_DestructiblePartInfo_NB = 2;
+}
+
+enum BIILPEJHKEH {
+  BIILPEJHKEH_EPendingReviveState_Alive = 0;
+  BIILPEJHKEH_EPendingReviveState_PrePending = 1;
+  BIILPEJHKEH_EPendingReviveState_Pending = 2;
+  BIILPEJHKEH_EPendingReviveState_Destroy = 3;
+}
+
+enum BIOFIHHONMO {
+  BIOFIHHONMO_ECUSTOMROOM_ROLE_NONE = 0;
+  BIOFIHHONMO_ECUSTOMROOM_ROLE_PLAYER = 1;
+  BIOFIHHONMO_ECUSTOMROOM_ROLE_SPECTATOR = 2;
+  BIOFIHHONMO_ECUSTOMROOM_ROLE_CREATOR = 3;
+  BIOFIHHONMO_ECUSTOMROOM_ROLE_REPLAY_SPECTATOR = 4;
+}
+
+enum BKODMMFCJMM {
+  BKODMMFCJMM_EWeaponShieldState_Hide = 0;
+  BKODMMFCJMM_EWeaponShieldState_Show = 1;
+}
+
+enum BOPMEKHLGCF {
+  BOPMEKHLGCF_EPartyDanceWheelPhase_Dance = 0;
+  BOPMEKHLGCF_EPartyDanceWheelPhase_DanceToWheel = 1;
+  BOPMEKHLGCF_EPartyDanceWheelPhase_Wheel = 2;
+  BOPMEKHLGCF_EPartyDanceWheelPhase_WheelToDance = 3;
+}
+
+enum CAFLICBGDLO {
+  CAFLICBGDLO_UGCMsgNotifyType_Unknown = 0;
+  CAFLICBGDLO_UGCMsgNotifyType_ArriveEndPoint = 1;
+}
+
+enum CBNPMCENMKE {
+  CBNPMCENMKE_EUGCScoreType_Unknown = 0;
+  CBNPMCENMKE_EUGCScoreType_Kill_Count = 1;
+  CBNPMCENMKE_EUGCScoreType_Damage_Amount = 2;
+  CBNPMCENMKE_EUGCScoreType_Assist_Count = 3;
+  CBNPMCENMKE_EUGCScoreType_Finish_Order = 4;
+  CBNPMCENMKE_EUGCScoreType_Finish_TimeScore = 5;
+  CBNPMCENMKE_EUGCScoreType_Finish_Teammate_Count = 6;
+  CBNPMCENMKE_EUGCScoreType_Checkpoint_Amount = 7;
+  CBNPMCENMKE_EUGCScoreType_RankScore = 8;
+  CBNPMCENMKE_EUGCScoreType_Survival_TimeScore = 9;
+  CBNPMCENMKE_EUGCScoreType_KillCount_Score = 10;
+}
+
+enum CEAJKPIPDAM {
+  CEAJKPIPDAM_UNSPECIFIED = 0;
+  CEAJKPIPDAM_EUGCPartyMatchPhase_Normal = 1;
+}
+
+enum CEMGBJIGLNK {
+  CEMGBJIGLNK_EGameMissionEndState_SuccessOK = 0;
+  CEMGBJIGLNK_EGameMissionEndState_SuccessWithToken = 1;
+  CEMGBJIGLNK_EGameMissionEndState_SuccessKillLast = 2;
+  CEMGBJIGLNK_EGameMissionEndState_SuccessTargetDead = 3;
+  CEMGBJIGLNK_EGameMissionEndState_TimeOut = 4;
+  CEMGBJIGLNK_EGameMissionEndState_TargetDead = 5;
+  CEMGBJIGLNK_EGameMissionEndState_Unknow = 6;
+}
+
+enum CGDMPJFPCKC {
+  CGDMPJFPCKC_EAOHGRI_ALIVE_PLAYERCOUNT = 0;
+  CGDMPJFPCKC_EAOHGRI_Phase = 1;
+  CGDMPJFPCKC_EAOHGRI_Team1_Score = 2;
+  CGDMPJFPCKC_EAOHGRI_Team2_Score = 3;
+  CGDMPJFPCKC_EAOHGRI_NB = 4;
+}
+
+enum CGKALEJOFFB {
+  CGKALEJOFFB_EPRI_DynamicCollider_Enable = 0;
+  CGKALEJOFFB_EPRI_DynamicCollider_NB = 1;
+}
+
+enum CIHFGCBCJHL {
+  CIHFGCBCJHL_UNSPECIFIED = 0;
+  CIHFGCBCJHL_EPRI_Cannon_Heat = 1;
+  CIHFGCBCJHL_EPRI_Cannon_FireState = 2;
+  CIHFGCBCJHL_EPRI_Cannon_MAXCOUNT = 3;
+}
+
+enum CJBCFPPCIHP {
+  CJBCFPPCIHP_EPetType_Default = 0;
+  CJBCFPPCIHP_EPetType_Biped = 1;
+}
+
+enum CKGBBMLMDHO {
+  CKGBBMLMDHO_EContainerType_Normal = 0;
+  CKGBBMLMDHO_EContainerType_Dynamic = 1;
+  CKGBBMLMDHO_EContainerType_DeadBox = 2;
+  CKGBBMLMDHO_EContainerType_AirDrop = 3;
+  CKGBBMLMDHO_EContainerType_Treasure = 4;
+  CKGBBMLMDHO_EContainerType_CarePackage = 5;
+  CKGBBMLMDHO_EContainerType_Instant = 6;
+  CKGBBMLMDHO_EContainerType_Mushroom = 7;
+  CKGBBMLMDHO_EContainerType_ArmorTools = 8;
+  CKGBBMLMDHO_EContainerType_AmmoBox = 9;
+  CKGBBMLMDHO_EContainerType_HypeJuice = 10;
+  CKGBBMLMDHO_EContainerType_InfoBox = 11;
+  CKGBBMLMDHO_EContainerType_ShootTarget = 12;
+  CKGBBMLMDHO_EContainerType_BuffDebris = 13;
+  CKGBBMLMDHO_EContainerType_EmoteGift = 14;
+  CKGBBMLMDHO_EContainerType_PumpkinBuff = 15;
+  CKGBBMLMDHO_EContainerType_LinkActivityReward = 16;
+  CKGBBMLMDHO_EContainerType_InstantBuff = 17;
+  CKGBBMLMDHO_EContainerType_GeneralDropBuff = 18;
+  CKGBBMLMDHO_EContainerType_ReaperSoul = 19;
+  CKGBBMLMDHO_EContainerType_Max = 20;
+}
+
+enum DAFICCBHLPI {
+  DAFICCBHLPI_UNSPECIFIED = 0;
+  DAFICCBHLPI_ECSGRI_MAX_ROUND = 1;
+  DAFICCBHLPI_ECSGRI_CURRENT_ROUND = 2;
+  DAFICCBHLPI_ECSGRI_CURRENT_PHASE = 3;
+  DAFICCBHLPI_ECSGRI_MATCH_POINT = 4;
+  DAFICCBHLPI_ECSGRI_MATCH_DRAW_STATE = 5;
+  DAFICCBHLPI_ECSGRI_ROUND_AIRDROP_DATA_ID = 6;
+  DAFICCBHLPI_ECSGRI_NB = 7;
+}
+
+enum DAHEMOKAHIN {
+  DAHEMOKAHIN_EWWMatchPhase_Waiting = 0;
+  DAHEMOKAHIN_EWWMatchPhase_Prepare = 1;
+  DAHEMOKAHIN_EWWMatchPhase_Task = 2;
+  DAHEMOKAHIN_EWWMatchPhase_Vote = 3;
+  DAHEMOKAHIN_EWWMatchPhase_VoteResultShow = 4;
+  DAHEMOKAHIN_EWWMatchPhase_FinalShow = 5;
+  DAHEMOKAHIN_EWWMatchPhase_GameEndShow = 6;
+  DAHEMOKAHIN_EWWMatchPhase_GameEndCommunication = 7;
+}
+
+enum DAMCDPIBGNE {
+  DAMCDPIBGNE_EWereWolvesRole_Waiting = 0;
+  DAMCDPIBGNE_EWereWolvesRole_Wolf = 1;
+  DAMCDPIBGNE_EWereWolvesRole_Human = 2;
+  DAMCDPIBGNE_EWereWolvesRole_Wolf_Dead = 3;
+  DAMCDPIBGNE_EWereWolvesRole_Human_Dead = 4;
+}
+
+enum DBAFFOJGING {
+  DBAFFOJGING_EPRI_MiniSentry_Target = 0;
+  DBAFFOJGING_EPRI_MiniSentry_Rot_Angles = 1;
+  DBAFFOJGING_EPRI_MiniSentry_NB = 2;
+}
+
+enum DCNOOCAGCKC {
+  DCNOOCAGCKC_UNSPECIFIED = 0;
+  DCNOOCAGCKC_RushingPetsParamType_GameTime = 1;
+  DCNOOCAGCKC_RushingPetsParamType_RoundCount = 2;
+  DCNOOCAGCKC_RushingPetsParamType_Round1 = 3;
+  DCNOOCAGCKC_RushingPetsParamType_Round2 = 4;
+  DCNOOCAGCKC_RushingPetsParamType_Round3 = 5;
+  DCNOOCAGCKC_RushingPetsParamType_Round4 = 6;
+  DCNOOCAGCKC_RushingPetsParamType_Round5 = 7;
+  DCNOOCAGCKC_RushingPetsParamType_Round6 = 8;
+  DCNOOCAGCKC_RushingPetsParamType_Round7 = 9;
+  DCNOOCAGCKC_RushingPetsParamType_Round8 = 10;
+  DCNOOCAGCKC_RushingPetsParamType_Max = 11;
+}
+
+enum DGNDKMLMLPM {
+  DGNDKMLMLPM_EMATCHMODE_NONE = 0;
+  DGNDKMLMLPM_EMATCHMODE_CASUAL = 1;
+  DGNDKMLMLPM_EMATCHMODE_RANKING = 2;
+  DGNDKMLMLPM_EMATCHMODE_ROOM = 3;
+  DGNDKMLMLPM_EMATCHMODE_CHAMPION = 4;
+  DGNDKMLMLPM_EMATCHNODE_TRAINNING = 5;
+  DGNDKMLMLPM_EMATCHNODE_CSRANKING = 6;
+  DGNDKMLMLPM_EMATCHMODE_CUP = 7;
+  DGNDKMLMLPM_EMATCHMODE_UGC = 8;
+  DGNDKMLMLPM_EMATCHMODE_PERIODIC = 9;
+  DGNDKMLMLPM_EMATCHMODE_UGCAllMap = 10;
+}
+
+enum DGNEMKIFINM {
+  DGNEMKIFINM_EGRI_ALIVE_PLAYERCOUNT = 0;
+  DGNEMKIFINM_EGRI_OBGLOBALEVENT_EFFECT_ENDTIME = 2;
+  DGNEMKIFINM_EGRI_NB = 3;
+}
+
+enum DIKMHHKFAPI {
+  DIKMHHKFAPI_EPRI_ControlPoint_DeactivateTime = 0;
+  DIKMHHKFAPI_EPRI_ControlPoint_Team1Score = 1;
+  DIKMHHKFAPI_EPRI_ControlPoint_Team2Score = 2;
+  DIKMHHKFAPI_EPRI_ControlPoint_UnderTeamIndex = 3;
+  DIKMHHKFAPI_EPRI_ControlPoint_TryingUnderTeamIndex = 4;
+  DIKMHHKFAPI_EPRI_ControlPoint_NB = 5;
+}
+
+enum DIPAHCOBEKE {
+  DIPAHCOBEKE_EWheelRollPlayerState_HitFly = 0;
+  DIPAHCOBEKE_EWheelRollPlayerState_JumpOver = 1;
+}
+
+enum DLDMLKHKFFD {
+  DLDMLKHKFFD_UNSPECIFIED = 0;
+  DLDMLKHKFFD_EWWGRI_CURRENT_PHASE = 1;
+  DLDMLKHKFFD_EWWGRI_CURRENT_POINT = 2;
+  DLDMLKHKFFD_EWWGRI_CIVILWIN_POINT = 3;
+  DLDMLKHKFFD_EWWGRI_CURRENT_WOLF_COUNT = 4;
+  DLDMLKHKFFD_EWWGRI_ALL_WOLF_COUNT = 5;
+  DLDMLKHKFFD_EWWGRI_WOLF_KILLCD = 6;
+  DLDMLKHKFFD_EWWGRI_WOLF_SKILLCD = 7;
+  DLDMLKHKFFD_EWWGRI_VoteCenter_CDEndTime = 8;
+  DLDMLKHKFFD_EWWGRI_GameEndTime = 9;
+  DLDMLKHKFFD_EWWGRI_GameOverFlag = 10;
+  DLDMLKHKFFD_EWWGRI_NB = 11;
+}
+
+enum DLPJLPIHNCL {
+  DLPJLPIHNCL_EItemMarkType_PickUp = 0;
+  DLPJLPIHNCL_EItemMarkType_LevelObject = 1;
+  DLPJLPIHNCL_EItemMarkType_Point = 2;
+  DLPJLPIHNCL_EItemMarkType_NB = 3;
+}
+
+enum DMPHBOJAAOO {
+  DMPHBOJAAOO_EVeicleAirDrop_None = 0;
+  DMPHBOJAAOO_EVeicleAirDrop_Falling = 1;
+  DMPHBOJAAOO_EVeicleAirDrop_Sleep = 2;
+}
+
+enum DNGBIJJABEK {
+  DNGBIJJABEK_EBanknoteGRI_ALIVE_PLAYERCOUNT = 0;
+  DNGBIJJABEK_EBanknoteGRI_Phase = 1;
+  DNGBIJJABEK_EBanknoteGRI_Next_Activate_Control_ID = 2;
+  DNGBIJJABEK_EBanknoteGRI_Last_Activate_Max_Amount = 3;
+  DNGBIJJABEK_EBanknoteGRI_Team1_Amount = 4;
+  DNGBIJJABEK_EBanknoteGRI_Team2_Amount = 5;
+  DNGBIJJABEK_EBanknoteGRI_NB = 6;
+}
+
+enum DOKOKGKOIFK {
+  DOKOKGKOIFK_EUGCArithmeticType_Unknown = 0;
+  DOKOKGKOIFK_EUGCArithmeticType_Add = 1;
+  DOKOKGKOIFK_EUGCArithmeticType_Subtract = 2;
+  DOKOKGKOIFK_EUGCArithmeticType_Multiply = 3;
+  DOKOKGKOIFK_EUGCArithmeticType_Divide = 4;
+  DOKOKGKOIFK_EUGCArithmeticType_Remainder = 5;
+}
+
+enum EBDJJIHBALF {
+  EBDJJIHBALF_EShopFlowType_Default = 0;
+  EBDJJIHBALF_EShopFlowType_TakeTurns = 1;
+}
+
+enum ECDLJCBFJLD {
+  ECDLJCBFJLD_UNSPECIFIED = 0;
+  ECDLJCBFJLD_ETKGRI_ALIVE_COUNT = 1;
+  ECDLJCBFJLD_ETKGRI_WIN_SCORE = 2;
+  ECDLJCBFJLD_ETKGRI_LEADING_SCORE = 3;
+  ECDLJCBFJLD_ETKGRI_LEADING_TEAMID = 4;
+  ECDLJCBFJLD_ETKGRI_2ND_SCORE = 5;
+  ECDLJCBFJLD_ETKGRI_2ND_TEAMID = 6;
+  ECDLJCBFJLD_ETKGRI_LEADING_WINTIME = 7;
+  ECDLJCBFJLD_ETKGRI_MAX_KNIFENUM = 8;
+  ECDLJCBFJLD_ETKGRI_CURRENT_PHASE = 9;
+  ECDLJCBFJLD_ETKGRI_NB = 10;
+}
+
+enum EClanErrorCode {
+  EClanErrorCode_OK = 0;
+  EClanErrorCode_COMMON_EROOR = 400;
+}
+
+enum ECreateClanErrorCode {
+  ECreateClanErrorCode_UNSPECIFIED = 0;
+  ECreateClanErrorCode_COMMON_ERROR = 400;
+  ECreateClanErrorCode_MONEY_NOT_ENOUGH = 500;
+}
+
+enum EDFIOEJBFGA {
+  EDFIOEJBFGA_EICEWALL_NORMAL = 0;
+  EDFIOEJBFGA_EICEWALL_CRACK = 1;
+  EDFIOEJBFGA_EICEWALL_EXTRAHP_NORMAL = 2;
+}
+
+enum EEKFBEGKBPJ {
+  EEKFBEGKBPJ_UNSPECIFIED = 0;
+  EEKFBEGKBPJ_EPRI_OILDRUM_HP = 1;
+  EEKFBEGKBPJ_EPRI_OILDRUM_STATE = 2;
+  EEKFBEGKBPJ_EPRI_OILDRUM_TYPE = 3;
+  EEKFBEGKBPJ_EPRI_OILDRUM_VARCOUNT = 4;
+}
+
+enum EELNFKLHCFA {
+  EELNFKLHCFA_ESPAWNOBJECTTYPE_VEHICLE = 0;
+  EELNFKLHCFA_ESPAWNOBJECTTYPE_BOT = 1;
+  EELNFKLHCFA_ESPAWNOBJECTTYPE_CHAIR = 2;
+  EELNFKLHCFA_ESPAWNOBJECTTYPE_PIRATE_TREASURE = 3;
+  EELNFKLHCFA_ESPAWNOBJECTTYPE_FOX_TORII = 4;
+  EELNFKLHCFA_ESPAWNOBJECTTYPE_ITEM_PLANT = 5;
+}
+
+enum EFDIOPGODAE {
+  EFDIOPGODAE_EMatchDrawState_NormalStart = 0;
+  EFDIOPGODAE_EMatchDrawState_HalfwayJoin = 1;
+  EFDIOPGODAE_EMatchDrawState_Draw = 2;
+  EFDIOPGODAE_EMatchDrawState_MatchEnd = 3;
+  EFDIOPGODAE_EMatchDrawState_CancelDraw = 4;
+}
+
+enum EFOBNMGHGML {
+  EFOBNMGHGML_UNSPECIFIED = 0;
+  EFOBNMGHGML_EUGCPartyGRI_PHASE = 1;
+  EFOBNMGHGML_EUGCPartyGRI_NB = 2;
+}
+
+enum EGLJHKJKBKC {
+  EGLJHKJKBKC_ETreasureType_Loadout = 0;
+  EGLJHKJKBKC_ETreasureType_DriftBottle = 1;
+  EGLJHKJKBKC_ETreasureType_Supply = 2;
+}
+
+enum EHOBOOLIDBL {
+  EHOBOOLIDBL_UNSPECIFIED = 0;
+  EHOBOOLIDBL_EPartyGameGRI_PetRacingPhase = 1;
+  EHOBOOLIDBL_EPartyGameGRI_DancingWheelPhase = 2;
+  EHOBOOLIDBL_EPartyGameGRI_NB = 3;
+}
+
+enum EIPHMPNABDM {
+  EIPHMPNABDM_UNSPECIFIED = 0;
+  EIPHMPNABDM_EDMMGRI_MATCH_PHASE = 1;
+  EIPHMPNABDM_EDMMGRI_PLAYER_COUNT = 2;
+  EIPHMPNABDM_EDMMGRI_NB = 3;
+}
+
+enum EJoinClanErrorCode {
+  EJoinClanErrorCode_UNSPECIFIED = 0;
+  EJoinClanErrorCode_COMMON_ERROR = 400;
+}
+
+enum ELLNEIIPMOE {
+  ELLNEIIPMOE_ELWSOMiniGamePhase_Introduction = 0;
+  ELLNEIIPMOE_ELWSOMiniGamePhase_Prepare = 1;
+  ELLNEIIPMOE_ELWSOMiniGamePhase_Fight = 2;
+  ELLNEIIPMOE_ELWSOMiniGamePhase_Post = 3;
+  ELLNEIIPMOE_ELWSOMiniGamePhase_Waiting = 4;
+}
+
+enum ELPKACPLMMA {
+  ELPKACPLMMA_EUGCUIHUDType_Unknown = 0;
+  ELPKACPLMMA_EUGCUIHUDType_CountDownTip = 1;
+  ELPKACPLMMA_EUGCUIHUDType_LevelEndShow = 2;
+  ELPKACPLMMA_EUGCUIHUDType_MatchInfoTitle = 3;
+  ELPKACPLMMA_EUGCUIHUDType_OpeningBanner_Annihilate = 4;
+  ELPKACPLMMA_EUGCUIHUDType_OpeningBanner_Racing = 5;
+  ELPKACPLMMA_EUGCUIHUDType_OpeningBanner_Score = 6;
+  ELPKACPLMMA_EUGCUIHUDType_TwoTeamLeaderboard = 7;
+  ELPKACPLMMA_EUGCUIHUDType_MoreTeamLeaderboard = 8;
+  ELPKACPLMMA_EUGCUIHUDType_RoundStartBanner_RedBlue = 9;
+  ELPKACPLMMA_EUGCUIHUDType_RoundStartBanner_Yellow = 10;
+  ELPKACPLMMA_EUGCUIHUDType_TwoTeamFaction = 11;
+  ELPKACPLMMA_EUGCUIHUDType_RoundResult = 12;
+  ELPKACPLMMA_EUGCUIHUDType_TwoTeamRoundScore = 13;
+  ELPKACPLMMA_EUGCUIHUDType_FinalRoundResult = 14;
+  ELPKACPLMMA_EUGCUIHUDType_CheckPointMgr = 15;
+}
+
+enum EModifyNickNameErrorCode {
+  EModifyNickNameErrorCode_UNSPECIFIED = 0;
+  EModifyNickNameErrorCode_COMMON_ERROR = 400;
+}
+
+enum EModifyPetNameErrorCode {
+  EModifyPetNameErrorCode_UNSPECIFIED = 0;
+  EModifyPetNameErrorCode_COMMON_ERROR = 400;
+}
+
+enum EOOBLLENDAK {
+  EOOBLLENDAK_EPRI_RevivePoint_State = 0;
+  EOOBLLENDAK_EPRI_RevivePoint_Owner = 1;
+  EOOBLLENDAK_EPRI_RevivePoint_Time = 2;
+  EOOBLLENDAK_EPRI_RevivePoint_NB = 3;
+}
+
+enum EPDOCMFMJEP {
+  EPDOCMFMJEP_EBombMatchBombTryRemoveFailReason_Success = 0;
+  EPDOCMFMJEP_EBombMatchBombTryRemoveFailReason_Distance = 1;
+  EPDOCMFMJEP_EBombMatchBombTryRemoveFailReason_Removing = 2;
+}
+
+enum EPGNANOLPFK {
+  EPGNANOLPFK_EBombMatchPhase_Waiting = 0;
+  EPGNANOLPFK_EBombMatchPhase_Prepare = 1;
+  EPGNANOLPFK_EBombMatchPhase_Settle = 2;
+  EPGNANOLPFK_EBombMatchPhase_Explode = 3;
+  EPGNANOLPFK_EBombMatchPhase_Post = 4;
+}
+
+enum EPHHNJKOHDA {
+  EPHHNJKOHDA_UNSPECIFIED = 0;
+  EPHHNJKOHDA_ELevelFlowTargetType_FinishTarget = 1;
+  EPHHNJKOHDA_ELevelFlowTargetType_Elimination = 2;
+}
+
+enum EServiceCommonErrorCode {
+  EServiceCommonErrorCode_UNSPECIFIED = 0;
+  EServiceCommonErrorCode_COMMON_ERROR = 400;
+}
+
+enum ETopupChannel {
+  ETopupChannel_None = 0;
+  ETopupChannel_InGame = 1;
+  ETopupChannel_MShop = 2;
+  ETopupChannel_Admin = 3;
+  ETopupChannel_Promo = 4;
+  ETopupChannel_Rebate = 5;
+}
+
+enum FBCAHNCLMDC {
+  FBCAHNCLMDC_EPHYSXPOSE_STANDING = 0;
+  FBCAHNCLMDC_EPHYSXPOSE_CROUCHING = 1;
+  FBCAHNCLMDC_EPHYSXPOSE_DASHING = 2;
+  FBCAHNCLMDC_EPHYSXPOSE_CREEPING = 3;
+  FBCAHNCLMDC_EPHYSXPOSE_SWIMDASH = 4;
+  FBCAHNCLMDC_EPHYSXPOSE_SKYDIVING = 5;
+  FBCAHNCLMDC_EPHYSXPOSE_CROSSOVER = 6;
+  FBCAHNCLMDC_EPHYSXPOSE_CLIMBOVER = 7;
+  FBCAHNCLMDC_EPHYSXPOSE_KNOCKDOWN = 8;
+  FBCAHNCLMDC_EPHYSXPOSE_SWIMSURFING = 9;
+  FBCAHNCLMDC_EPHYSXPOSE_HIGHFALLING = 10;
+  FBCAHNCLMDC_EPHYSXPOSE_LOWFALLING = 11;
+  FBCAHNCLMDC_EPHYSXPOSE_JETFLYRUSH = 12;
+  FBCAHNCLMDC_EPHYSXPOSE_SECONDFALLING = 13;
+  FBCAHNCLMDC_EPHYSXPOSE_SITTING = 14;
+  FBCAHNCLMDC_EPHYSXPOSE_CATAPULTFALLING = 15;
+  FBCAHNCLMDC_EPHYSXPOSE_CATAPULTSTANDING = 16;
+  FBCAHNCLMDC_EPHYSXPOSE_GLIDING = 17;
+  FBCAHNCLMDC_EPHYSXPOSE_GLIDEFALLING = 18;
+  FBCAHNCLMDC_EPHYSXPOSE_FOUNTAINFALLING = 19;
+  FBCAHNCLMDC_EPHYSXPOSE_HUMANTIREFALLING = 20;
+  FBCAHNCLMDC_EPHYSXPOSE_PARTYDANCE = 21;
+  FBCAHNCLMDC_EPHYSXPOSE_FLIGHTROAMRUSH = 22;
+  FBCAHNCLMDC_EPHYSXPOSE_COUNT = 23;
+  FBCAHNCLMDC_EPHYSXPOSE_CANNONSTANDING = 24;
+}
+
+enum FDPGKJMFMKI {
+  FDPGKJMFMKI_ESystemPlatform_IOS = 0;
+  FDPGKJMFMKI_ESystemPlatform_Android = 1;
+  FDPGKJMFMKI_ESystemPlatform_PC = 2;
+}
+
+enum FJBGPMCGAJG {
+  FJBGPMCGAJG_UNSPECIFIED = 0;
+  FJBGPMCGAJG_EBombGRI_ALIVE_PLAYERCOUNT = 1;
+  FJBGPMCGAJG_EBombGRI_MAX_ROUND = 2;
+  FJBGPMCGAJG_EBombGRI_CURRENT_ROUND = 3;
+  FJBGPMCGAJG_EBombGRI_CURRENT_PHASE = 4;
+  FJBGPMCGAJG_EBombGRI_TEAM1_SCORE = 5;
+  FJBGPMCGAJG_EBombGRI_TEAM2_SCORE = 6;
+  FJBGPMCGAJG_EBombGRI_Equip_Sets = 7;
+  FJBGPMCGAJG_EBombGRI_Bomb_Carrier = 8;
+  FJBGPMCGAJG_EBombGRI_NB = 9;
+}
+
+enum FJCPGEDJJJK {
+  FJCPGEDJJJK_LWSOLastRoundResult_Bye = 0;
+  FJCPGEDJJJK_LWSOLastRoundResult_Win = 1;
+  FJCPGEDJJJK_LWSOLastRoundResult_Lose = 2;
+}
+
+enum FMEFLOGMIKC {
+  FMEFLOGMIKC_UNSPECIFIED = 0;
+  FMEFLOGMIKC_EGiantGRI_AliveCount = 1;
+  FMEFLOGMIKC_EGiantGRI_Phase = 2;
+  FMEFLOGMIKC_EGiantGRI_EquipSet = 3;
+  FMEFLOGMIKC_EGiantGRI_MAX_ROUND = 4;
+  FMEFLOGMIKC_EGiantGRI_CURRENT_ROUND = 5;
+  FMEFLOGMIKC_EGiantGRI_TIMING_ON = 6;
+  FMEFLOGMIKC_EGiantGRI_MILLSTONEINDEX = 7;
+  FMEFLOGMIKC_EGiantGRI_EFFECTIVE_DEFENDER = 8;
+  FMEFLOGMIKC_EGiantGRI_EFFECTIVE_ATTACKER = 9;
+  FMEFLOGMIKC_EGiantGRI_CURRENT_DISTANCE = 10;
+  FMEFLOGMIKC_EGiantGRI_TOTAL_DISTANCE = 11;
+  FMEFLOGMIKC_EGiantGRI_LAST_TEAM_SCORE = 12;
+  FMEFLOGMIKC_EGiantGRI_ZONE_INDEX = 13;
+  FMEFLOGMIKC_EGiantGRI_NB = 14;
+}
+
+enum FNNDDGOFAHC {
+  FNNDDGOFAHC_UNSPECIFIED = 0;
+  FNNDDGOFAHC_EMatchPhase_Pregame = 99;
+}
+
+enum GBIFIIGGDGB {
+  GBIFIIGGDGB_EObserverType_Death = 0;
+  GBIFIIGGDGB_EObserverType_Room = 1;
+  GBIFIIGGDGB_EObserverType_Replay = 2;
+}
+
+enum GBPLOMJFIKN {
+  GBPLOMJFIKN_EPRI_RedEnvelope_State = 0;
+  GBPLOMJFIKN_EPRI_RedEnvelope_NB = 1;
+}
+
+enum GDEHAFJBPGE {
+  GDEHAFJBPGE_EAISkillPhase_Null = 0;
+  GDEHAFJBPGE_EAISkillPhase_RotateTo = 1;
+  GDEHAFJBPGE_EAISkillPhase_PreAttack = 2;
+  GDEHAFJBPGE_EAISkillPhase_Attack = 3;
+  GDEHAFJBPGE_EAISkillPhase_PostAttack = 4;
+}
+
+enum GDIDOFFDJNJ {
+  GDIDOFFDJNJ_EUGCModuleType_Unknown = 0;
+  GDIDOFFDJNJ_EUGCModuleType_RuleBlackboard = 1;
+  GDIDOFFDJNJ_EUGCModuleType_ConditionBlackboard = 2;
+  GDIDOFFDJNJ_EUGCModuleType_RoundBlackboard = 3;
+  GDIDOFFDJNJ_EUGCModuleType_FactionRound = 4;
+  GDIDOFFDJNJ_EUGCModuleType_ScoreBlackboard = 5;
+  GDIDOFFDJNJ_EUGCModuleType_SpawnPosMgr = 6;
+  GDIDOFFDJNJ_EUGCModuleType_RankBlackboard = 7;
+  GDIDOFFDJNJ_EUGCModuleType_HudStateMgr = 8;
+  GDIDOFFDJNJ_EUGCModuleType_SafeZone = 9;
+  GDIDOFFDJNJ_EUGCModuleType_GenerateSpawnPosMgr = 10;
+  GDIDOFFDJNJ_EUGCModuleType_PRIBlackboard = 11;
+  GDIDOFFDJNJ_EUGCModuleType_TriggerPriority = 12;
+  GDIDOFFDJNJ_EUGCModuleType_CheckPoint = 13;
+  GDIDOFFDJNJ_EUGCModuleType_Team = 14;
+}
+
+enum GINCLDDPFOJ {
+  GINCLDDPFOJ_EGuildWar_ALIVE_PLAYERCOUNT = 0;
+  GINCLDDPFOJ_EGuildWar_Phase = 1;
+  GINCLDDPFOJ_EGuildWar_Team1_Score = 2;
+  GINCLDDPFOJ_EGuildWar_Team2_Score = 3;
+  GINCLDDPFOJ_EGuildWar_Next_Generate_Time = 4;
+  GINCLDDPFOJ_EGuildWar_NB = 5;
+}
+
+enum GKHIPJFCCNI {
+  GKHIPJFCCNI_EUGCVariableType_Unknown = 0;
+  GKHIPJFCCNI_EUGCVariableType_MatchGameTimeMs = 1;
+  GKHIPJFCCNI_EUGCVariableType_PhaseEndTime = 2;
+  GKHIPJFCCNI_EUGCVariableType_ATeamIndex = 3;
+  GKHIPJFCCNI_EUGCVariableType_BTeamIndex = 4;
+  GKHIPJFCCNI_EUGCVariableType_AllTeams = 5;
+  GKHIPJFCCNI_EUGCVariableType_AllSurvivalTeamIndex = 6;
+  GKHIPJFCCNI_EUGCVariableType_MatchCurPhaseIndex = 7;
+  GKHIPJFCCNI_EUGCVariableType_MatchLastWinTeamIndex = 8;
+  GKHIPJFCCNI_EUGCVariableType_MatchLastWinReason = 9;
+  GKHIPJFCCNI_EUGCVariableType_AllPlayers = 10;
+  GKHIPJFCCNI_EUGCVariableType_MatchCurRoundIndex = 11;
+  GKHIPJFCCNI_EUGCVariableType_TeamPlayers = 12;
+  GKHIPJFCCNI_EUGCVariableType_LevelObjects = 13;
+  GKHIPJFCCNI_EUGCVariableType_IsInvalidMatch = 14;
+  GKHIPJFCCNI_EUGCVariableType_PhaseStartTime = 15;
+  GKHIPJFCCNI_EUGCVariableType_GetMapCenterPos = 16;
+  GKHIPJFCCNI_EUGCVariableType_ArrayLength = 1001;
+  GKHIPJFCCNI_EUGCVariableType_GetArrayElementByIndex = 1002;
+  GKHIPJFCCNI_EUGCVariableType_Compare = 1003;
+  GKHIPJFCCNI_EUGCVariableType_Arithmetic = 1004;
+  GKHIPJFCCNI_EUGCVariableType_EventParamByIndex = 2001;
+  GKHIPJFCCNI_EUGCVariableType_MechanismBoolParam = 2002;
+  GKHIPJFCCNI_EUGCVariableType_MechanismIntParam = 2003;
+  GKHIPJFCCNI_EUGCVariableType_MechanismFloatParam = 2004;
+  GKHIPJFCCNI_EUGCVariableType_GRIParamByIndex = 2005;
+  GKHIPJFCCNI_EUGCVariableType_GRIParamByName = 2006;
+  GKHIPJFCCNI_EUGCVariableType_ConstBool = 2007;
+  GKHIPJFCCNI_EUGCVariableType_ConstInt = 2008;
+  GKHIPJFCCNI_EUGCVariableType_ConstFloat = 2009;
+  GKHIPJFCCNI_EUGCVariableType_ConstString = 2010;
+  GKHIPJFCCNI_EUGCVariableType_ConstVector3 = 2011;
+  GKHIPJFCCNI_EUGCVariableType_Iterator = 2050;
+  GKHIPJFCCNI_EUGCVariableType_SpawnPosByID = 3001;
+  GKHIPJFCCNI_EUGCVariableType_SpawnPosByRandomID = 3002;
+  GKHIPJFCCNI_EUGCVariableType_EntityPRIByName = 3003;
+  GKHIPJFCCNI_EUGCVariableType_IsCanTriggerEnterActionByPriority = 3004;
+  GKHIPJFCCNI_EUGCVariableType_IsCheckPointCanTrigger = 3005;
+  GKHIPJFCCNI_EUGCVariableType_IsCheckPointAllFinished = 3006;
+  GKHIPJFCCNI_EUGCVariableType_FilterPlayers = 20001;
+  GKHIPJFCCNI_EUGCVariableType_PlayerPRIByIndex = 20004;
+  GKHIPJFCCNI_EUGCVariableType_PlayerHostTeam = 20005;
+  GKHIPJFCCNI_EUGCVariableType_PlayerCheckPointID = 20006;
+  GKHIPJFCCNI_EUGCVariableType_GetPlayerBornPos = 20007;
+  GKHIPJFCCNI_EUGCVariableType_GetCheckPointPos = 20008;
+  GKHIPJFCCNI_EUGCVariableType_GetTeamateNearPos = 20009;
+  GKHIPJFCCNI_EUGCVariableType_GetTeamByTeamIndex = 40002;
+  GKHIPJFCCNI_EUGCVariableType_GetTeamByTeamEntityID = 40003;
+  GKHIPJFCCNI_EUGCVariableType_TeamPRIByIndex = 40004;
+  GKHIPJFCCNI_EUGCVariableType_TeamScore = 40005;
+}
+
+enum GLGIEANPOKB {
+  GLGIEANPOKB_UNSPECIFIED = 0;
+  GLGIEANPOKB_EGameLevelFinishType_Custom = 1;
+  GLGIEANPOKB_EGameLevelFinishType_Trigger = 2;
+  GLGIEANPOKB_EGameLevelFinishType_NoEnterKillZone = 3;
+  GLGIEANPOKB_EGameLevelFinishType_HappyFriday = 4;
+  GLGIEANPOKB_EGameLevelFinishType_Score = 5;
+}
+
+enum GMDAGDBDGGG {
+  GMDAGDBDGGG_EReaperMatchPhase_Pregame = 0;
+  GMDAGDBDGGG_EReaperMatchPhase_Fight = 1;
+}
+
+enum GPBIKBKCCKI {
+  GPBIKBKCCKI_EUGCPRIEntityType_Unknown = 0;
+  GPBIKBKCCKI_EUGCPRIEntityType_Player = 1;
+  GPBIKBKCCKI_EUGCPRIEntityType_Team = 2;
+}
+
+enum HAHGILHEOFD {
+  HAHGILHEOFD_ESceneEditItemType_Normal = 0;
+  HAHGILHEOFD_ESceneEditItemType_DestructibleObj = 1;
+  HAHGILHEOFD_ESceneEditItemType_SpawnPoint = 2;
+  HAHGILHEOFD_ESceneEditItemType_BounceTire = 3;
+  HAHGILHEOFD_ESceneEditItemType_Vehicle = 4;
+  HAHGILHEOFD_ESceneEditItemType_TeleportDoor = 5;
+  HAHGILHEOFD_ESceneEditItemType_MusicElement = 6;
+  HAHGILHEOFD_ESceneEditItemType_BuffGen = 7;
+  HAHGILHEOFD_ESceneEditItemType_ScalableItem = 8;
+  HAHGILHEOFD_ESceneEditItemType_NoTeamIndexSpawnPoint = 9;
+  HAHGILHEOFD_ESceneEditItemType_MoveObject = 10;
+  HAHGILHEOFD_ESceneEditItemType_ItemBox = 11;
+  HAHGILHEOFD_ESceneEditItemType_Trigger = 12;
+  HAHGILHEOFD_ESceneEditItemType_CheckPoint = 13;
+  HAHGILHEOFD_ESceneEditItemType_ArrivalEndPoint = 14;
+}
+
+enum HCMGLNKPNIN {
+  HCMGLNKPNIN_EAddAmmoReason_None = 0;
+  HCMGLNKPNIN_EAddAmmoReason_SwatGuySkill = 1;
+}
+
+enum HEDIKCDGNEE {
+  HEDIKCDGNEE_EUGCGRI_UNKNOWN = 0;
+  HEDIKCDGNEE_EUGCGRI_PROCESS_ENTITY_NUM = 1;
+  HEDIKCDGNEE_EUGCGRI_MAX_PROCESS_ENTITY_NUM = 2;
+  HEDIKCDGNEE_EUGCGRI_MAX_PLAYER_NUM = 3;
+  HEDIKCDGNEE_EUGCGRI_MAX_ROUND_NUM = 4;
+  HEDIKCDGNEE_EUGCGRI_CURRENT_ROUND_INDEX = 5;
+  HEDIKCDGNEE_EUGCGRI_CURRENT_PHASE_INDEX = 6;
+  HEDIKCDGNEE_EUGCGRI_MATCH_IS_CAN_MOVE = 7;
+  HEDIKCDGNEE_EUGCGRI_RANK1_TEAMINDEX = 8;
+  HEDIKCDGNEE_EUGCGRI_ROUNDRANK1_TEAMINDEX = 9;
+  HEDIKCDGNEE_EUGCGRI_NB = 10;
+}
+
+enum HEPAJPDNOOK {
+  HEPAJPDNOOK_EPRI_EscorBoss_Upper_HP = 0;
+  HEPAJPDNOOK_EPRI_EscorBoss_Lower_HP = 1;
+  HEPAJPDNOOK_EPRI_EscorBoss_State_Index = 2;
+  HEPAJPDNOOK_EPRI_EscorBoss_Repairing_Count = 3;
+  HEPAJPDNOOK_EPRI_EscorBoss_NB = 4;
+}
+
+enum HFMEHNDOKCA {
+  HFMEHNDOKCA_EPlayerBestStats_Kill = 0;
+  HFMEHNDOKCA_EPlayerBestStats_Damage = 1;
+  HFMEHNDOKCA_EPlayerBestStats_GrenadeCnt = 2;
+  HFMEHNDOKCA_EPlayerBestStats_IceWallCnt = 3;
+  HFMEHNDOKCA_EPlayerBestStats_AvgSurvival = 4;
+  HFMEHNDOKCA_EPlayerBestStats_HeadShot = 5;
+  HFMEHNDOKCA_EPlayerBestStats_HelpTeammates = 6;
+  HFMEHNDOKCA_EPlayerBestStats_HeadshotRate = 7;
+}
+
+enum HHDIPHFOBFO {
+  HHDIPHFOBFO_EGROUPMODE_SOLO = 0;
+  HHDIPHFOBFO_EGROUPMODE_DUAL = 1;
+  HHDIPHFOBFO_EGROUPMODE_TRIPLE = 2;
+  HHDIPHFOBFO_EGROUPMODE_QUAD = 3;
+  HHDIPHFOBFO_EGROUPMODE_PENTA = 4;
+  HHDIPHFOBFO_EGROUPMODE_HEXA = 5;
+  HHDIPHFOBFO_EGROUPMODE_8 = 7;
+  HHDIPHFOBFO_EGROUPMODE_12 = 11;
+}
+
+enum HHKIHCHHIHH {
+  HHKIHCHHIHH_EControlMatchPhase_Waiting = 0;
+  HHKIHCHHIHH_EControlMatchPhase_Prepare = 1;
+  HHKIHCHHIHH_EControlMatchPhase_Fight = 2;
+  HHKIHCHHIHH_EControlMatchPhase_Overtime = 3;
+  HHKIHCHHIHH_EControlMatchPhase_Post = 4;
+}
+
+enum HICMEGJFGHB {
+  HICMEGJFGHB_EITEM_TYPE_MEDKIT = 0;
+  HICMEGJFGHB_EITEM_TYPE_GRENADE = 1;
+  HICMEGJFGHB_EITEM_TYPE_GRENADE_FLASH = 2;
+  HICMEGJFGHB_EITEM_TYPE_GRENADE_SMOKINGBOMB = 3;
+  HICMEGJFGHB_EITEM_TYPE_LOADOUT_CAREPACKAGE = 4;
+  HICMEGJFGHB_EITEM_TYPE_LOADOUT_CAMPFIRE = 5;
+  HICMEGJFGHB_EITEM_TYPE_LOADOUT_TREASUREMAP = 6;
+  HICMEGJFGHB_EITEM_TYPE_BUILDING = 7;
+  HICMEGJFGHB_EITEM_TYPE_LANDMINE = 8;
+  HICMEGJFGHB_EITEM_TYPE_BOUNTY_SCANNER = 9;
+  HICMEGJFGHB_EITEM_TYPE_LOADOUT_BOUNTYCONTRACT = 10;
+  HICMEGJFGHB_EITEM_TYPE_MINISENTRY = 11;
+  HICMEGJFGHB_EITEM_TYPE_PAINTSPRAYER = 12;
+  HICMEGJFGHB_EITEM_TYPE_DUMMY = 13;
+  HICMEGJFGHB_EITEM_TYPE_BOMBMODE_PLIERS = 14;
+  HICMEGJFGHB_EITEM_TYPE_FIREWORKS = 15;
+  HICMEGJFGHB_EITEM_TYPE_ALL = 16;
+}
+
+enum HJAMKPJEKND {
+  HJAMKPJEKND_EDGGMatchPhase_Prepare = 0;
+  HJAMKPJEKND_EDGGMatchPhase_Fight = 1;
+}
+
+enum HJNDCIILHNJ {
+  HJNDCIILHNJ_EGetInCannonResult_OK = 0;
+  HJNDCIILHNJ_EGetInCannonResult_StateInvalid = 1;
+  HJNDCIILHNJ_EGetInCannonResult_NoCannonFound = 2;
+  HJNDCIILHNJ_EGetInCannonResult_OutOfRange = 3;
+  HJNDCIILHNJ_EGetInCannonResult_NotCannon = 4;
+  HJNDCIILHNJ_EGetInCannonResult_Unavailable = 5;
+  HJNDCIILHNJ_EGetInCannonResult_VehicleInside = 6;
+}
+
+enum HKOLNPFAPBF {
+  HKOLNPFAPBF_EPetRacingMiniMatchPhase_Waiting = 0;
+  HKOLNPFAPBF_EPetRacingMiniMatchPhase_Prepare = 1;
+  HKOLNPFAPBF_EPetRacingMiniMatchPhase_Racing = 2;
+  HKOLNPFAPBF_EPetRacingMiniMatchPhase_Post = 3;
+}
+
+enum HNKGGNNJAEA {
+  HNKGGNNJAEA_ECSMatchPhase_Waiting = 0;
+  HNKGGNNJAEA_ECSMatchPhase_Prepare = 1;
+  HNKGGNNJAEA_ECSMatchPhase_Fight = 2;
+  HNKGGNNJAEA_ECSMatchPhase_Post = 3;
+  HNKGGNNJAEA_ECSMatchPhase_Cutscene = 4;
+  HNKGGNNJAEA_ECSMatchPhase_Introduction = 5;
+}
+
+enum HNLNFDIECBD {
+  HNLNFDIECBD_UNSPECIFIED = 0;
+  HNLNFDIECBD_ETakeTurnsShopState_Choose = 1;
+  HNLNFDIECBD_ETakeTurnsShopState_Keep = 2;
+  HNLNFDIECBD_ETakeTurnsShopState_Final = 3;
+}
+
+enum IAJPAFDOPII {
+  IAJPAFDOPII_ESkillSyncStatus_StartCasting = 0;
+  IAJPAFDOPII_ESkillSyncStatus_StartEffecting = 1;
+  IAJPAFDOPII_ESkillSyncStatus_StopEffecting = 2;
+  IAJPAFDOPII_ESkillSyncStatus_BanActiveSkill = 3;
+  IAJPAFDOPII_ESkillSyncStatus_RefreshCoolDown = 4;
+}
+
+enum IANLBOJBCIO {
+  IANLBOJBCIO_UNSPECIFIED = 0;
+  IANLBOJBCIO_WereWolvesParamType_PlayerCount = 1;
+  IANLBOJBCIO_WereWolvesParamType_WolfCount = 2;
+  IANLBOJBCIO_WereWolvesParamType_GameTime = 3;
+  IANLBOJBCIO_WereWolvesParamType_HumanTaskCount = 4;
+  IANLBOJBCIO_WereWolvesParamType_WolfKillCD = 5;
+  IANLBOJBCIO_WereWolvesParamType_WolfTaskCD = 6;
+  IANLBOJBCIO_WereWolvesParamType_WolfTaskDuration = 7;
+  IANLBOJBCIO_WereWolvesParamType_VoteCenterCD = 8;
+  IANLBOJBCIO_WereWolvesParamType_TrapEnable = 9;
+  IANLBOJBCIO_WereWolvesParamType_PredictEnable = 10;
+  IANLBOJBCIO_WereWolvesParamType_Max = 11;
+}
+
+enum IFAGEPEEJBJ {
+  IFAGEPEEJBJ_EGiantMatchPhase_Waiting = 0;
+  IFAGEPEEJBJ_EGiantMatchPhase_Prepare = 1;
+  IFAGEPEEJBJ_EGiantMatchPhase_Regular = 2;
+  IFAGEPEEJBJ_EGiantMatchPhase_Overtime = 3;
+  IFAGEPEEJBJ_EGiantMatchPhase_Post = 4;
+}
+
+enum IFEIEMDBBJG {
+  IFEIEMDBBJG_EGameMissionError_Unknow = 0;
+  IFEIEMDBBJG_EGameMissionError_CantBuild = 1;
+  IFEIEMDBBJG_EGameMissionError_CantParallel = 2;
+  IFEIEMDBBJG_EGameMissionError_NoTarget = 3;
+}
+
+enum IHDGEDLCEHF {
+  IHDGEDLCEHF_LudoPlayerState_Normal = 0;
+  IHDGEDLCEHF_LudoPlayerState_Trust = 1;
+  IHDGEDLCEHF_LudoPlayerState_Offline = 2;
+  IHDGEDLCEHF_LudoPlayerState_Quit = 3;
+}
+
+enum IHNHKCOIDJK {
+  IHNHKCOIDJK_UNSPECIFIED = 0;
+  IHNHKCOIDJK_ELudoGRI_PhaseAndPhaseEndTime = 1;
+  IHNHKCOIDJK_ELudoGRI_NB = 2;
+}
+
+enum IKFOMLELBPG {
+  IKFOMLELBPG_ECoinBonusType_Init = 0;
+  IKFOMLELBPG_ECoinBonusType_Kill = 1;
+  IKFOMLELBPG_ECoinBonusType_Win = 2;
+  IKFOMLELBPG_ECoinBonusType_Lose = 3;
+  IKFOMLELBPG_ECoinBonusType_LoseStreak_2 = 4;
+  IKFOMLELBPG_ECoinBonusType_LoseStreak_3 = 5;
+  IKFOMLELBPG_ECoinBonusType_Purchase = 6;
+  IKFOMLELBPG_ECoinBonusType_KillBonusWithNamedWeapon = 7;
+  IKFOMLELBPG_ECoinBonusType_FirstBlood = 8;
+  IKFOMLELBPG_ECoinBonusType_Giant_Attack = 9;
+  IKFOMLELBPG_ECoinBonusType_Giant_Defence = 10;
+  IKFOMLELBPG_ECoinBonusType_Giant_KnowDown = 11;
+  IKFOMLELBPG_ECoinBonusType_DeadInSafeZonePenalty = 12;
+  IKFOMLELBPG_ECoinBonusType_ExplodeBomb = 13;
+  IKFOMLELBPG_ECoinBonusType_RemoveBomb = 14;
+  IKFOMLELBPG_ECoinBonusType_InvBonusCoin = 15;
+}
+
+enum IMMHELFPOIC {
+  IMMHELFPOIC_ERequestReviveType_Free = 0;
+  IMMHELFPOIC_ERequestReviveType_Diamond = 1;
+  IMMHELFPOIC_ERequestReviveType_Token = 2;
+  IMMHELFPOIC_ERequestReviveType_Point = 3;
+}
+
+enum INNIMLNIOIA {
+  INNIMLNIOIA_EPLAYER_STATUS_ONLINE = 0;
+  INNIMLNIOIA_EPLAYER_STATUS_OFFLINE = 1;
+  INNIMLNIOIA_EPLAYER_STATUS_DISCONNECTED = 2;
+}
+
+enum IOKFKBMDJMA {
+  IOKFKBMDJMA_EPRI_Tower_State = 0;
+  IOKFKBMDJMA_EPRI_Tower_ActiveEndTime = 1;
+  IOKFKBMDJMA_EPRI_Tower_ShieldOpen = 2;
+  IOKFKBMDJMA_EPRI_Tower_NB = 3;
+}
+
+enum JADJBFDFEHA {
+  JADJBFDFEHA_EAttackableType_None = 0;
+  JADJBFDFEHA_EAttackableType_Vehicle = 1;
+  JADJBFDFEHA_EAttackableType_Zombie = 2;
+}
+
+enum JAOADEMOBHH {
+  JAOADEMOBHH_UNSPECIFIED = 0;
+  JAOADEMOBHH_EInGameShopBuy_OK = 1;
+  JAOADEMOBHH_EInGameShopBuy_TokenLack = 2;
+  JAOADEMOBHH_EInGameShopBuy_CapacityLack = 3;
+  JAOADEMOBHH_EInGameShopBuy_Limitation = 4;
+  JAOADEMOBHH_EInGameShopBuy_Unknown = 5;
+  JAOADEMOBHH_EInGameShopBuy_NoItemSelected = 6;
+  JAOADEMOBHH_EInGameShopBuy_OutOfRange = 7;
+  JAOADEMOBHH_EInGameShopBuy_ReviveCard = 8;
+  JAOADEMOBHH_EInGameShopBuy_GameMissionCantBuild = 9;
+  JAOADEMOBHH_EInGameShopBuy_GameMissionCantParallel = 10;
+  JAOADEMOBHH_EInGameShopBuy_GameMissionNoTarget = 11;
+}
+
+enum JBAIBAGPHGM {
+  JBAIBAGPHGM_ECSStrikeOutMiniGamePhase_Introduction = 0;
+  JBAIBAGPHGM_ECSStrikeOutMiniGamePhase_Prepare = 1;
+  JBAIBAGPHGM_ECSStrikeOutMiniGamePhase_Fight = 2;
+  JBAIBAGPHGM_ECSStrikeOutMiniGamePhase_Post = 3;
+  JBAIBAGPHGM_ECSStrikeOutMiniGamePhase_Waiting = 4;
+}
+
+enum JCBFLBIIDCJ {
+  JCBFLBIIDCJ_ELevelFlowPhase_MatchPregame = 0;
+  JCBFLBIIDCJ_ELevelFlowPhase_LevelWaiting = 1;
+  JCBFLBIIDCJ_ELevelFlowPhase_LevelRunning = 2;
+  JCBFLBIIDCJ_ELevelFlowPhase_LevelEndShow = 3;
+  JCBFLBIIDCJ_ELevelFlowPhase_LevelSwitching = 4;
+  JCBFLBIIDCJ_ELevelFlowPhase_MatchEnd = 5;
+}
+
+enum JEAGJCOAEAH {
+  JEAGJCOAEAH_EMatchEndType_None = 0;
+  JEAGJCOAEAH_EMatchEndType_PVEWin = 1;
+  JEAGJCOAEAH_EMatchEndType_PlayerDead = 2;
+  JEAGJCOAEAH_EMatchEndType_TimeOut = 3;
+  JEAGJCOAEAH_EMatchEndType_CSSOTeamEliminate = 4;
+}
+
+enum JFDAPOOOPIO {
+  JFDAPOOOPIO_ECUSTOMROOM_TYPE_NONE = 0;
+  JFDAPOOOPIO_ECUSTOMROOM_TYPE_CASUAL = 1;
+  JFDAPOOOPIO_ECUSTOMROOM_TYPE_LEAGUE_NORMAL = 2;
+  JFDAPOOOPIO_ECUSTOMROOM_TYPE_BATCH = 6;
+  JFDAPOOOPIO_ECUSTOMROOM_TYPE_WORKSHOP = 8;
+}
+
+enum JHJBBBKHOJE {
+  JHJBBBKHOJE_EGameMissionType_None = 0;
+  JHJBBBKHOJE_EGameMissionType_Wanted = 1;
+  JHJBBBKHOJE_EGameMissionType_Defender = 2;
+  JHJBBBKHOJE_EGameMissionType_Supply = 3;
+}
+
+enum JIOCDGMJLLL {
+  JIOCDGMJLLL_EPRI_AI_CUR_HP = 0;
+  JIOCDGMJLLL_EPRI_AI_MAX_HP = 1;
+  JIOCDGMJLLL_EPRI_AI_TRANSFORMLEVEL = 2;
+  JIOCDGMJLLL_EPRI_AI_SHIELD_STATUS = 3;
+  JIOCDGMJLLL_EPRI_AI_SHIELD_CUR_HP = 4;
+  JIOCDGMJLLL_EPRI_AI_STATE_INDEX = 5;
+  JIOCDGMJLLL_EPRI_AI_NB = 6;
+}
+
+enum JLJPMNODJGA {
+  JLJPMNODJGA_EPRI_BountyTeleportMachine_Broken = 0;
+  JLJPMNODJGA_EPRI_BountyTeleportMachine_Repairing = 1;
+  JLJPMNODJGA_EPRI_BountyTeleportMachine_Enable = 2;
+}
+
+enum JNPHKFCINNM {
+  JNPHKFCINNM_EPRI_WeaponBox_State = 0;
+  JNPHKFCINNM_EPRI_WeaponBox_NB = 1;
+}
+
+enum JOBLHFHJHJA {
+  JOBLHFHJHJA_EUGCActionType_Unknown = 0;
+  JOBLHFHJHJA_EUGCActionType_MatchSwitch2Phase = 1;
+  JOBLHFHJHJA_EUGCActionType_SetGRIParamByIndex = 2;
+  JOBLHFHJHJA_EUGCActionType_SetGRIParamByName = 3;
+  JOBLHFHJHJA_EUGCActionType_ChangeHudState = 4;
+  JOBLHFHJHJA_EUGCActionType_SetMatchCanMove = 5;
+  JOBLHFHJHJA_EUGCActionType_DelLevelObject = 6;
+  JOBLHFHJHJA_EUGCActionType_AddLevelObject = 7;
+  JOBLHFHJHJA_EUGCActionType_EnableUGCSpawnFence = 8;
+  JOBLHFHJHJA_EUGCActionType_SetPRIParamByIndex = 9;
+  JOBLHFHJHJA_EUGCActionType_SetPRIParamByName = 10;
+  JOBLHFHJHJA_EUGCActionType_GenerateRoundResult = 11;
+  JOBLHFHJHJA_EUGCActionType_OpenSafeZone = 12;
+  JOBLHFHJHJA_EUGCActionType_CloseSafeZone = 13;
+  JOBLHFHJHJA_EUGCActionType_ShrinkSafeZone = 14;
+  JOBLHFHJHJA_EUGCActionType_PlayerAddScore = 20001;
+  JOBLHFHJHJA_EUGCActionType_PlayerTeleport = 20002;
+  JOBLHFHJHJA_EUGCActionType_PlayerSetScore = 20003;
+  JOBLHFHJHJA_EUGCActionType_PlayerChangeHudState = 20004;
+  JOBLHFHJHJA_EUGCActionType_PlayerChangeGodState = 20005;
+  JOBLHFHJHJA_EUGCActionType_PlayerEnterKillZone = 20006;
+  JOBLHFHJHJA_EUGCActionType_PlayerUpdateAndCheckTriggerPriorityModule = 20007;
+  JOBLHFHJHJA_EUGCActionType_PlayerUpdateCheckPointModule = 20008;
+  JOBLHFHJHJA_EUGCActionType_SetRevivePosition = 20009;
+  JOBLHFHJHJA_EUGCActionType_BeginPendingRevive = 20010;
+  JOBLHFHJHJA_EUGCActionType_MsgNotify = 20011;
+  JOBLHFHJHJA_EUGCActionType_TeamAddScore = 40001;
+  JOBLHFHJHJA_EUGCActionType_TeamSetScore = 40002;
+  JOBLHFHJHJA_EUGCActionType_TeamScoreSync = 40003;
+  JOBLHFHJHJA_EUGCActionType_TeamRank1ToWin = 40004;
+}
+
+enum JOFKEEABHJJ {
+  JOFKEEABHJJ_EPVERuleTip_BossSpawn = 0;
+  JOFKEEABHJJ_EPVERuleTipBossSkill = 1;
+}
+
+enum JOIEAINLEBN {
+  JOIEAINLEBN_EServerMiniGamePhase_Waiting = 0;
+  JOIEAINLEBN_EServerMiniGamePhase_Prepare = 1;
+  JOIEAINLEBN_EServerMiniGamePhase_Fight = 2;
+  JOIEAINLEBN_EServerMiniGamePhase_Post = 3;
+}
+
+enum JOKABEAPNPP {
+  JOKABEAPNPP_EGAMEMODE_NONE = 0;
+  JOKABEAPNPP_EGAMEMODE_BattleRoyale = 1;
+  JOKABEAPNPP_EGAMEMODE_SpeedRoyale = 2;
+  JOKABEAPNPP_EGAMEMODE_FateRoyale = 3;
+  JOKABEAPNPP_EGAMEMODE_SpeedRoyale_Zombie = 4;
+  JOKABEAPNPP_EGAMEMODE_BattleRoyale_Zombie = 7;
+  JOKABEAPNPP_EGAMEMODE_Casual_JanKenPon = 9;
+  JOKABEAPNPP_EGAMEMODE_WinnerTakeAll = 11;
+  JOKABEAPNPP_EGAMEMODE_Purge = 12;
+  JOKABEAPNPP_EGAMEMODE_Reborn = 13;
+  JOKABEAPNPP_EGAMEMODE_HookBrick = 14;
+  JOKABEAPNPP_EGAMEMODE_CS = 15;
+  JOKABEAPNPP_EGAMEMODE_BigHead = 16;
+  JOKABEAPNPP_EGAMEMODE_SprayandPray = 17;
+  JOKABEAPNPP_EGAMEMODE_Explosivejump = 18;
+  JOKABEAPNPP_EGAMEMODE_Nighthunter = 19;
+  JOKABEAPNPP_EGAMEMODE_Sharpshooter = 20;
+  JOKABEAPNPP_EGAMEMODE_DGG = 21;
+  JOKABEAPNPP_EGAMEMODE_TK = 22;
+  JOKABEAPNPP_EGAMEMODE_TRAINNING = 23;
+  JOKABEAPNPP_EGAMEMODE_TDM = 24;
+  JOKABEAPNPP_EGAMEMODE_SnowMan = 25;
+  JOKABEAPNPP_EGAMEMODE_ArmsRace = 26;
+  JOKABEAPNPP_EGAMEMODE_Bomb = 27;
+  JOKABEAPNPP_EGAMEMODE_Token = 28;
+  JOKABEAPNPP_EGAMEMODE_Giant = 29;
+  JOKABEAPNPP_EGAMEMODE_Reaper = 30;
+  JOKABEAPNPP_EGAMEMODE_AttackOnHead = 31;
+  JOKABEAPNPP_EGAMEMODE_Control = 32;
+  JOKABEAPNPP_EGAMEMODE_Banknote = 33;
+  JOKABEAPNPP_EGAMEMODE_TeamArmsRace = 34;
+  JOKABEAPNPP_EGAMEMODE_ADSpace = 35;
+  JOKABEAPNPP_EGAMEMODE_CSStrikeOut = 36;
+  JOKABEAPNPP_EGAMEMODE_Werewolves = 37;
+  JOKABEAPNPP_EGAMEMODE_Party = 38;
+  JOKABEAPNPP_EGAMEMODE_FourSymbols = 39;
+  JOKABEAPNPP_EGAMEMODE_TutorialBR = 40;
+  JOKABEAPNPP_EGAMEMODE_TutorialCS = 41;
+  JOKABEAPNPP_EGAMEMODE_GuildWar = 42;
+  JOKABEAPNPP_EGAMEMODE_FightClub = 43;
+  JOKABEAPNPP_EGAMEMODE_RushingPets = 44;
+  JOKABEAPNPP_EGAMEMODE_UGCParty = 45;
+  JOKABEAPNPP_EGAMEMODE_UGC = 46;
+  JOKABEAPNPP_EGAMEMODE_DMM = 47;
+  JOKABEAPNPP_EGAMEMODE_FateRoyale_CombineWeapon = 48;
+  JOKABEAPNPP_EGAMEMODE_LWSO_1V1 = 49;
+  JOKABEAPNPP_EGAMEMODE_Ludo = 50;
+  JOKABEAPNPP_EGAMEMODE_HappyFriday = 51;
+  JOKABEAPNPP_EGAMEMODE_HardCoreCS = 52;
+  JOKABEAPNPP_EGAMEMODE_UGCCommon = 53;
+  JOKABEAPNPP_EGAMEMODE_UGCCommon_Dev1 = 54;
+  JOKABEAPNPP_EGAMEMODE_PVE_HYAKKI = 101;
+  JOKABEAPNPP_EGAMEMODE_SVZombie = 102;
+  JOKABEAPNPP_EGAMEMODE_FateRoyale_Fast = 201;
+}
+
+enum JOKMLPIJFHB {
+  JOKMLPIJFHB_UNSPECIFIED = 0;
+  JOKMLPIJFHB_ERushingPetGRI_PhaseAndPhaseEndTime = 1;
+  JOKMLPIJFHB_ERushingPetGRI_RoundIDAndType = 2;
+  JOKMLPIJFHB_ERushingPetGRI_RoundPlayerCount = 3;
+  JOKMLPIJFHB_ERushingPetGRI_NB = 4;
+}
+
+enum JPAAPJEEFCE {
+  JPAAPJEEFCE_EPRI_BountyTeleportMachine_State = 0;
+  JPAAPJEEFCE_EPRI_BountyTeleportMachine_CanUse = 1;
+  JPAAPJEEFCE_EPRI_BountyTeleportMachine_NB = 2;
+}
+
+enum KBJIDDDPPOO {
+  KBJIDDDPPOO_EActSkillBase = 0;
+  KBJIDDDPPOO_EActSkillEndTransform = 1;
+  KBJIDDDPPOO_EActSkillDash = 2;
+  KBJIDDDPPOO_EActSkillComboMeleeAttack = 3;
+  KBJIDDDPPOO_EActSkillEnterTransform = 4;
+}
+
+enum KCGNBBEDPJE {
+  KCGNBBEDPJE_EUGCMatchWinReason_Unknown = 0;
+  KCGNBBEDPJE_EUGCMatchWinReason_Rank1 = 1;
+}
+
+enum KECHHLGGOOF {
+  KECHHLGGOOF_EPVERoundNotifyType_RoundStart = 0;
+  KECHHLGGOOF_EPVERoundNotifyType_RoundEnd = 1;
+  KECHHLGGOOF_EPVERoundNotifyType_RoundRefreshArmorTool = 2;
+  KECHHLGGOOF_EPVERoundNotifyType_MatchNoTimeWarning = 3;
+}
+
+enum KEPFEAIMGAE {
+  KEPFEAIMGAE_EBombMatchWinReason_BOMBNoSettleAttackACE = 0;
+  KEPFEAIMGAE_EBombMatchWinReason_BOMBNoSettleDefenseACE = 1;
+  KEPFEAIMGAE_EBombMatchWinReason_BOMBSettledDefenseACE = 2;
+  KEPFEAIMGAE_EBombMatchWinReason_BombExplode = 3;
+  KEPFEAIMGAE_EBombMatchWinReason_BombRemvoe = 4;
+  KEPFEAIMGAE_EBombMatchWinReason_BombNoSettle = 5;
+}
+
+enum KFBAPGKALIC {
+  KFBAPGKALIC_UNSPECIFIED = 0;
+  KFBAPGKALIC_ECSStrikeOutGRI_TEAMSHP = 1;
+  KFBAPGKALIC_ECSStrikeOutGRI_CURRENT_ROUND = 2;
+  KFBAPGKALIC_ECSStrikeOutGRI_LASTROUNDRANKLIST = 3;
+  KFBAPGKALIC_ECSStrikeOutGRI_RANKLIST = 4;
+  KFBAPGKALIC_ECSStrikeOutGRI_CURRENT_PHASE = 5;
+  KFBAPGKALIC_ECSStrikeOutGRI_NB = 6;
+}
+
+enum KFFPBFNDECE {
+  KFFPBFNDECE_ESceneEditBuffType_Random = 0;
+  KFFPBFNDECE_ESceneEditBuffType_HP = 1;
+  KFFPBFNDECE_ESceneEditBuffType_Ammo = 2;
+  KFFPBFNDECE_ESceneEditBuffType_Armer = 3;
+}
+
+enum KHFJMPKKPIO {
+  KHFJMPKKPIO_EADSGRI_ALIVE_PLAYERCOUNT = 0;
+  KHFJMPKKPIO_EADSGRI_1V1RoundFinished = 1;
+  KHFJMPKKPIO_EADSGRI_Phase = 2;
+  KHFJMPKKPIO_EADSGRI_Team1_Score = 3;
+  KHFJMPKKPIO_EADSGRI_Team2_Score = 4;
+  KHFJMPKKPIO_EADSGRI_Bonus_TeamIndex = 5;
+  KHFJMPKKPIO_EADSGRI_Team1_1V1PID = 6;
+  KHFJMPKKPIO_EADSGRI_Team2_1V1PID = 7;
+  KHFJMPKKPIO_EADSGRI_NormalFightStartTime = 8;
+  KHFJMPKKPIO_EADSGRI_NB = 9;
+}
+
+enum KLEHHINDFNA {
+  KLEHHINDFNA_EUGCWorkflowSequenceItemType_Phase = 0;
+  KLEHHINDFNA_EUGCWorkflowSequenceItemType_Round = 1;
+}
+
+enum KMHNOECAAAN {
+  KMHNOECAAAN_UNSPECIFIED = 0;
+  KMHNOECAAAN_EWAITINGGAME_FLIGHTROAM_PLAYERCOUNT = 1;
+  KMHNOECAAAN_EWAITINGGAMEGRI_NB = 2;
+}
+
+enum KNHFNOOPKEA {
+  KNHFNOOPKEA_EPRI_LevelEmote_Used = 0;
+  KNHFNOOPKEA_EPRI_LevelEmote_NB = 1;
+}
+
+enum KODPEAGCIAL {
+  KODPEAGCIAL_EFightClubMatchPhase_Waiting = 0;
+  KODPEAGCIAL_EFightClubMatchPhase_Prepare = 1;
+  KODPEAGCIAL_EFightClubMatchPhase_TakeTurnsShop = 2;
+  KODPEAGCIAL_EFightClubMatchPhase_CheckEquipment = 3;
+  KODPEAGCIAL_EFightClubMatchPhase_Fight = 4;
+  KODPEAGCIAL_EFightClubMatchPhase_Post = 5;
+  KODPEAGCIAL_EFightClubMatchPhase_Cutscene = 6;
+  KODPEAGCIAL_EFightClubMatchPhase_Introduction = 7;
+}
+
+enum KOHHLHKLOAO {
+  KOHHLHKLOAO_EZeppelinState_None = 0;
+  KOHHLHKLOAO_EZeppelinState_Moving = 1;
+  KOHHLHKLOAO_EZeppelinState_Down = 2;
+  KOHHLHKLOAO_EZeppelinState_Stable = 3;
+  KOHHLHKLOAO_EZeppelinState_Up = 4;
+}
+
+enum KPCKLGPOAOD {
+  KPCKLGPOAOD_EAIShieldStatus_Normal = 0;
+  KPCKLGPOAOD_EAIShieldStatus_Life = 1;
+  KPCKLGPOAOD_EAIShieldStatus_Gone = 2;
+}
+
+enum KPECBHBGKBF {
+  KPECBHBGKBF_ECSPurchaseRet_OK = 0;
+  KPECBHBGKBF_ECSPurchaseRet_NotValidItem = 1;
+  KPECBHBGKBF_ECSPurchaseRet_NotEnoughCoin = 2;
+  KPECBHBGKBF_ECSPurchaseRet_ExceedLimitation = 3;
+  KPECBHBGKBF_ECSPurchaseRet_CannotPurchase = 4;
+  KPECBHBGKBF_ECSPurchaseRet_InCD = 5;
+}
+
+enum KPPFMLKPKJC {
+  KPPFMLKPKJC_EArchitecture_None = 0;
+  KPPFMLKPKJC_EArchitecture_ARM = 1;
+  KPPFMLKPKJC_EArchitecture_ARM64 = 2;
+  KPPFMLKPKJC_EArchitecture_X86 = 3;
+}
+
+enum LAKANBFBEOK {
+  LAKANBFBEOK_EAIType_Null = 0;
+  LAKANBFBEOK_EAIType_Bot = 1;
+  LAKANBFBEOK_EAIType_ZombieWandering = 2;
+  LAKANBFBEOK_EAIType_ZombieAttPlayer = 3;
+  LAKANBFBEOK_EAIType_ZombieWoodCutter = 4;
+  LAKANBFBEOK_EAIType_ZombieThrow = 5;
+  LAKANBFBEOK_EAIType_ZombieExplosive = 6;
+  LAKANBFBEOK_EAIType_ZombieEvent = 7;
+  LAKANBFBEOK_EAIType_BossTyrant = 8;
+  LAKANBFBEOK_EAIType_ZombieThrowDot = 9;
+  LAKANBFBEOK_EAIType_BossMystery = 10;
+  LAKANBFBEOK_EAIType_ZombieTank03 = 11;
+  LAKANBFBEOK_EAIType_ZombieBurrow = 12;
+  LAKANBFBEOK_EAIType_BossSumurai = 13;
+  LAKANBFBEOK_EAIType_BossGiant = 14;
+  LAKANBFBEOK_EAIType_WaitingDummy = 15;
+  LAKANBFBEOK_EAIType_PartyGameNPC = 16;
+  LAKANBFBEOK_EAIType_ZombieTDGeneral = 17;
+}
+
+enum LCIPBALGMFC {
+  LCIPBALGMFC_EUGCEventType_Unknown = 0;
+  LCIPBALGMFC_EUGCEventType_OnMatchStart = 1;
+  LCIPBALGMFC_EUGCEventType_OnMatchLoop = 2;
+  LCIPBALGMFC_EUGCEventType_OnMatchEnd = 3;
+  LCIPBALGMFC_EUGCEventType_OnRoundStart = 4;
+  LCIPBALGMFC_EUGCEventType_OnRoundEnd = 5;
+  LCIPBALGMFC_EUGCEventType_OnSwitchFaction = 6;
+  LCIPBALGMFC_EUGCEventType_OnPhaseStart = 7;
+  LCIPBALGMFC_EUGCEventType_OnPhaseEnd = 8;
+  LCIPBALGMFC_EUGCEventType_OnCustomizeGRIChange = 9;
+  LCIPBALGMFC_EUGCEventType_OnGRIParamChange = 10;
+  LCIPBALGMFC_EUGCEventType_OnUserQuit = 11;
+  LCIPBALGMFC_EUGCEventType_OnPlayerRoundScoreChange = 10001;
+  LCIPBALGMFC_EUGCEventType_OnTeamRoundScoreChange = 10002;
+  LCIPBALGMFC_EUGCEventType_OnEntityCustomizePRIChange = 10003;
+  LCIPBALGMFC_EUGCEventType_OnEntityPRIChange = 10004;
+  LCIPBALGMFC_EUGCEventType_OnMatchAIArriveStronghold = 20001;
+  LCIPBALGMFC_EUGCEventType_OnMatchAIKillByPlayer = 20002;
+  LCIPBALGMFC_EUGCEventType_OnPlayerDead = 20003;
+  LCIPBALGMFC_EUGCEventType_OnPlayerAssist = 20004;
+  LCIPBALGMFC_EUGCEventType_OnPlayerDamage = 20005;
+  LCIPBALGMFC_EUGCEventType_OnPlayerKill = 20006;
+  LCIPBALGMFC_EUGCEventType_OnPlayerAdd = 20007;
+  LCIPBALGMFC_EUGCEventType_OnPlayerRevive = 20008;
+  LCIPBALGMFC_EUGCEventType_OnRemoveTeam = 40001;
+  LCIPBALGMFC_EUGCEventType_OnAddTeam = 40002;
+  LCIPBALGMFC_EUGCEventType_OnTeamAllMemberDead = 40003;
+}
+
+enum LEBBECEFJJA {
+  LEBBECEFJJA_EGetInCatapultResult_OK = 0;
+  LEBBECEFJJA_EGetInCatapultResult_StateInvalid = 1;
+  LEBBECEFJJA_EGetInCatapultResult_NoCatapultFound = 2;
+  LEBBECEFJJA_EGetInCatapultResult_OutOfRange = 3;
+  LEBBECEFJJA_EGetInCatapultResult_NotCatapult = 4;
+  LEBBECEFJJA_EGetInCatapultResult_Unavailable = 5;
+  LEBBECEFJJA_EGetInCatapultResult_VehicleInside = 6;
+}
+
+enum LHBLJNHOPIJ {
+  LHBLJNHOPIJ_EItemMarkPointType_Location = 0;
+  LHBLJNHOPIJ_EItemMarkPointType_NoticeEnemy = 1;
+  LHBLJNHOPIJ_EItemMarkPointType_NoticeHere = 2;
+  LHBLJNHOPIJ_EItemMarkPointType_NB = 3;
+}
+
+enum LIANAECLCBK {
+  LIANAECLCBK_EWEAPONBOX_STATE_NORMAL = 0;
+  LIANAECLCBK_EWEAPONBOX_STATE_OPEN = 1;
+  LIANAECLCBK_EWEAPONBOX_STATE_PICKEDUP = 2;
+}
+
+enum LMLGJLFONCP {
+  LMLGJLFONCP_UNSPECIFIED = 0;
+  LMLGJLFONCP_ELWSOGRI_FINAL_ROUND = 1;
+  LMLGJLFONCP_ELWSOGRI_MAXHP = 2;
+  LMLGJLFONCP_ELWSOGRI_CURRENT_ROUND = 3;
+  LMLGJLFONCP_ELWSOGRI_CURRENT_PHASE = 4;
+  LMLGJLFONCP_ELWSOGRI_NB = 5;
+}
+
+enum LPNKIMBIJCB {
+  LPNKIMBIJCB_EPetCategory_Default = 0;
+  LPNKIMBIJCB_EPetCategory_LinkFoxTorii = 1;
+}
+
+enum MDMMGPMJHJG {
+  MDMMGPMJHJG_ELudoLevelFlowPhase_Pregame = 0;
+  MDMMGPMJHJG_ELudoLevelFlowPhase_Waiting = 1;
+  MDMMGPMJHJG_ELudoLevelFlowPhase_Random = 2;
+  MDMMGPMJHJG_ELudoLevelFlowPhase_Moving = 3;
+  MDMMGPMJHJG_ELudoLevelFlowPhase_EndShow = 4;
+  MDMMGPMJHJG_ELudoLevelFlowPhase_MatchEnd = 5;
+}
+
+enum MEBEMEIFFBA {
+  MEBEMEIFFBA_ELevelObjectDestroyReason_Default = 0;
+  MEBEMEIFFBA_ELevelObjectDestroyReason_Dead = 1;
+  MEBEMEIFFBA_ELevelObjectDestroyReason_CountLimit = 2;
+  MEBEMEIFFBA_ELevelObjectDestroyReason_SystemKill = 3;
+}
+
+enum MGCOAIHMGBA {
+  MGCOAIHMGBA_Tower_State_Available = 0;
+  MGCOAIHMGBA_Tower_State_Banned = 1;
+}
+
+enum MGIEKBBFMKP {
+  MGIEKBBFMKP_EBigHeadGRI_ALIVE_PLAYERCOUNT = 0;
+  MGIEKBBFMKP_EBigHeadGRI_Stage = 1;
+  MGIEKBBFMKP_EBigHeadGRI_LeadingScore = 2;
+  MGIEKBBFMKP_EBigHeadGRI_NB = 3;
+}
+
+enum MHAKBOKLPMP {
+  MHAKBOKLPMP_LWSOIdentity_Attack = 0;
+  MHAKBOKLPMP_LWSOIdentity_Defense = 1;
+  MHAKBOKLPMP_LWSOIdentity_OB = 2;
+}
+
+enum MHBONLCNNHF {
+  MHBONLCNNHF_UNSPECIFIED = 0;
+  MHBONLCNNHF_EReaperModeAttributePRIByte = 4;
+}
+
+enum MHDGPDAFCLH {
+  MHDGPDAFCLH_EPRI_TREASURY_DOOR_ISOPENED = 0;
+  MHDGPDAFCLH_EPRI_TREASURY_NB = 1;
+}
+
+enum MJFPJIAOJEP {
+  MJFPJIAOJEP_EPauseState_None = 0;
+  MJFPJIAOJEP_EPauseState_Pause = 1;
+  MJFPJIAOJEP_EPauseState_Resume = 2;
+  MJFPJIAOJEP_EPauseState_PreResume = 3;
+}
+
+enum MLEFPNOMADC {
+  MLEFPNOMADC_UNSPECIFIED = 0;
+  MLEFPNOMADC_EPRI_WAREHOUSE_HP = 1;
+  MLEFPNOMADC_EPRI_WAREHOUSE_MAX_HP = 2;
+  MLEFPNOMADC_EPRI_WAREHOUSE_NB = 3;
+}
+
+enum MLPFGGNMKJK {
+  MLPFGGNMKJK_ETRAININGGAME_ZONE_PLAYERCOUNT = 0;
+  MLPFGGNMKJK_ETRAININGGAME_QUEUE_PLAYERCOUNT = 1;
+  MLPFGGNMKJK_ETRAININGGAME_MAX_KILL_CHANGE = 2;
+  MLPFGGNMKJK_ETRAININGGAMEGRI_NB = 3;
+}
+
+enum MMOHBDPIKLC {
+  MMOHBDPIKLC_EWereWolvesGameOverState_NoOver = 0;
+  MMOHBDPIKLC_EWereWolvesGameOverState_HumanWinFinishAllTask = 1;
+  MMOHBDPIKLC_EWereWolvesGameOverState_HumanWinKillAllWolf = 2;
+  MMOHBDPIKLC_EWereWolvesGameOverState_WolfWinCount = 3;
+  MMOHBDPIKLC_EWereWolvesGameOverState_WolfWinTimeOut = 4;
+  MMOHBDPIKLC_EWereWolvesGameOverState_WolfWinTaskTimeOut = 5;
+}
+
+enum MONBKEHFODK {
+  MONBKEHFODK_UNSPECIFIED = 0;
+  MONBKEHFODK_EDGGGRI_ALIVE_COUNT = 1;
+  MONBKEHFODK_EDGGGRI_WIN_SCORE = 2;
+  MONBKEHFODK_EDGGGRI_LEADING_SCORE = 3;
+  MONBKEHFODK_EDGGGRI_LEADING_TEAMID = 4;
+  MONBKEHFODK_EDGGGRI_2ND_SCORE = 5;
+  MONBKEHFODK_EDGGGRI_2ND_TEAMID = 6;
+  MONBKEHFODK_EDGGGRI_LEADING_WINTIME = 7;
+  MONBKEHFODK_EDGGGRI_WIN_TIME = 8;
+  MONBKEHFODK_EDGGGRI_NB = 9;
+}
+
+enum MPJLNJOENFC {
+  MPJLNJOENFC_EUGCTeamPRIType_Unknown = 0;
+  MPJLNJOENFC_EUGCTeamPRIType_AllTeammateCount = 1;
+  MPJLNJOENFC_EUGCTeamPRIType_AliveTeammateCount = 2;
+  MPJLNJOENFC_EUGCTeamPRIType_WinRoundCount = 3;
+  MPJLNJOENFC_EUGCTeamPRIType_TeamIndex = 4;
+  MPJLNJOENFC_EUGCTeamPRIType_MAX = 5;
+}
+
+enum MPLANFPBEMP {
+  MPLANFPBEMP_UGCSpawnPointSpawnType_Default = 0;
+  MPLANFPBEMP_UGCSpawnPointSpawnType_Random = 1;
+  MPLANFPBEMP_UGCSpawnPointSpawnType_UserAssign = 2;
+}
+
+enum NCCJMGJEFML {
+  NCCJMGJEFML_EGuildWarMatchPhase_Waiting = 0;
+  NCCJMGJEFML_EGuildWarMatchPhase_Prepare = 1;
+  NCCJMGJEFML_EGuildWarMatchPhase_Normal = 2;
+  NCCJMGJEFML_EGuildWarMatchPhase_Overtime = 3;
+  NCCJMGJEFML_EGuildWarMMatchPhase_Post = 4;
+}
+
+enum NHEKHIEAHNG {
+  NHEKHIEAHNG_EBanknoteMatchPhase_Waiting = 0;
+  NHEKHIEAHNG_EBanknoteMatchPhase_Prepare = 1;
+  NHEKHIEAHNG_EBanknoteMatchPhase_Fight = 2;
+  NHEKHIEAHNG_EBanknoteMatchPhase_OverTime = 3;
+  NHEKHIEAHNG_EBanknoteMatchPhase_Post = 4;
+}
+
+enum NJHKMJIEHLI {
+  NJHKMJIEHLI_UNSPECIFIED = 0;
+  NJHKMJIEHLI_EArmsRaceGRI_BattleTime = 1;
+  NJHKMJIEHLI_EArmsRaceGRI_TopPlayerArmLevel = 2;
+  NJHKMJIEHLI_EArmsRaceGRI_CURRENT_PHASE = 3;
+  NJHKMJIEHLI_EArmsRaceGRI_NB = 4;
+}
+
+enum NKLPCICJPND {
+  NKLPCICJPND_EUGCCompareType_Unknown = 0;
+  NKLPCICJPND_EUGCCompareType_AlwaysTrue = 1;
+  NKLPCICJPND_EUGCCompareType_Less = 2;
+  NKLPCICJPND_EUGCCompareType_LessEqual = 3;
+  NKLPCICJPND_EUGCCompareType_GreaterEqual = 4;
+  NKLPCICJPND_EUGCCompareType_Greater = 5;
+  NKLPCICJPND_EUGCCompareType_Equal = 6;
+  NKLPCICJPND_EUGCCompareType_NotEqual = 7;
+  NKLPCICJPND_EUGCCompareType_And = 8;
+  NKLPCICJPND_EUGCCompareType_Or = 9;
+}
+
+enum NNJPOHFLBEG {
+  NNJPOHFLBEG_EUGCPlayerPRI_Unknown = 0;
+  NNJPOHFLBEG_EUGCPlayerPRI_HP = 1;
+  NNJPOHFLBEG_EUGCPlayerPRI_HPMAX = 2;
+  NNJPOHFLBEG_EUGCPlayerPRI_IsAI = 3;
+  NNJPOHFLBEG_EUGCPlayerPRI_IsHumanPlayerBot = 4;
+  NNJPOHFLBEG_EUGCPlayerPRI_IsHumanPlayer = 5;
+  NNJPOHFLBEG_EUGCPlayerPRI_PlayerID = 6;
+  NNJPOHFLBEG_EUGCPlayerPRI_IsDead = 7;
+  NNJPOHFLBEG_EUGCPlayerPRI_LastSurvivalTime = 8;
+  NNJPOHFLBEG_EUGCPlayerPRI_MAX = 9;
+}
+
+enum NNKNPGLNMEG {
+  NNKNPGLNMEG_ETDMGRI_ALIVE_PLAYERCOUNT = 0;
+  NNKNPGLNMEG_ETDMGRI_Phase = 1;
+  NNKNPGLNMEG_ETDMGRI_Team1_Score = 2;
+  NNKNPGLNMEG_ETDMGRI_Team2_Score = 3;
+  NNKNPGLNMEG_ETDMGRI_Equip_Sets = 4;
+  NNKNPGLNMEG_ETDMGRI_TargetScore = 5;
+  NNKNPGLNMEG_ETDMGRI_NB = 6;
+}
+
+enum OBKMOGIMDCG {
+  OBKMOGIMDCG_EChannelType_DEV = 0;
+  OBKMOGIMDCG_EChannelType_TRAIL = 1;
+  OBKMOGIMDCG_EChannelType_MAX = 2;
+  OBKMOGIMDCG_EChannelType_GP = 3;
+  OBKMOGIMDCG_EChannelType_HUAWEI = 4;
+  OBKMOGIMDCG_EChannelType_SAMSUNG = 5;
+  OBKMOGIMDCG_EChannelType_THIRDPARTY = 6;
+}
+
+enum OCDGILKMGMK {
+  OCDGILKMGMK_UNSPECIFIED = 0;
+  OCDGILKMGMK_EFightClubGRI_MAX_ROUND = 1;
+  OCDGILKMGMK_EFightClubGRI_CURRENT_ROUND = 2;
+  OCDGILKMGMK_EFightClubGRI_SHOP_FLOW = 3;
+  OCDGILKMGMK_EFightClubGRI_CURRENT_PHASE = 4;
+  OCDGILKMGMK_EFightClubGRI_MATCH_POINT = 5;
+  OCDGILKMGMK_EFightClubGRI_GAMEZONE_INDEX = 6;
+  OCDGILKMGMK_EFightClubGRI_NB = 7;
+}
+
+enum OCGCIAMIMKJ {
+  OCGCIAMIMKJ_ETutorialBRMatchPhase_Waiting = 0;
+  OCGCIAMIMKJ_ETutorialBRMatchPhase_Fight = 1;
+}
+
+enum ODFDBIKIEOE {
+  ODFDBIKIEOE_UNSPECIFIED = 0;
+  ODFDBIKIEOE_EGiantGameTeam_Attack = 1;
+  ODFDBIKIEOE_EGiantGameTeam_Denfence = 2;
+}
+
+enum ODFIIFHKNNG {
+  ODFIIFHKNNG_EPetAction_Invisible = 0;
+  ODFIIFHKNNG_EPetAction_Idle = 1;
+  ODFIIFHKNNG_EPetAction_Wander = 2;
+  ODFIIFHKNNG_EPetAction_Walk = 3;
+  ODFIIFHKNNG_EPetAction_Run = 4;
+  ODFIIFHKNNG_EPetAction_Parachute = 5;
+  ODFIIFHKNNG_EPetAction_Destroy = 6;
+  ODFIIFHKNNG_EPetAction_Anim_Cute = 7;
+  ODFIIFHKNNG_EPetAction_Anim_Celebrate = 8;
+  ODFIIFHKNNG_EPetAction_Anim_Encourage = 9;
+  ODFIIFHKNNG_EPetAction_Anim_Moan = 10;
+  ODFIIFHKNNG_EPetAction_Anim_Scare = 11;
+  ODFIIFHKNNG_EPetAction_Jump = 12;
+  ODFIIFHKNNG_EPetAction_FallDown = 13;
+  ODFIIFHKNNG_EPetAction_Num = 14;
+  ODFIIFHKNNG_EPetAction_Mode_Jump = 15;
+  ODFIIFHKNNG_EPetAction_Mode_Walk = 16;
+}
+
+enum ODJKNKABMBE {
+  ODJKNKABMBE_ETKMatchPhase_Prepare = 0;
+  ODJKNKABMBE_ETKMatchPhase_Fight = 1;
+}
+
+enum OFIMNODADJL {
+  OFIMNODADJL_EPRI_PveSafeDOOR_State = 0;
+  OFIMNODADJL_EPRI_PveSafeDOOR_NB = 1;
+}
+
+enum OFMLNGKDDPC {
+  OFMLNGKDDPC_EBombMatchTeamFaction_Attack = 0;
+  OFMLNGKDDPC_EBombMatchTeamFaction_Defense = 1;
+}
+
+enum OGBEMHKFCFG {
+  OGBEMHKFCFG_EArmsRaceMatchPhase_Fight = 0;
+}
+
+enum OGGHKEOBLNJ {
+  OGGHKEOBLNJ_EPRI_TeleportDoor_State = 0;
+  OGGHKEOBLNJ_EPRI_TeleportDoor_HP = 1;
+  OGGHKEOBLNJ_EPRI_TeleportDoor_NB = 2;
+}
+
+enum OGNBEEFIBNF {
+  OGNBEEFIBNF_UNSPECIFIED = 0;
+  OGNBEEFIBNF_EBountyWaitingGRI_ALIVE_COUNT = 1;
+  OGNBEEFIBNF_EBountyWaitingGRI_RepairProgress = 2;
+  OGNBEEFIBNF_EBountyWaitingGRI_RepairNO1 = 3;
+  OGNBEEFIBNF_EBountyWaitingGRI_RepairNO2 = 4;
+  OGNBEEFIBNF_EBountyWaitingGRI_RepairNO3 = 5;
+  OGNBEEFIBNF_EBountyWaitingGRI_NB = 6;
+}
+
+enum OHAAMABDKEN {
+  OHAAMABDKEN_EUGCValueType_Unknown = 0;
+  OHAAMABDKEN_EUGCValueType_Bool = 1;
+  OHAAMABDKEN_EUGCValueType_Int = 2;
+  OHAAMABDKEN_EUGCValueType_Float = 3;
+  OHAAMABDKEN_EUGCValueType_String = 4;
+  OHAAMABDKEN_EUGCValueType_Vector3 = 5;
+  OHAAMABDKEN_EUGCValueType_IntArray = 6;
+}
+
+enum OHFFBGJNAJE {
+  OHFFBGJNAJE_ELevelObjectType_None = 0;
+  OHFFBGJNAJE_ELevelObjectType_IceWall = 1;
+  OHFFBGJNAJE_ELevelObjectType_Landmine = 2;
+  OHFFBGJNAJE_ElevelObjectType_FrozenZone = 3;
+  OHFFBGJNAJE_ElevelObjectType_UGCCustomizeTrigger = 4;
+  OHFFBGJNAJE_ELevelObjectType_Max = 5;
+}
+
+enum OIDCEDCDBGP {
+  OIDCEDCDBGP_EControlGRI_ALIVE_PLAYERCOUNT = 0;
+  OIDCEDCDBGP_EControlGRI_Phase = 1;
+  OIDCEDCDBGP_EControlGRI_Equip_Sets = 2;
+  OIDCEDCDBGP_EControlGRI_Next_Activate_Control_ID = 3;
+  OIDCEDCDBGP_EControlGRI_Last_Activate_Time_MS = 4;
+  OIDCEDCDBGP_EControlGRI_Team1_Score = 5;
+  OIDCEDCDBGP_EControlGRI_Team2_Score = 6;
+  OIDCEDCDBGP_EControlGRI_NB = 7;
+}
+
+enum OJBGMIOAJFN {
+  OJBGMIOAJFN_EUGCCustomizeTriggerEventType_Unknown = 0;
+  OJBGMIOAJFN_EUGCCustomizeTriggerEventType_OnPlayerEnter = 1;
+  OJBGMIOAJFN_EUGCCustomizeTriggerEventType_OnPlayerExit = 2;
+  OJBGMIOAJFN_EUGCCustomizeTriggerEventType_OnPlayerEnterUpdatePriorityModule = 3;
+  OJBGMIOAJFN_EUGCCustomizeTriggerEventType_OnPlayerExitUpdatePriorityModule = 4;
+}
+
+enum OJFMJOHPCNI {
+  OJFMJOHPCNI_UNSPECIFIED = 0;
+  OJFMJOHPCNI_EDynamicColliderType_SpawnFence = 1;
+  OJFMJOHPCNI_EDynamicColliderType_ADS1v1PrepareFence = 2;
+  OJFMJOHPCNI_EDynamicColliderType_NB = 3;
+}
+
+enum OJNGMIAPKGF {
+  OJNGMIAPKGF_EPRI_WeaponShield_HP = 0;
+  OJNGMIAPKGF_EPRI_WeaponShield_NB = 1;
+}
+
+enum OLDFDLECCBG {
+  OLDFDLECCBG_UNSPECIFIED = 0;
+  OLDFDLECCBG_EReplayEvent_TeamAce = 1;
+  OLDFDLECCBG_EReplayEvent_PersonShow = 2;
+  OLDFDLECCBG_EReplayEvent_Kill = 3;
+  OLDFDLECCBG_EReplayEvent_Dead = 4;
+  OLDFDLECCBG_EReplayEvent_MVPShow = 5;
+}
+
+enum OMAEJNDCHKD {
+  OMAEJNDCHKD_EUGCParamSettingMethodType_Unknown = 0;
+  OMAEJNDCHKD_EUGCParamSettingMethodType_Override = 1;
+  OMAEJNDCHKD_EUGCParamSettingMethodType_Add = 2;
+  OMAEJNDCHKD_EUGCParamSettingMethodType_Subtract = 3;
+  OMAEJNDCHKD_EUGCParamSettingMethodType_Multiply = 4;
+  OMAEJNDCHKD_EUGCParamSettingMethodType_Divide = 5;
+}
+
+enum OMDNLEEOJBD {
+  OMDNLEEOJBD_ESceneEditTriggerType_KillZone = 0;
+  OMDNLEEOJBD_ESceneEditTriggerType_GodZone = 1;
+}
+
+enum OMJPKHFKMPO {
+  OMJPKHFKMPO_EAOHMatchPhase_Prepare = 0;
+  OMJPKHFKMPO_EAOHMatchPhase_Normal = 1;
+  OMJPKHFKMPO_EAOHMatchPhase_DoubleScore = 2;
+  OMJPKHFKMPO_EAOHMatchPhase_Post = 3;
+}
+
+enum OMNKHMIAIHL {
+  OMNKHMIAIHL_ESceneEditItemBoxType_Weapon = 0;
+  OMNKHMIAIHL_ESceneEditItemBoxType_Item = 1;
+}
+
+enum OOGJNEIKMFI {
+  OOGJNEIKMFI_UNSPECIFIED = 0;
+  OOGJNEIKMFI_ECSShopItemFilter_Weapon = 1;
+  OOGJNEIKMFI_ECSShopItemFilter_Armor = 2;
+  OOGJNEIKMFI_ECSShopItemFilter_Attachment = 3;
+  OOGJNEIKMFI_ECSShopItemFilter_Prop = 4;
+  OOGJNEIKMFI_ECSShopItemFilter_MystoryBox = 5;
+}
+
+enum OOIIAFEFOLC {
+  OOIIAFEFOLC_ERevivePointState_BeforeOpen = 0;
+  OOIIAFEFOLC_ERevivePointState_Open = 1;
+  OOIIAFEFOLC_ERevivePointState_BeforeClose = 2;
+  OOIIAFEFOLC_ERevivePointState_Close = 3;
+}
+
+enum OOJKENBIMMF {
+  OOJKENBIMMF_EPRI_DOOR_ISOPENED = 0;
+  OOJKENBIMMF_EPRI_DOOR_Health = 1;
+  OOJKENBIMMF_EPRI_DOOR_NB = 2;
+}
+
+enum OPKPPFDNCMC {
+  OPKPPFDNCMC_EAISkillType_MeleeAttack = 0;
+  OPKPPFDNCMC_EAISkillType_ThrowAttack = 1;
+  OPKPPFDNCMC_EAISkillType_DeathExplosion = 2;
+  OPKPPFDNCMC_EAISkillType_DashAttack = 3;
+  OPKPPFDNCMC_EAISkillType_ShockWaveAttack = 4;
+  OPKPPFDNCMC_EAISkillType_Dormant = 5;
+  OPKPPFDNCMC_EAISkillType_WhirlwindAttack = 6;
+  OPKPPFDNCMC_EAISkillType_ChaseTarget = 7;
+  OPKPPFDNCMC_EAISkillType_Revive = 8;
+  OPKPPFDNCMC_EAISkillType_ExtensiveAttack = 9;
+  OPKPPFDNCMC_EAISkillType_Fury = 10;
+  OPKPPFDNCMC_EAISkillType_LeaveBombAndFlee = 11;
+  OPKPPFDNCMC_EAISkillType_DodgeAfterHurt = 12;
+  OPKPPFDNCMC_EAISkillType_JumpAttack = 13;
+  OPKPPFDNCMC_EAISkillType_ChaseMeleeAttack = 14;
+  OPKPPFDNCMC_EAISkillType_LockTargetShoot = 15;
+  OPKPPFDNCMC_EAISkillType_ChargeAttack = 16;
+  OPKPPFDNCMC_EAISkillType_Transform = 17;
+  OPKPPFDNCMC_EAISkillType_Thump = 18;
+  OPKPPFDNCMC_EAISkillType_NoMoveDoge = 19;
+  OPKPPFDNCMC_EAISkillType_SpawnDamageZone = 20;
+  OPKPPFDNCMC_EAISkillType_BlinkJump = 21;
+  OPKPPFDNCMC_EAISkillType_ShieldUp = 22;
+  OPKPPFDNCMC_EAISkillType_ShieldBroken = 23;
+  OPKPPFDNCMC_EAISkillType_ChangeMoveSpeed = 24;
+  OPKPPFDNCMC_EAISkillType_BurrowAttack = 25;
+  OPKPPFDNCMC_EAISkillType_BurrowIn = 26;
+  OPKPPFDNCMC_EAISkillType_BurrowOut = 27;
+  OPKPPFDNCMC_EAISkillType_AdjustRotMeleeAttack = 28;
+  OPKPPFDNCMC_EAISkillType_MoveMeleeAttack = 29;
+  OPKPPFDNCMC_EAISkillType_TwoTargetMoveMelee = 30;
+  OPKPPFDNCMC_EAISkillType_ReviveTowerTeamKill = 31;
+  OPKPPFDNCMC_EAISkillType_MultiTargetLockPosAttack = 32;
+  OPKPPFDNCMC_EAISkillType_ExtinguishTower = 33;
+  OPKPPFDNCMC_EAISkillType_Invalid = 34;
+}
+
+enum OPNCEEBBMJH {
+  OPNCEEBBMJH_UNSPECIFIED = 0;
+  OPNCEEBBMJH_RUDP_JOIN_MATCH = 100;
+  OPNCEEBBMJH_RUDP_PLAYER_JOIN = 101;
+  OPNCEEBBMJH_RUDP_PLAYER_QUIT = 102;
+  OPNCEEBBMJH_RUDP_MATCH_END = 103;
+  OPNCEEBBMJH_RUDP_START_FIRE = 104;
+  OPNCEEBBMJH_RUDP_STOP_FIRE = 105;
+  OPNCEEBBMJH_RUDP_TAKE_DAMAGE = 106;
+  OPNCEEBBMJH_RUDP_DEAD = 107;
+  OPNCEEBBMJH_RUDP_CHANGE_INVENTORY_ON_HAND = 108;
+  OPNCEEBBMJH_RUDP_OPEN_DOOR = 109;
+  OPNCEEBBMJH_RUDP_BATTLE_START = 110;
+  OPNCEEBBMJH_RUDP_PICKUP_INVENTORY = 111;
+  OPNCEEBBMJH_RUDP_DROP_INVENTORY = 112;
+  OPNCEEBBMJH_RUDP_USE_INVENTORY = 113;
+  OPNCEEBBMJH_RUDP_ADD_PICKUP = 114;
+  OPNCEEBBMJH_RUDP_DEL_PICKUP = 115;
+  OPNCEEBBMJH_RUDP_SYNC_SCENE_INFO = 116;
+  OPNCEEBBMJH_RUDP_SAFE_ZONE_CHANGE = 117;
+  OPNCEEBBMJH_RUDP_BIND_PRI = 118;
+  OPNCEEBBMJH_RUDP_EQUIP = 119;
+  OPNCEEBBMJH_RUDP_UNEQUIP = 120;
+  OPNCEEBBMJH_RUDP_EQUIPMENT_CHANGED = 121;
+  OPNCEEBBMJH_RUDP_EQUIP_ATTACHMENT = 122;
+  OPNCEEBBMJH_RUDP_UNEQUIP_ATTACHMENT = 123;
+  OPNCEEBBMJH_RUDP_ATTACHMENT_CHANGED = 124;
+  OPNCEEBBMJH_RUDP_GETON_VEHICLE = 125;
+  OPNCEEBBMJH_RUDP_GETOFF_VEHICLE = 126;
+  OPNCEEBBMJH_RUDP_VEHICLE_TAKE_DAMAGE = 127;
+  OPNCEEBBMJH_RUDP_VEHICLE_DEAD = 128;
+  OPNCEEBBMJH_RUDP_FORCE_SYNC_VEHICLE_STATE = 129;
+  OPNCEEBBMJH_RUDP_JOIN_MATCH_FINISHED = 130;
+  OPNCEEBBMJH_RUDP_TRYUSE_INVENTORY = 131;
+  OPNCEEBBMJH_RUDP_CANCELUSE_INVENTORY = 132;
+  OPNCEEBBMJH_RUDP_START_RELOAD = 133;
+  OPNCEEBBMJH_RUDP_STOP_RELOAD = 134;
+  OPNCEEBBMJH_RUDP_SYNC_PLAYERS_VISIBILITY = 135;
+  OPNCEEBBMJH_RUDP_SYNC_VEHICLES_VISIBILITY = 136;
+  OPNCEEBBMJH_RUDP_START_SNIPER = 137;
+  OPNCEEBBMJH_RUDP_STOP_SNIPER = 138;
+  OPNCEEBBMJH_RUDP_KNOCK_DOWN = 139;
+  OPNCEEBBMJH_RUDP_KNOCK_REVIVE = 140;
+  OPNCEEBBMJH_RUDP_KNOCK_REVIVE_SELFRESCURE = 141;
+  OPNCEEBBMJH_RUDP_START_RESCURE = 142;
+  OPNCEEBBMJH_RUDP_STOP_RESCURE = 143;
+  OPNCEEBBMJH_RUDP_FORCE_SYNC_PLAYER_STATE = 144;
+  OPNCEEBBMJH_RUDP_TELEPORT_PLAYER = 145;
+  OPNCEEBBMJH_RUDP_CONFIRM_SERVERFORCE_SYNC_PLAYER_STATE = 146;
+  OPNCEEBBMJH_RUDP_INIT_VEHICLE_STATE = 147;
+  OPNCEEBBMJH_RUDP_MAPMARK_CHANGED = 148;
+  OPNCEEBBMJH_RUDP_SWITCH_OBSERVE = 149;
+  OPNCEEBBMJH_RUDP_NOTIFY_AI_INFO = 150;
+  OPNCEEBBMJH_RUDP_PLANTBOMB = 151;
+  OPNCEEBBMJH_RUDP_TRY_REMOVEBOMB = 152;
+  OPNCEEBBMJH_RUDP_REMOVEBOMB = 153;
+  OPNCEEBBMJH_RUDP_AIRDROP_START = 154;
+  OPNCEEBBMJH_RUDP_AIRDRAGON_START = 155;
+  OPNCEEBBMJH_RUDP_BOMB = 156;
+  OPNCEEBBMJH_RUDP_CUSTOM_BOMBEVENT = 157;
+  OPNCEEBBMJH_RUDP_HITPROTECTION = 158;
+  OPNCEEBBMJH_RUDP_PROJECTILE_STATE_SYNC = 159;
+  OPNCEEBBMJH_RUDP_PROJECTILE_THROW = 160;
+  OPNCEEBBMJH_RUDP_PROJECTILE_EXPLODE = 161;
+  OPNCEEBBMJH_RUDP_START_GRENADE = 162;
+  OPNCEEBBMJH_RUDP_STOP_GRENADE = 163;
+  OPNCEEBBMJH_RUDP_CUSTOM_ANIMATION = 164;
+  OPNCEEBBMJH_RUDP_UAV_REVEAL_PLAYERS = 165;
+  OPNCEEBBMJH_RUDP_UAV_TAKE_DAMAGE = 166;
+  OPNCEEBBMJH_RUDP_UAV_DEAD = 167;
+  OPNCEEBBMJH_RUDP_SHOW_DAMAGE = 168;
+  OPNCEEBBMJH_RUDP_SHOW_SHOW_SHILED_ATTACKED = 169;
+  OPNCEEBBMJH_RUDP_UPDATE_BUFFBEHAVIOR = 170;
+  OPNCEEBBMJH_RUDP_VEHICLE_EXPLODE = 171;
+  OPNCEEBBMJH_RUDP_AIRDROP_INWATER = 172;
+  OPNCEEBBMJH_RUDP_SWITCH_ATTACHMENT = 173;
+  OPNCEEBBMJH_RUDP_SYNC_INVENTORY_INFO = 174;
+  OPNCEEBBMJH_RUDP_SYNC_OTHER_ATTACHMENT_INFO = 175;
+  OPNCEEBBMJH_RUDP_SYNC_REGION_ACTIVITIES = 176;
+  OPNCEEBBMJH_RUDP_VEHICLE_CHANGE_SHAPE = 177;
+  OPNCEEBBMJH_RUDP_VEHICLE_INIT_INVENTORY = 178;
+  OPNCEEBBMJH_RUDP_VEHICLE_SYNC_INVENTORY = 179;
+  OPNCEEBBMJH_RUDP_VEHICLE_PICKUP_INVENTORY = 180;
+  OPNCEEBBMJH_RUDP_VEHICLE_DROP_INVENTORY = 181;
+  OPNCEEBBMJH_RUDP_VEHICLE_EQUIPMENT_CHANGED = 182;
+  OPNCEEBBMJH_RUDP_VEHICLE_USE_INVENTORY = 183;
+  OPNCEEBBMJH_RUDP_VEHICLE_TRYUSE_INVENTORY = 184;
+  OPNCEEBBMJH_RUDP_VEHICLE_CANCELUSE_INVENTORY = 185;
+  OPNCEEBBMJH_RUDP_VEHICLE_CHANGE_AUTH = 186;
+  OPNCEEBBMJH_RUDP_VEHICLE_CHANGE_SEAT = 187;
+  OPNCEEBBMJH_RUDP_SPECTATOR_JOIN = 188;
+  OPNCEEBBMJH_RUDP_VEHICLE_ASK_CHANGE_SEAT = 189;
+  OPNCEEBBMJH_RUDP_VEHICLE_CONFIRM_CHANGE_SEAT = 190;
+  OPNCEEBBMJH_RUDP_PLAYER_QUIT_REQ = 191;
+  OPNCEEBBMJH_RUDP_PLAYER_QUIT_RES = 192;
+  OPNCEEBBMJH_RUDP_START_CLIMB = 193;
+  OPNCEEBBMJH_RUDP_VEHICLE_CHANGE_ParachuteState = 194;
+  OPNCEEBBMJH_RUDP_TEAM_INFO = 195;
+  OPNCEEBBMJH_RUDP_AIRDROP_REENTER = 196;
+  OPNCEEBBMJH_RUDP_SPECTATOR_PLAYERTAKEDAMAGE = 197;
+  OPNCEEBBMJH_RUDP_GETON_STROP = 198;
+  OPNCEEBBMJH_RUDP_GETOFF_STROP = 199;
+  OPNCEEBBMJH_RUDP_DOOR_TAKE_DAMAGE = 200;
+  OPNCEEBBMJH_RUDP_PLAYER_DO_ACTION = 201;
+  OPNCEEBBMJH_RUDP_OILDRUMS_TAKE_DAMAGE = 202;
+  OPNCEEBBMJH_RUDP_OILDRUMS_USE = 203;
+  OPNCEEBBMJH_RUDP_OILDRUMS_BROKEN = 204;
+  OPNCEEBBMJH_RUDP_VEHICLE_PICKUP_SOUND = 205;
+  OPNCEEBBMJH_RUDP_LOADOUT_CAMPFIRE_SYNCSTATE = 206;
+  OPNCEEBBMJH_RUDP_LOADOUT_CAMPFIRE_REENTERSYNC = 207;
+  OPNCEEBBMJH_RUDP_LOADOUT_TREASURE_SYNCSTATE = 208;
+  OPNCEEBBMJH_RUDP_LOADOUT_TREASURE_REENTERSYNC = 209;
+  OPNCEEBBMJH_RUDP_DIGOUTTREASURE_REQ = 210;
+  OPNCEEBBMJH_RUDP_Dynamic_ADD_VEHICLE = 211;
+  OPNCEEBBMJH_RUDP_SPECTATOR_REJOIN_DEADPLAYERINFO = 212;
+  OPNCEEBBMJH_RUDP_WEAPON_AMMO_IN_CLIP_SYNC = 213;
+  OPNCEEBBMJH_RUDP_PICKUP_INVENTORY_CHECK_TIME = 214;
+  OPNCEEBBMJH_RUDP_MISSILE_FIRE = 215;
+  OPNCEEBBMJH_RUDP_MISSILE_STATE_SYNC = 216;
+  OPNCEEBBMJH_RUDP_MISSILE_EXPLODE = 217;
+  OPNCEEBBMJH_RUDP_ADD_ICEWALL = 218;
+  OPNCEEBBMJH_RUDP_ICEWALL_TAKE_DAMAGE = 219;
+  OPNCEEBBMJH_RUDP_RESYNC_ICEWALL = 220;
+  OPNCEEBBMJH_RUDP_REMOVE_ICEWALL = 221;
+  OPNCEEBBMJH_RUDP_LOADOUT_SYNCRUNTIMEVALUE = 222;
+  OPNCEEBBMJH_RUDP_SPECTATOR_ITEM_COUNT_SYNC = 223;
+  OPNCEEBBMJH_RUDP_SPECTATOR_JOIN_ITEM_COUNT_SYNC = 224;
+  OPNCEEBBMJH_RUDP_ADD_PICKUPLIST = 225;
+  OPNCEEBBMJH_RUDP_UPDATE_PICKUPLIST = 226;
+  OPNCEEBBMJH_RUDP_ADD_CONTAINER = 227;
+  OPNCEEBBMJH_RUDP_DEL_CONTAINER = 228;
+  OPNCEEBBMJH_RUDP_VEHICLE_MACHINEGUN_AMMO = 229;
+  OPNCEEBBMJH_RUDP_OBSERVER_JOIN = 230;
+  OPNCEEBBMJH_RUDP_SWITCH_CERTAIN_OBSERVE = 231;
+  OPNCEEBBMJH_RUDP_TEAM_RANK_SCORE = 232;
+  OPNCEEBBMJH_RUDP_LANDMINE_ADD = 233;
+  OPNCEEBBMJH_RUDP_LANDMINE_DEL = 234;
+  OPNCEEBBMJH_RUDP_LANDMINE_RESYNC = 235;
+  OPNCEEBBMJH_RUDP_LANDMINE_TAKE_DAMAGE = 236;
+  OPNCEEBBMJH_RUDP_USE_BOUNTY_SCANNER = 237;
+  OPNCEEBBMJH_RUDP_SYNC_AI_SKILL = 238;
+  OPNCEEBBMJH_RUDP_SYNC_AI_DEATHEXPLOSION = 239;
+  OPNCEEBBMJH_RUDP_PET_CREATE_BATCH = 240;
+  OPNCEEBBMJH_RUDP_PET_DELETE = 241;
+  OPNCEEBBMJH_RUDP_PET_ACTION = 242;
+  OPNCEEBBMJH_RUDP_PET_ACTION_RES = 243;
+  OPNCEEBBMJH_RUDP_USE_ACTIVE_SKILL = 244;
+  OPNCEEBBMJH_RUDP_STOP_ACTIVE_SKILL = 245;
+  OPNCEEBBMJH_RUDP_SYNC_ACTIVE_SKILL_STATE = 246;
+  OPNCEEBBMJH_RUDP_SPAWN_DAMAGE_ZONE = 247;
+  OPNCEEBBMJH_RUDP_ZOMBIE_BOMB_SPAWN = 248;
+  OPNCEEBBMJH_RUDP_ZOMBIE_BOMB_EXPLODE = 249;
+  OPNCEEBBMJH_RUDP_SYNC_MARKED_ENERMIES = 250;
+  OPNCEEBBMJH_RUDP_NOTIFY_BE_HINTTED = 251;
+  OPNCEEBBMJH_RUDP_PLAYER_Notify_Enter_PENDING_REVIVE = 252;
+  OPNCEEBBMJH_RUDP_SYNC_ACTSKILL = 253;
+  OPNCEEBBMJH_RUDP_SYNC_GOD = 254;
+  OPNCEEBBMJH_RUDP_FULL_AMMO = 255;
+  OPNCEEBBMJH_RUDP_DEL_CONTAINER_LIST = 256;
+  OPNCEEBBMJH_RUDP_DEL_LEVELOBJECT_LIST = 257;
+  OPNCEEBBMJH_RUDP_SYNC_CHAIRS = 258;
+  OPNCEEBBMJH_RUDP_SYNC_ITEMPLANTS = 259;
+  OPNCEEBBMJH_RUDP_SYNC_WAREHOUSES = 260;
+  OPNCEEBBMJH_RUDP_SYNC_DETAIL_ITEM_GENERATORS = 261;
+  OPNCEEBBMJH_RUDP_SYNC_TREASURIES = 262;
+  OPNCEEBBMJH_RUDP_SYNC_HAYRICK_ORIRIONS = 263;
+  OPNCEEBBMJH_RUDP_SYNC_HAYRICK_ENDS = 264;
+  OPNCEEBBMJH_RUDP_GETON_CHAIR = 265;
+  OPNCEEBBMJH_RUDP_GETOFF_CHAIR = 266;
+  OPNCEEBBMJH_RUDP_FLASHBOMB_TIME = 267;
+  OPNCEEBBMJH_RUDP_PVE_TAKE_DAMAGE = 268;
+  OPNCEEBBMJH_RUDP_SYNC_ESCORT_BOSS = 269;
+  OPNCEEBBMJH_RUDP_ZombieSurprised = 270;
+  OPNCEEBBMJH_RUDP_INFOBOX = 271;
+  OPNCEEBBMJH_RUDP_NOTIFY_EXTRALIFE_OBSOLETED = 272;
+  OPNCEEBBMJH_RUDP_INFOBOX_SPECTATOR = 273;
+  OPNCEEBBMJH_RUDP_AIM_TARGET_CHANGE = 274;
+  OPNCEEBBMJH_RUDP_BATTLEFLAG_SYNCSTATE = 275;
+  OPNCEEBBMJH_RUDP_BATTLEFLAG_USE = 276;
+  OPNCEEBBMJH_RUDP_BATTLEFLAG_REENTER = 277;
+  OPNCEEBBMJH_RUDP_SPAWN_OBJECT = 278;
+  OPNCEEBBMJH_RUDP_DESTROY_OBJECT = 279;
+  OPNCEEBBMJH_RUDP_MANUAL_CHALLENGE = 280;
+  OPNCEEBBMJH_RUDP_MINISENTRY_FIRE = 281;
+  OPNCEEBBMJH_RUDP_GRAPPLINGHOOK_SPAWN = 282;
+  OPNCEEBBMJH_RUDP_GRAPPLINGHOOK_HOOKED = 283;
+  OPNCEEBBMJH_RUDP_GRAPPLINGHOOK_DESTROY = 284;
+  OPNCEEBBMJH_RUDP_SP_ROOMGAMEACHIEVEMENT = 285;
+  OPNCEEBBMJH_RUDP_GETON_STROP_BATCH = 286;
+  OPNCEEBBMJH_RUDP_GRAPPLINGHOOK_REENTER_SYNC = 287;
+  OPNCEEBBMJH_RUDP_PAUSE_GAME = 288;
+  OPNCEEBBMJH_RUDP_PAINTSPRAYER_USE = 289;
+  OPNCEEBBMJH_RUDP_PAINTSPRAYER_SYNC_STATE = 290;
+  OPNCEEBBMJH_RUDP_PAINTSPRAYER_REENTER = 291;
+  OPNCEEBBMJH_RUDP_PAINTSPRAYER_REMOVE = 292;
+  OPNCEEBBMJH_RUDP_SpawnLevelEmote = 293;
+  OPNCEEBBMJH_RUDP_SyncShowCase = 294;
+  OPNCEEBBMJH_RUDP_BatchCreateControlModeBuffBox = 295;
+  OPNCEEBBMJH_RUDP_TriggerControlModeBuffBox = 296;
+  OPNCEEBBMJH_RUDP_SyncRevengeInfo = 297;
+  OPNCEEBBMJH_RUDP_SyncRevengersInfo = 298;
+  OPNCEEBBMJH_RUDP_QuitRevive = 299;
+  OPNCEEBBMJH_RUDP_TriggerLevelEmote = 300;
+  OPNCEEBBMJH_RUDP_SPECTATOR_TEAMSCORE = 301;
+  OPNCEEBBMJH_RUDP_SPECTATOR_PLAYER_RANK = 302;
+  OPNCEEBBMJH_RUDP_PLAY_EPIC_CLOTHES_EFFECT = 303;
+  OPNCEEBBMJH_RUDP_SPECTATOR_INIT_TEAMSCORE = 304;
+  OPNCEEBBMJH_RUDP_LANDMINE_WARNING = 305;
+  OPNCEEBBMJH_RUDP_CLIENT_CLOTHES = 306;
+  OPNCEEBBMJH_RUDP_LINK_ACTIVITY_INIT = 307;
+  OPNCEEBBMJH_RUDP_MEDKITHP_SYNC_UPDATE = 308;
+  OPNCEEBBMJH_RUDP_LINK_ACTIVITY_UPDATE = 309;
+  OPNCEEBBMJH_RUDP_BEGIN_FOOTBALL = 310;
+  OPNCEEBBMJH_RUDP_FOOTBALL_REVIVE = 311;
+  OPNCEEBBMJH_RUDP_LINK_ACTIVITY_FINISH = 312;
+  OPNCEEBBMJH_RUDP_SYNC_PUMPKIN_POSLIST = 313;
+  OPNCEEBBMJH_RUDP_DEL_PUMPKIN_POSLIST = 314;
+  OPNCEEBBMJH_RUDP_SYNC_PUMPKIN_POS = 315;
+  OPNCEEBBMJH_RUDP_DEL_PUMPKIN_POS = 316;
+  OPNCEEBBMJH_RUDP_THROWINGKNIFE_PICKUPSPAWN = 317;
+  OPNCEEBBMJH_RUDP_SYNC_PLAYER_PUMPKIN_POSLIST = 318;
+  OPNCEEBBMJH_RUDP_DUMMY_FAKEFIRE = 319;
+  OPNCEEBBMJH_RUDP_MANUAL_ZONE_ENTEROREXIT = 320;
+  OPNCEEBBMJH_RUDP_TRAINING_QUITZONE = 321;
+  OPNCEEBBMJH_RUDP_TRAINING_EXCHANGESHOPLIST = 322;
+  OPNCEEBBMJH_RUDP_TRAINING_SHOWSHOPLIST = 323;
+  OPNCEEBBMJH_RUDP_TRAINING_SHOPITEMBUYSUCESS = 324;
+  OPNCEEBBMJH_RUDP_TRAINING_EXCHANGEITEMSUCESS = 325;
+  OPNCEEBBMJH_RUDP_TRAINING_REQUESTADDINVENTORY = 326;
+  OPNCEEBBMJH_RUDP_REMOVE_INVENTORYLIST = 327;
+  OPNCEEBBMJH_RUDP_SAFE_ZONE_RECT_CHANGE = 328;
+  OPNCEEBBMJH_RUDP_SELECT_EQUIP_SET = 329;
+  OPNCEEBBMJH_RUDP_TRAINING_INTOPROTAl = 330;
+  OPNCEEBBMJH_RUDP_SYNC_ICEWALL = 331;
+  OPNCEEBBMJH_RUDP_TRAINING_ENDCOUNTDOWN = 332;
+  OPNCEEBBMJH_RUDP_ICEWALL_FIRE = 333;
+  OPNCEEBBMJH_RUDP_TRAINING_ENTERINVERTORYSHOP = 334;
+  OPNCEEBBMJH_RUDP_AIRDROP_DESTROY = 335;
+  OPNCEEBBMJH_RUDP_UAVDROP_REENTER = 336;
+  OPNCEEBBMJH_RUDP_RESYNC_WEAPONSHIELD = 337;
+  OPNCEEBBMJH_RUDP_WEAPONSHIELD_TAKE_DAMAGE = 338;
+  OPNCEEBBMJH_RUDP_WEAPONSHIELD_STATECHANGE = 339;
+  OPNCEEBBMJH_RUDP_PET_CHANGE_SKIN = 340;
+  OPNCEEBBMJH_RUDP_REAPER_EQUIPSETGROUPINFO = 341;
+  OPNCEEBBMJH_RUDP_EQUIPSETGROUPINFO = 342;
+  OPNCEEBBMJH_RUDP_REAPER_TRANSFORM = 343;
+  OPNCEEBBMJH_RUDP_TOKEN_LASTPOINT = 344;
+  OPNCEEBBMJH_RUDP_TOKEN_SCORE_CHANGED = 345;
+  OPNCEEBBMJH_RUDP_ENTERBORNSHOP = 346;
+  OPNCEEBBMJH_RUDP_S2C_GIANTTEAMMODE = 347;
+  OPNCEEBBMJH_RUDP_S2C_GIANTEQUIP = 348;
+  OPNCEEBBMJH_RUDP_DETECTIVE_MARK_ENEMIES = 349;
+  OPNCEEBBMJH_RUDP_DETECTIVE_BEMARKED_NOTIFY = 350;
+  OPNCEEBBMJH_RUDP_Add_FakeTimes_Req = 351;
+  OPNCEEBBMJH_RUDP_S2C_EQUIPSHOW = 352;
+  OPNCEEBBMJH_RUDP_Sync_PlayerSelectedEquipIndex = 353;
+  OPNCEEBBMJH_RUDP_S2C_EquipListInfo = 354;
+  OPNCEEBBMJH_RUDP_S2C_UpdateEquipLevelUnlockInfo = 355;
+  OPNCEEBBMJH_RUDP_FULL_EQUIP = 356;
+  OPNCEEBBMJH_RUDP_NOTIFY_TEAMKILL = 357;
+  OPNCEEBBMJH_RUDP_SYNC_TDMLIKESHOP = 358;
+  OPNCEEBBMJH_RUDP_PURCHASE_TDMLIKESHOPITEM = 359;
+  OPNCEEBBMJH_RUDP_SYNC_TDMLIKE_LIMITED_PURCHASE_ITEMS = 360;
+  OPNCEEBBMJH_RUDP_SYNC_ITEMFEEDZONES = 361;
+  OPNCEEBBMJH_RUDP_SYNC_BRIEFITEMFEEDZONES = 362;
+  OPNCEEBBMJH_RUDP_VEHICLE_BRAKE = 363;
+  OPNCEEBBMJH_RUDP_PLAYER_GOALS = 364;
+  OPNCEEBBMJH_RUDP_OBSERVER_LIKE = 365;
+  OPNCEEBBMJH_RUDP_AI_Create_Batch = 366;
+  OPNCEEBBMJH_RUDP_AI_Culling_Batch = 367;
+  OPNCEEBBMJH_RUDP_AI_DEAD = 368;
+  OPNCEEBBMJH_RUDP_EMOTION_ANIMATION = 369;
+  OPNCEEBBMJH_RUDP_STOP_PLANT_EMOTION = 370;
+  OPNCEEBBMJH_RUDP_PLAY_PLANT_EMOTION = 371;
+  OPNCEEBBMJH_RUDP_STORE_WAREHOUSE = 372;
+  OPNCEEBBMJH_RUDP_OPEN_TREASURY_GATE = 373;
+  OPNCEEBBMJH_RUDP_REQUEST_FAITH_JUMPING = 374;
+  OPNCEEBBMJH_RUDP_PLANT_GROWN = 375;
+  OPNCEEBBMJH_RUDP_SYNC_ESCOR_BOSS = 376;
+  OPNCEEBBMJH_RUDP_TAKE_HEALING = 377;
+  OPNCEEBBMJH_RUDP_ADD_REDENVELOPE = 378;
+  OPNCEEBBMJH_RUDP_SYNC_REDENVELOPE = 379;
+  OPNCEEBBMJH_RUDP_RECEIVE_REDENVELOPE = 380;
+  OPNCEEBBMJH_RUDP_SYNC_MovePlatform_VISIBILITY = 381;
+  OPNCEEBBMJH_RUDP_PLAYER_INROOM = 382;
+  OPNCEEBBMJH_RUDP_PLAYER_UPDATE_JKPBUFF = 383;
+  OPNCEEBBMJH_RUDP_PVE_ROUND_NOTIFY = 384;
+  OPNCEEBBMJH_RUDP_PVE_PLAYER_DAMAGE = 385;
+  OPNCEEBBMJH_RUDP_REQUESTREVIVE = 386;
+  OPNCEEBBMJH_RUDP_REQUESTREVIVEWITHLOCATION = 387;
+  OPNCEEBBMJH_RUDP_NOTIFYREVIVE = 388;
+  OPNCEEBBMJH_RUDP_LEVELOBJECT_TAKE_DAMAGE = 389;
+  OPNCEEBBMJH_RUDP_GETIN_CATAPULT = 390;
+  OPNCEEBBMJH_RUDP_GETOUT_CATAPULT = 391;
+  OPNCEEBBMJH_RUDP_START_CATAPULT_FALLING = 392;
+  OPNCEEBBMJH_RUDP_NotifyPlayCutscene = 393;
+  OPNCEEBBMJH_RUDP_SPECTATOR_COMBAT_LEVEL = 394;
+  OPNCEEBBMJH_RUDP_TeamParachuteInfo = 395;
+  OPNCEEBBMJH_RUDP_C2S_TransferParachuteLeader = 396;
+  OPNCEEBBMJH_RUDP_C2S_ParachuteBecomeFree = 397;
+  OPNCEEBBMJH_RUDP_S2C_TransferParachuteLeaderFail = 398;
+  OPNCEEBBMJH_RUDP_CATAPULTS_SYNC = 399;
+  OPNCEEBBMJH_RUDP_SYNC_HOTZONE_INFO = 400;
+  OPNCEEBBMJH_RUDP_DISMISS_HOTZONES = 401;
+  OPNCEEBBMJH_RUDP_SHOW_MATCH_RESULT = 402;
+  OPNCEEBBMJH_RUDP_PET_FINDMUSHROOM_MARK = 403;
+  OPNCEEBBMJH_RUDP_PET_FINDMUSHROOM_REMOVE = 404;
+  OPNCEEBBMJH_RUDP_PETSKILL_RECOVERARMORDURABILITY = 405;
+  OPNCEEBBMJH_RUDP_SYNC_CSGAMEZONE_INFO = 406;
+  OPNCEEBBMJH_RUDP_SYNC_CSSHOPITEMS_LIST = 407;
+  OPNCEEBBMJH_RUDP_PURCHASE_CSITEMS = 408;
+  OPNCEEBBMJH_RUDP_CS_CURROUND_RESULT = 409;
+  OPNCEEBBMJH_RUDP_CS_CURROUND_SPECTATOR_RESULT = 410;
+  OPNCEEBBMJH_RUDP_SYNC_CandyHOTZONE_INFO = 411;
+  OPNCEEBBMJH_RUDP_SYNC_ChangeWeather = 412;
+  OPNCEEBBMJH_RUDP_C2S_ActiveReviveTower = 413;
+  OPNCEEBBMJH_RUDP_SYNC_BigToyBallInfo = 414;
+  OPNCEEBBMJH_RUDP_AISkillUpdateTargetPostion = 415;
+  OPNCEEBBMJH_RUDP_SYNC_ReviveTowerLinkInfo = 416;
+  OPNCEEBBMJH_RUDP_Assistant_MarkItem = 417;
+  OPNCEEBBMJH_RUDP_Assistant_RemoveMarkItem = 418;
+  OPNCEEBBMJH_RUDP_Assistant_TriggerEvent = 419;
+  OPNCEEBBMJH_RUDP_ArmsRace_KillLeader = 420;
+  OPNCEEBBMJH_RUDP_ArmsRace_ArmsInfoList = 421;
+  OPNCEEBBMJH_RUDP_SYNC_DECREASEDAMAGE_INFO = 422;
+  OPNCEEBBMJH_RUDP_S2C_BombZone_Info = 423;
+  OPNCEEBBMJH_RUDP_CONTROL_SYNC_LEADERBOARD = 424;
+  OPNCEEBBMJH_RUDP_SEND_MTPINFO = 425;
+  OPNCEEBBMJH_RUDP_S2C_PET_SKILL_START = 426;
+  OPNCEEBBMJH_RUDP_S2C_PET_SKILL_END = 427;
+  OPNCEEBBMJH_RUDP_S2C_PET_SKILL_AUTOADD_ICEWALL = 428;
+  OPNCEEBBMJH_RUDP_S2C_PET_SKILL_MARK_CURING_ENEMY = 429;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_ESCORT_MATCH_BOSS_STATE = 430;
+  OPNCEEBBMJH_RUDP_S2C_PET_SKILL_MARKED_CURING = 431;
+  OPNCEEBBMJH_RUDP_NOTIFY_BANKNOTE_PICK_AMOUNT = 432;
+  OPNCEEBBMJH_RUDP_S2C_ARMSRACE_BONUSCARD_GIVE = 433;
+  OPNCEEBBMJH_RUDP_C2S_ARMSRACE_BONUSCARD_USE = 434;
+  OPNCEEBBMJH_RUDP_ZEPPELIN_DEAD = 435;
+  OPNCEEBBMJH_RUDP_ZEPPELIN_DROP_DESTROY = 436;
+  OPNCEEBBMJH_RUDP_ZEPPELIN_NEXT_POSITION = 437;
+  OPNCEEBBMJH_RUDP_SAFEZONE_KILL_PENALTY = 438;
+  OPNCEEBBMJH_RUDP_JOIN_MATCH_PREPARE = 439;
+  OPNCEEBBMJH_RUDP_JOIN_MATCH_POST = 440;
+  OPNCEEBBMJH_RUDP_COMBINE_WEAPON = 441;
+  OPNCEEBBMJH_RUDP_COMBINE_WEAPON_LOCKED = 442;
+  OPNCEEBBMJH_RUDP_SYNC_VEHICLE_ACTIVE_SKILL_STATE = 443;
+  OPNCEEBBMJH_RUDP_ESCORT_BOSS_RUIN = 444;
+  OPNCEEBBMJH_RUDP_SEND_MTPINFOEXT = 445;
+  OPNCEEBBMJH_RUDP_SYNC_CSSTRIKEOUT_MINIGAME_PHASEINFO = 446;
+  OPNCEEBBMJH_RUDP_CSSO_TEAMELIMINATE = 447;
+  OPNCEEBBMJH_RUDP_NOPARAM_NOTIFY = 448;
+  OPNCEEBBMJH_RUDP_C2S_BountyIsland_SwitchSceneReq = 449;
+  OPNCEEBBMJH_RUDP_S2C_BountyIsland_SwitchSceneRes = 450;
+  OPNCEEBBMJH_RUDP_C2S_BountyIsland_SwitchSceneFinish = 451;
+  OPNCEEBBMJH_RUDP_S2C_BountyIsland_SwitchSceneFail = 452;
+  OPNCEEBBMJH_RUDP_C2S_BountyIsland_RepairTeleportMachine = 453;
+  OPNCEEBBMJH_RUDP_C2S_ActiveHitFlyPunch = 454;
+  OPNCEEBBMJH_RUDP_SYNC_CSSO_ROUND_RESULT = 455;
+  OPNCEEBBMJH_RUDP_SYNC_CSSO_BATTLE_RESULT = 456;
+  OPNCEEBBMJH_RUDP_S2C_CSSO_PLAYER_INFO = 457;
+  OPNCEEBBMJH_RUDP_S2C_CSSO_PLAYERKILLINFO = 458;
+  OPNCEEBBMJH_RUDP_C2S_VEHICLE_RESET = 459;
+  OPNCEEBBMJH_RUDP_SYNC_CSSO_TEAMELIMINATEINFO = 460;
+  OPNCEEBBMJH_RUDP_S2C_SET_COLLECTION_SKIN = 461;
+  OPNCEEBBMJH_RUDP_CONFIRM_SERVERFORCE_SYNC_VEHICLE_STATE = 462;
+  OPNCEEBBMJH_RUDP_C2S_VEHICLE_HORN = 463;
+  OPNCEEBBMJH_RUDP_S2C_ADS_1V1PLAYERWIN = 464;
+  OPNCEEBBMJH_RUDP_SYNC_TELEPORTDOOR_INFO = 465;
+  OPNCEEBBMJH_RUDP_C2S_USE_TELEPORTDOOR = 466;
+  OPNCEEBBMJH_RUDP_S2C_INGAME_SHOP_ITEMS = 467;
+  OPNCEEBBMJH_RUDP_S2C_AIRDROPINGAME_SHOP_ITEMS = 468;
+  OPNCEEBBMJH_RUDP_S2C_INGAME_SHOP_LOCATIONS = 469;
+  OPNCEEBBMJH_RUDP_S2C_INGAME_AIRSHOP_EFFECTIMES = 470;
+  OPNCEEBBMJH_RUDP_S2C_INGAME_AIRSHOP_AVAIABLES = 471;
+  OPNCEEBBMJH_RUDP_S2C_INGAME_AIRSHOP_BOUGHTTIMES = 472;
+  OPNCEEBBMJH_RUDP_INGAME_SHOP_BUY = 473;
+  OPNCEEBBMJH_RUDP_S2C_INGAME_SHOP_AVAILABLE_SYNC = 474;
+  OPNCEEBBMJH_RUDP_GETON_SKATEBOARD = 475;
+  OPNCEEBBMJH_RUDP_GETOFF_SKATEBOARD = 476;
+  OPNCEEBBMJH_RUDP_FIREWORK_SYNCSTATE = 477;
+  OPNCEEBBMJH_RUDP_FIREWORK_REENTERSYNC = 478;
+  OPNCEEBBMJH_RUDP_S2C_REMOVE_PHYXSHIELD = 479;
+  OPNCEEBBMJH_RUDP_S2C_ADD_PHYXSHIELD = 480;
+  OPNCEEBBMJH_RUDP_S2C_PHYXSHIELD_TAKEEFFECT = 481;
+  OPNCEEBBMJH_RUDP_S2C_BAN_SKILLACTIVE = 482;
+  OPNCEEBBMJH_RUDP_S2C_RECOVER_SKILLACTIVE = 483;
+  OPNCEEBBMJH_RUDP_TRIGGER_MUSIC_ELEMENT = 484;
+  OPNCEEBBMJH_RUDP_TRIGGER_MUSIC_ELEMENT_SYNC = 485;
+  OPNCEEBBMJH_RUDP_SYNC_TELEPORTDOOR_CDENDTIME = 486;
+  OPNCEEBBMJH_RUDP_RESYNC_PHYXSHIELD = 487;
+  OPNCEEBBMJH_RUDP_C2S_FollowParachuteLeader = 488;
+  OPNCEEBBMJH_RUDP_S2C_FollowParachuteLeaderFail = 489;
+  OPNCEEBBMJH_RUDP_MINIGAME_REQUESTUPLOADSCORE = 490;
+  OPNCEEBBMJH_RUDP_SYNC_ALLMINIGAMERANKING = 491;
+  OPNCEEBBMJH_RUDP_SYNC_SINGLEMINIGAMERANKING = 492;
+  OPNCEEBBMJH_RUDP_STOP_EMOTION = 493;
+  OPNCEEBBMJH_RUDP_SYNC_BLACKMASK = 494;
+  OPNCEEBBMJH_RUDP_SYNC_ADS_BOUNUS_COUNTDOWN = 495;
+  OPNCEEBBMJH_RUDP_SYNC_SHOWINITIAL_TDMLIKESHOP = 496;
+  OPNCEEBBMJH_RUDP_SYNC_SHOW_TDMLIKESHOP = 497;
+  OPNCEEBBMJH_RUDP_GETON_FERRISWHEEL = 498;
+  OPNCEEBBMJH_RUDP_GETOFF_FERRISWHEEL = 499;
+  OPNCEEBBMJH_RUDP_RESYNC_PLAYERSFERRISWHEELINFO = 500;
+  OPNCEEBBMJH_RUDP_SYNC_DEL_BIG_TOY_BALL = 501;
+  OPNCEEBBMJH_RUDP_SYNC_AMUSE_LEVEL = 502;
+  OPNCEEBBMJH_RUDP_MYSTORY_BOX_OPEN = 503;
+  OPNCEEBBMJH_RUDP_MYSTORY_BOX_CHOOSE_ITEM = 504;
+  OPNCEEBBMJH_RUDP_SYNC_DELIVERYMARKENEMYSKILL_STATE = 505;
+  OPNCEEBBMJH_RUDP_S2C_Sync_WereWolvesMatchEndInfo = 506;
+  OPNCEEBBMJH_RUDP_S2C_NotifyPlayerCampInfo = 507;
+  OPNCEEBBMJH_RUDP_C2S_WolfKillHuman = 508;
+  OPNCEEBBMJH_RUDP_S2C_NotifyHumanKilled = 509;
+  OPNCEEBBMJH_RUDP_S2C_CreateWereWolvesBody = 510;
+  OPNCEEBBMJH_RUDP_S2C_DeleWereWolvesBody = 511;
+  OPNCEEBBMJH_RUDP_SYNC_StartVoteInfo = 512;
+  OPNCEEBBMJH_RUDP_SYNC_VOTE = 513;
+  OPNCEEBBMJH_RUDP_SYNC_TASK = 514;
+  OPNCEEBBMJH_RUDP_START_VOTE = 515;
+  OPNCEEBBMJH_RUDP_SYNC_VOTERESULT = 516;
+  OPNCEEBBMJH_RUDP_SYNC_HistroyVoteResult = 517;
+  OPNCEEBBMJH_RUDP_S2C_HumanCompleteAllTask = 518;
+  OPNCEEBBMJH_RUDP_S2C_CreateWolfTraps = 519;
+  OPNCEEBBMJH_RUDP_S2C_DelWolfTrap = 520;
+  OPNCEEBBMJH_RUDP_S2C_SyncWolfTrapCatchInfo = 521;
+  OPNCEEBBMJH_RUDP_C2S_UseTrap = 522;
+  OPNCEEBBMJH_RUDP_C2S_TrapRescure = 523;
+  OPNCEEBBMJH_RUDP_Sync_PredictWereWolvesRole = 524;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_REJOIN_COMBINE_STATUS = 525;
+  OPNCEEBBMJH_RUDP_WARNING_ZONE_NTF = 526;
+  OPNCEEBBMJH_RUDP_SYNC_BLOWUPICEWALLBALL_CREATE = 527;
+  OPNCEEBBMJH_RUDP_SYNC_BLOWUPICEWALLBALL_REENTER = 528;
+  OPNCEEBBMJH_RUDP_SYNC_BLOWUPICEWALLBALL_DESTROY = 529;
+  OPNCEEBBMJH_RUDP_SYNC_QUICK_CHAT = 530;
+  OPNCEEBBMJH_RUDP_REVIVEPOINT_STATE_NOTIFY = 531;
+  OPNCEEBBMJH_RUDP_REVIVEPOINT_STATE_SYNC = 532;
+  OPNCEEBBMJH_RUDP_SYNC_LIMITED_PURCHASE_ITEMS = 533;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_THROWINGKNIFE_COUNT = 534;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_WEAPONBOX_INFO = 535;
+  OPNCEEBBMJH_RUDP_C2S_OPEN_WEAPONBOX = 536;
+  OPNCEEBBMJH_RUDP_C2S_INTO_BUNKER = 537;
+  OPNCEEBBMJH_RUDP_S2C_WEREWOLF_VOICE = 538;
+  OPNCEEBBMJH_RUDP_SYNC_WEREWOLVES_CHAT = 539;
+  OPNCEEBBMJH_RUDP_SYNC_WEREWOLVES_QUICKCHAT = 540;
+  OPNCEEBBMJH_RUDP_SpawnLevelDriftBottle = 541;
+  OPNCEEBBMJH_RUDP_TriggerLevelDriftBottle = 542;
+  OPNCEEBBMJH_RUDP_Del_DriftBottle = 543;
+  OPNCEEBBMJH_RUDP_Sync_PlayerUseDriftBottleState = 544;
+  OPNCEEBBMJH_RUDP_SYNC_WEREWOLVES_TASK_ALERT = 545;
+  OPNCEEBBMJH_RUDP_ENTER_SERVER_MINI_GAME = 546;
+  OPNCEEBBMJH_RUDP_INVITE_SERVER_MINI_GAME = 547;
+  OPNCEEBBMJH_RUDP_EXIT_SERVER_MINI_GAME = 548;
+  OPNCEEBBMJH_RUDP_SYNC_SERVER_MINI_GAME_PHASE = 549;
+  OPNCEEBBMJH_RUDP_USEMEDKIT_SUCCESS = 550;
+  OPNCEEBBMJH_RUDP_REPLAY_EVENT = 551;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_CONTAINER_KILLER_INFOS = 552;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_BOXING_MACHINE_DATA = 553;
+  OPNCEEBBMJH_RUDP_SYNC_SECOND_WEAPON_DATA = 554;
+  OPNCEEBBMJH_RUDP_SYNC_SPAWM_WAITINGROOMFOURSYMBOLS = 555;
+  OPNCEEBBMJH_RUDP_USE_WAITINGROOMFOURSYMBOLS = 556;
+  OPNCEEBBMJH_RUDP_C2S_SELECT_FOURSYMBOL_ATTRIBUTE = 557;
+  OPNCEEBBMJH_RUDP_S2C_FOURSYMBOLSLEVELUPATTRIBUTES = 558;
+  OPNCEEBBMJH_RUDP_SYNC_PLAYERFOURSYMBOLS_REENTER = 559;
+  OPNCEEBBMJH_RUDP_SCENEEDIT_SETTING_SYNC = 560;
+  OPNCEEBBMJH_RUDP_ENTER_SKY_FALLING = 561;
+  OPNCEEBBMJH_RUDP_ADD_PICKUPLIST_AT_TUTORIAL = 562;
+  OPNCEEBBMJH_RUDP_TELEPORT_BOT_AT_TUTORIAL = 563;
+  OPNCEEBBMJH_RUDP_TUTORIALBR_START_FIGHT = 564;
+  OPNCEEBBMJH_RUDP_SYNC_PLAYERFOURSYMBOLS_MATCHEND_INFO = 565;
+  OPNCEEBBMJH_RUDP_INGAME_REWARD_INFO = 566;
+  OPNCEEBBMJH_RUDP_S2C_ADD_MUSICTARGET = 567;
+  OPNCEEBBMJH_RUDP_S2C_REMOVE_MUSICTARGET = 568;
+  OPNCEEBBMJH_RUDP_RESYNC_MUSICTARGETLIST = 569;
+  OPNCEEBBMJH_RUDP_PLAY_COMBO_EFFECT = 570;
+  OPNCEEBBMJH_RUDP_PLAY_MUSIC_SHOOTON = 571;
+  OPNCEEBBMJH_RUDP_BREAK_MUSICTARGET = 572;
+  OPNCEEBBMJH_RUDP_ENTER_MUSICSHOOT = 573;
+  OPNCEEBBMJH_RUDP_EXIT_MUSICSHOOT = 574;
+  OPNCEEBBMJH_RUDP_PETRACING_VOTE = 575;
+  OPNCEEBBMJH_RUDP_PETRACING_RESULT = 576;
+  OPNCEEBBMJH_RUDP_SYNC_PARTY_DANCE_LEVEL = 577;
+  OPNCEEBBMJH_RUDP_SYNC_PARTY_DANCE_ANIM = 578;
+  OPNCEEBBMJH_RUDP_SpawnFrozenZone = 579;
+  OPNCEEBBMJH_RUDP_Del_FrozenZone = 580;
+  OPNCEEBBMJH_RUDP_SPECTATOR_PLAYER_BESTSTATS = 581;
+  OPNCEEBBMJH_RUDP_NotifyClientPlayerQuit = 582;
+  OPNCEEBBMJH_RUDP_S2C_INGAME_SHOP_PERSONAL_AVAILABLE_SYNC = 583;
+  OPNCEEBBMJH_RUDP_NotifyPickPlayer_PickContainer = 584;
+  OPNCEEBBMJH_RUDP_ASK_PURCHASE_CSITEMS = 585;
+  OPNCEEBBMJH_RUDP_PURCHASE_CSITEMS_FOROTHERS = 586;
+  OPNCEEBBMJH_RUDP_AGREE_TRAININGGAME = 587;
+  OPNCEEBBMJH_RUDP_TRAININGGAME_LINEUPENDRES = 588;
+  OPNCEEBBMJH_RUDP_CHANGE_CLOTH = 589;
+  OPNCEEBBMJH_RUDP_PARTY_WHEELROLL_CTRL = 590;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_FLIGHTROAMINFO = 591;
+  OPNCEEBBMJH_RUDP_WHEELROLL_PLAYERSTATE = 592;
+  OPNCEEBBMJH_RUDP_C2S_PARTY_NPC_INTERACT = 593;
+  OPNCEEBBMJH_RUDP_S2C_REPLACER = 594;
+  OPNCEEBBMJH_RUDP_Spawn_RescureZone = 595;
+  OPNCEEBBMJH_RUDP_Del_RescureZone = 596;
+  OPNCEEBBMJH_RUDP_Use_RescureZone = 597;
+  OPNCEEBBMJH_RUDP_CancelUse_RescureZone = 598;
+  OPNCEEBBMJH_RUDP_KNOCK_REVIVE_USERESCUREZONE = 599;
+  OPNCEEBBMJH_RUDP_SYNC_PARTYMUSICZONE = 600;
+  OPNCEEBBMJH_RUDP_CREATE_DESTRUCTIBLEOBJ = 601;
+  OPNCEEBBMJH_RUDP_DESTROY_DESTRUCTIBLEPART = 602;
+  OPNCEEBBMJH_RUDP_ENTER_SOLODANCE = 603;
+  OPNCEEBBMJH_RUDP_QUIT_SOLODANCE = 604;
+  OPNCEEBBMJH_RUDP_INVITE_SOLODANCE_OPPONENT = 605;
+  OPNCEEBBMJH_RUDP_SOLODANCE_SETTLEMENT = 606;
+  OPNCEEBBMJH_RUDP_SYNC_SOLODANCE_SCORE = 607;
+  OPNCEEBBMJH_RUDP_SOLODANCE_BATTLESTART = 608;
+  OPNCEEBBMJH_RUDP_SOLODANCE_READY = 609;
+  OPNCEEBBMJH_RUDP_SYNC_CUSTOM_SPAWNAREA = 610;
+  OPNCEEBBMJH_RUDP_LOG_PARTY_PLAYMUSICBEAT = 611;
+  OPNCEEBBMJH_RUDP_CHANGE_FLIGHTROAM = 612;
+  OPNCEEBBMJH_RUDP_COIN_BONUS_REPORT = 613;
+  OPNCEEBBMJH_RUDP_SimpleChangeFootballState = 614;
+  OPNCEEBBMJH_RUDP_C2S_ClientHitFlyPlayer = 615;
+  OPNCEEBBMJH_RUDP_S2C_Sync_RushingPetsPlayerLevelShowWinOrOver = 616;
+  OPNCEEBBMJH_RUDP_S2C_Sync_RushingPetsPlayerFirstFinishTarget = 617;
+  OPNCEEBBMJH_RUDP_S2C_NotifyPlayerTriggerCheckPoint = 618;
+  OPNCEEBBMJH_RUDP_ADD_TRAMPLE = 619;
+  OPNCEEBBMJH_RUDP_RESYNC_TRAMPLE = 620;
+  OPNCEEBBMJH_RUDP_REMOVE_TRAMPLE = 621;
+  OPNCEEBBMJH_RUDP_SYNC_TRAMPLE = 622;
+  OPNCEEBBMJH_RUDP_ADD_DROP = 623;
+  OPNCEEBBMJH_RUDP_RESYNC_DROP = 624;
+  OPNCEEBBMJH_RUDP_REMOVE_DROP = 625;
+  OPNCEEBBMJH_RUDP_SYNC_DROPP = 626;
+  OPNCEEBBMJH_RUDP_DETECTIVE_ENEMIES_FOR_DAMAGER = 627;
+  OPNCEEBBMJH_RUDP_S2C_LUDOGAME_CREATEPLAYER = 628;
+  OPNCEEBBMJH_RUDP_C2S_LUDOGAME_RANDOM = 629;
+  OPNCEEBBMJH_RUDP_S2C_LUDOGAME_RANDOM = 630;
+  OPNCEEBBMJH_RUDP_C2S_LUDOGAME_SELECT = 631;
+  OPNCEEBBMJH_RUDP_S2C_LUDOGAME_MOVE = 632;
+  OPNCEEBBMJH_RUDP_S2C_LUDOGAME_SETTLE = 633;
+  OPNCEEBBMJH_RUDP_C2S_LUDOGAME_TRUST = 634;
+  OPNCEEBBMJH_RUDP_S2C_LUDOGAME_TRUST = 635;
+  OPNCEEBBMJH_RUDP_S2C_LUDOGAME_PlayerState = 636;
+  OPNCEEBBMJH_RUDP_SYNC_AIRDROPINGAMEPOS = 637;
+  OPNCEEBBMJH_RUDP_SYNC_METEORSPECIFICTIME = 638;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_IsTrainingBGMON = 639;
+  OPNCEEBBMJH_RUDP_C2S_LOCAL_OBEVENT_REQ = 640;
+  OPNCEEBBMJH_RUDP_C2S_GLOBAL_OBEVENT_REQ = 641;
+  OPNCEEBBMJH_RUDP_S2C_GLOBAL_OBEVENT_POLL_NTF = 642;
+  OPNCEEBBMJH_RUDP_C2S_GLOBAL_OBEVENT_POLL_REQ = 643;
+  OPNCEEBBMJH_RUDP_S2C_GLOBAL_OBEVENT_ROOMSETTING_NTF = 644;
+  OPNCEEBBMJH_RUDP_S2C_OBEVENT_CDEND_NTF = 645;
+  OPNCEEBBMJH_RUDP_DMM_SYNC_MorphObject = 646;
+  OPNCEEBBMJH_RUDP_DMM_REQ_MORPH_OBJECT = 647;
+  OPNCEEBBMJH_RUDP_S2C_SPAWN_GAMEOBJECT = 648;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_TAKE_TURNS_SHOP_STATE = 649;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_TAKE_TURNS_SHOP_OPTIONS = 650;
+  OPNCEEBBMJH_RUDP_SYNC_OPTION_STATE = 651;
+  OPNCEEBBMJH_RUDP_SYNC_SKILL_STATE_REDUCEBEDAMAGEDBYGRENADE = 652;
+  OPNCEEBBMJH_RUDP_C2S_INGAME_GIVE_SNOWBALL = 653;
+  OPNCEEBBMJH_RUDP_S2C_SNOWBALLBOX_CREATE = 654;
+  OPNCEEBBMJH_RUDP_GETIN_CANNON = 655;
+  OPNCEEBBMJH_RUDP_GETOUT_CANNON = 656;
+  OPNCEEBBMJH_RUDP_CANNONS_SYNC = 657;
+  OPNCEEBBMJH_RUDP_S2C_SYNC_ASSIST_KNOCK_DOWN = 658;
+  OPNCEEBBMJH_RUDP_CANNON_FIRE = 659;
+  OPNCEEBBMJH_RUDP_GAMEMISSION_START = 660;
+  OPNCEEBBMJH_RUDP_GAMEMISSION_ERROR = 661;
+  OPNCEEBBMJH_RUDP_GAMEMISSION_END = 662;
+  OPNCEEBBMJH_RUDP_GAMEMISSION_SUPPLY_TRIGGER = 663;
+  OPNCEEBBMJH_RUDP_GAMEMISSION_SUPPLY_DELETE = 664;
+  OPNCEEBBMJH_RUDP_SPAWN_LEVEL_SUPPLY = 665;
+  OPNCEEBBMJH_RUDP_SYNC_PLAYER_USE_SUPPLY_STATE = 666;
+  OPNCEEBBMJH_RUDP_GAMEMISSION_TREASURE_DELETE = 667;
+  OPNCEEBBMJH_RUDP_S2C_LWSO_PLAYERKILLINFO = 668;
+  OPNCEEBBMJH_RUDP_S2C_LWSO_MINIGAME_PHASEINFO = 669;
+  OPNCEEBBMJH_RUDP_S2C_LWSO_TEAMINFO = 670;
+  OPNCEEBBMJH_RUDP_S2C_LWSO_LASTROUNDRESULT = 671;
+  OPNCEEBBMJH_RUDP_S2C_LWSO_CURROUND_RESULT = 672;
+  OPNCEEBBMJH_RUDP_S2C_UGC_ScoreModule_SyncScore = 673;
+  OPNCEEBBMJH_RUDP_S2C_UGC_HudModule_SyncHUDState = 674;
+  OPNCEEBBMJH_RUDP_S2C_UGC_AddLevelObject = 675;
+  OPNCEEBBMJH_RUDP_S2C_UGC_EnableLevelObject = 676;
+  OPNCEEBBMJH_RUDP_S2C_GLOBAL_OBEVENT_ACTIVE_NTF = 677;
+  OPNCEEBBMJH_RUDP_SYNC_SKILL_STATE_REDUCEBACKDAMAGE = 678;
+  OPNCEEBBMJH_RUDP_S2C_UGC_PRISyncDirtyDataset = 679;
+  OPNCEEBBMJH_RUDP_S2C_REPLACE_SAMOINFO_NTF = 680;
+  OPNCEEBBMJH_RUDP_S2C_UGC_MsgNotify = 681;
+  OPNCEEBBMJH_RUDP_VAR_SYNC_PRI_DATA = 900;
+  OPNCEEBBMJH_RUDP_VAR_SYNC_GRI_DATA = 901;
+  OPNCEEBBMJH_UDP_SYNC_SERVER_TIME = 1000;
+  OPNCEEBBMJH_UDP_PLAYER_STATE_SYNC = 1001;
+  OPNCEEBBMJH_UDP_VEHICLE_STATE_SYNC = 1002;
+  OPNCEEBBMJH_UDP_AIRDROP_STATE_SYNC = 1003;
+  OPNCEEBBMJH_UDP_SYNC_AI_MOVE = 1004;
+  OPNCEEBBMJH_UDP_UAV_STATE_SYNC = 1005;
+  OPNCEEBBMJH_UDP_PASSENGER_STATE_SYNC = 1006;
+  OPNCEEBBMJH_UDP_LevelMovePlatform_STATE_SYNC = 1007;
+  OPNCEEBBMJH_UDP_VEHICLE_MACHINEGUN_SYNC = 1008;
+  OPNCEEBBMJH_UDP_AI_STATE_SYNC = 1009;
+  OPNCEEBBMJH_UDP_PLAYER_HURT = 1010;
+  OPNCEEBBMJH_UDP_PET_STATE_SYNC = 1011;
+  OPNCEEBBMJH_UDP_PLAYER_STATE_SYNC_V2 = 1012;
+  OPNCEEBBMJH_UDP_PLAYER_HEAL = 1013;
+  OPNCEEBBMJH_UDP_PLAYER_POSITION_ONLY = 1014;
+  OPNCEEBBMJH_UDP_SYNC_CATAPULT = 1015;
+  OPNCEEBBMJH_UDP_SYNC_AIM_ROTATION = 1016;
+  OPNCEEBBMJH_UDP_SYNC_ASSISTANT_AUDIO_INFO = 1017;
+  OPNCEEBBMJH_UDP_SYNC_ASSISTANT_TRIGGER_INFO = 1018;
+  OPNCEEBBMJH_UDP_SYNC_PROTECTED_HELMET_EVENT = 1019;
+  OPNCEEBBMJH_UDP_TRAINING_INGAMECHAT = 1020;
+  OPNCEEBBMJH_UDP_UAVDROP_STATE_SYNC = 1021;
+  OPNCEEBBMJH_UDP_FERRISWHEEL_STATE_SYNC = 1022;
+  OPNCEEBBMJH_UDP_ZEPPELIN_STATE_SYNC = 1023;
+  OPNCEEBBMJH_UDP_ZEPPELIN_DROP_STATE_SYNC = 1024;
+  OPNCEEBBMJH_UDP_ESCORT_MATCH_BOSS_STATE_SYNC = 1025;
+  OPNCEEBBMJH_UDP_BLOWUPICEWALL_BALL_STATE_SYNC = 1026;
+  OPNCEEBBMJH_UDP_SYNC_PETRACER_STATE = 1027;
+  OPNCEEBBMJH_UDP_C2S_VEHICLE_GEARVFX = 1028;
+  OPNCEEBBMJH_UDP_WHEELROLL_STATE_SYNC = 1029;
+  OPNCEEBBMJH_UDP_INGAMECHAT = 1030;
+  OPNCEEBBMJH_UDP_SYNC_CANNON = 1031;
+  OPNCEEBBMJH_RUDP_DEBUG_TEST_RECIPE = 2000;
+  OPNCEEBBMJH_RUDP_DEBUG_START_BOT_AGENT = 2001;
+  OPNCEEBBMJH_RUDP_DEBUG_SET_SKIN_ID = 2002;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_PICKUP = 2003;
+  OPNCEEBBMJH_RUDP_DEBUG_TURN_ZONE_DAMAGE_ONOFF = 2004;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_AIRDROP = 2005;
+  OPNCEEBBMJH_RUDP_DEBUG_TOGGLE_GOD = 2006;
+  OPNCEEBBMJH_RUDP_DEBUG_SPEED_HACK = 2007;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_BOT = 2008;
+  OPNCEEBBMJH_RUDP_DEBUG_Goto_Level = 2009;
+  OPNCEEBBMJH_RUDP_DEBUG_ChangePhaseTime = 2010;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_AI = 2011;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_PROJECTILE = 2012;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_EP = 2013;
+  OPNCEEBBMJH_RUDP_DEBUG_AIMOVE = 2014;
+  OPNCEEBBMJH_RUDP_DEBUG_REMOVE_ZONE = 2015;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_VEHICLE = 2016;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_VEHICLE_ITEM = 2017;
+  OPNCEEBBMJH_RUDP_DEBUG_INFINITE_AMMO = 2018;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_ICEWALL = 2019;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_ReaperSoul = 2020;
+  OPNCEEBBMJH_RUDP_DEBUG_TELEPORT_PLAYER = 2021;
+  OPNCEEBBMJH_RUDP_DEBUG = 2022;
+  OPNCEEBBMJH_RUDP_DEBUG_FORCE_TAKE_DAMAGE = 2023;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_PET = 2024;
+  OPNCEEBBMJH_RUDP_DEBUG_TOGGLE_IGNORE_BY_AI = 2025;
+  OPNCEEBBMJH_RUDP_DEBUG_CHANGE_CLOTH = 2026;
+  OPNCEEBBMJH_RUDP_DEBUG_ADD_HYPE = 2027;
+  OPNCEEBBMJH_RUDP_TRIGGER_GRENADE = 2028;
+  OPNCEEBBMJH_RUDP_DEBUG_TAKE_DAMAGE = 2029;
+  OPNCEEBBMJH_RUDP_DEBUG_ADS_SWITCHTO_1V1 = 2030;
+  OPNCEEBBMJH_RUDP_DEBUG_WheelRoll = 2031;
+  OPNCEEBBMJH_RUDP_DEBUG_LudoGameRandom = 2032;
+}
+
+enum PABLHBJMDLH {
+  PABLHBJMDLH_UNSPECIFIED = 0;
+  PABLHBJMDLH_ETutorialBRGRI_ALIVE_PLAYERCOUNT = 1;
+  PABLHBJMDLH_ETutorialBRGRI_CURRENT_PHASE = 2;
+  PABLHBJMDLH_ETutorialBRGRI_NB = 3;
+}
+
+enum PAKPPDMBAKL {
+  PAKPPDMBAKL_EPRI_ControlModeBuffBox_State = 0;
+  PAKPPDMBAKL_EPRI_ControlModeBuffBox_NB = 1;
+}
+
+enum PEEJEFAIMAE {
+  PEEJEFAIMAE_UNSPECIFIED = 0;
+  PEEJEFAIMAE_EPRI_SHIELD_HP = 1;
+  PEEJEFAIMAE_EPRI_SHIELD_NB = 2;
+}
+
+enum PFODPDKLOIM {
+  PFODPDKLOIM_EPRI_VEHICLE_CUR_HP = 0;
+  PFODPDKLOIM_EPRI_VEHICLE_MAX_HP = 1;
+  PFODPDKLOIM_EPRI_VEHICLE_IS_STABLE = 2;
+  PFODPDKLOIM_EPRI_VEHICLE_SHAPE = 3;
+  PFODPDKLOIM_EPRI_VEHICLE_ParachuteState = 4;
+  PFODPDKLOIM_EPRI_VEHICLE_AirDropState = 5;
+  PFODPDKLOIM_EPRI_VEHICLE_SKINID = 6;
+  PFODPDKLOIM_EPRI_VEHICLE_BRAKESTATE = 7;
+  PFODPDKLOIM_EPRI_VEHICLE_HORNSTATE = 8;
+  PFODPDKLOIM_EPRI_VEHICLE_LEVEL = 9;
+  PFODPDKLOIM_EPRI_VEHICLE_NB = 10;
+}
+
+enum PHAANMKLCGC {
+  PHAANMKLCGC_ETreasureMapInfo_Owner = 0;
+  PHAANMKLCGC_ETreasureMapInfo_Status = 1;
+  PHAANMKLCGC_ETreasureMapInfo_MaxCount = 2;
+}
+
+enum PHBIPHIOEEG {
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_HP = 0;
+  PHBIPHIOEEG_EPRI_PLAYER_MAX_HP = 1;
+  PHBIPHIOEEG_EPRI_PLAYER_VEST_DURABILITY = 2;
+  PHBIPHIOEEG_EPRI_PLAYER_HELMET_DURABILITY = 3;
+  PHBIPHIOEEG_EPRI_PLAYER_ITEM_ON_HAND = 4;
+  PHBIPHIOEEG_EPRI_PLAYER_IS_RESCURING = 5;
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_EP = 6;
+  PHBIPHIOEEG_EPRI_PLAYER_MAX_EP = 7;
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_AP = 8;
+  PHBIPHIOEEG_EPRI_PLAYER_MAX_AP = 9;
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_LIFE_COUNT = 10;
+  PHBIPHIOEEG_EPRI_PLAYER_STATUS = 11;
+  PHBIPHIOEEG_EPRI_PLAYER_SIGHTING_ID = 12;
+  PHBIPHIOEEG_EPRI_PLAYER_KILL_COUNT = 13;
+  PHBIPHIOEEG_EPRI_PLAYER_OB_COUNT = 14;
+  PHBIPHIOEEG_EPRI_PLAYER_BUFF = 15;
+  PHBIPHIOEEG_EPRI_PLAYER_CAMOUFLAGE_HP = 16;
+  PHBIPHIOEEG_ERPI_PLAYER_LIKED_COUNT = 17;
+  PHBIPHIOEEG_ERPI_PLAYER_CAMOUFLAGE_EP = 18;
+  PHBIPHIOEEG_ERPI_PLAYER_INROOM = 19;
+  PHBIPHIOEEG_ERPI_PLAYER_PVE_KILL_COUNT = 20;
+  PHBIPHIOEEG_EPRI_PLAYER_FIRING_STATUS = 21;
+  PHBIPHIOEEG_EPRI_PLAYER_MAX_HYPE = 22;
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_HYPE = 23;
+  PHBIPHIOEEG_EPRI_PLAYER_MAX_HYPE_LEVEL = 24;
+  PHBIPHIOEEG_EPRI_PLAYER_HYPE_LEVEL = 25;
+  PHBIPHIOEEG_EPRI_PLAYER_EPIC_CLOTHES = 26;
+  PHBIPHIOEEG_EPRI_PLAYER_EFFECT_TRIGGER = 27;
+  PHBIPHIOEEG_EPRI_PLAYER_SCORE = 28;
+  PHBIPHIOEEG_EPRI_PLAYER_DEAD_COUNT = 29;
+  PHBIPHIOEEG_EPRI_PLAYER_ASSIST_COUNT = 30;
+  PHBIPHIOEEG_EPRI_PLAYER_TOTAL_DAMAGE = 31;
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_COIN = 32;
+  PHBIPHIOEEG_EPRI_PLAYER_COINEARNED_CURROUND = 33;
+  PHBIPHIOEEG_EPRI_PLAYER_FACTION_ID = 34;
+  PHBIPHIOEEG_EPRI_PLAYER_LINK_ACTIVITY_FINISHED = 35;
+  PHBIPHIOEEG_EPRI_PLAYER_THROWKNIFE_PHASE = 36;
+  PHBIPHIOEEG_EPRI_PLAYER_TRAININGZONE_TYPE_IAMIN = 37;
+  PHBIPHIOEEG_EPRI_PLAYER_EQUIP_SET_INDEX = 38;
+  PHBIPHIOEEG_EPRI_PLAYER_FOOTBALL_RADIUS = 39;
+  PHBIPHIOEEG_EPRI_PLAYER_HIDE = 40;
+  PHBIPHIOEEG_EPRI_PLAYER_ARMRACE_LEVELANDPOINTS = 41;
+  PHBIPHIOEEG_EPRI_PLAYER_ARMRACE_RANK = 42;
+  PHBIPHIOEEG_EPRI_PLAYER_ARMRACE_ISLEADER = 43;
+  PHBIPHIOEEG_EPRI_PLAYER_ARMRACE_OPPONENTLEVEL = 44;
+  PHBIPHIOEEG_EPRI_PLAYER_OD_FACTION = 45;
+  PHBIPHIOEEG_EPRI_PLAYER_TOKEN_COUNT = 46;
+  PHBIPHIOEEG_EPRI_PLAYER_REAPER_SOUL = 47;
+  PHBIPHIOEEG_EPRI_PLAYER_REAPER_STATE = 48;
+  PHBIPHIOEEG_EPRI_PLAYER_Reaper_HP = 49;
+  PHBIPHIOEEG_EPRI_PLAYER_GAMEMODE_SPEEDSCALE = 50;
+  PHBIPHIOEEG_EPRI_PLAYER_GAMEMODE_DAMAGESCALE = 51;
+  PHBIPHIOEEG_EPRI_PLAYER_GAMEMODE_JUMPHEIGHTSCALE = 52;
+  PHBIPHIOEEG_EPRI_PLAYER_GAMEMODE_DAMAGEREDUCESCALE = 53;
+  PHBIPHIOEEG_EPRI_PLAYER_VMEHOOK_BULLET = 54;
+  PHBIPHIOEEG_EPRI_PLAYER_VMEHOOK_ENERGY = 55;
+  PHBIPHIOEEG_EPRI_PLAYER_CONTROLMODE_OWNBUFF = 56;
+  PHBIPHIOEEG_EPRI_PLAYER_STREAMER_OB_COUNT = 57;
+  PHBIPHIOEEG_EPRI_PLAYER_EXTRA_SKY_SURFING_MAX_HSPEED = 58;
+  PHBIPHIOEEG_EPRI_PLAYER_EXTRA_SKY_DIVING_MAX_HSPEED = 59;
+  PHBIPHIOEEG_EPRI_PLAYER_EXTRA_PARACHUTING_MAX_VSPEED = 60;
+  PHBIPHIOEEG_EPRI_PLAYER_WEAPON_COMBINED = 61;
+  PHBIPHIOEEG_EPRI_PLAYER_WEAPON_COMBINED_LOCKED = 62;
+  PHBIPHIOEEG_EPRI_PLAYER_TRAINING_TOKEN = 63;
+  PHBIPHIOEEG_EPRI_PLAYER_AMUSE_BIG_HEAD = 64;
+  PHBIPHIOEEG_EPRI_PLAYER_MINIGAME_EFFECT = 65;
+  PHBIPHIOEEG_EPRI_PLAYER_MYSTERY_BOX_QUALITY = 66;
+  PHBIPHIOEEG_EPRI_PLAYER_IN_WARNING_ZONE = 67;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_ROLE = 68;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_ColorIndex = 69;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_IsUsedVoteDesk = 70;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_KillCDEndTime = 71;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_InBunker = 72;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_InBunkerTrigger = 73;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_OwnTrapCount = 74;
+  PHBIPHIOEEG_EPRI_PLAYER_WEREWOLVES_PredictToolActiveEndTime = 75;
+  PHBIPHIOEEG_EPRI_PLAYER_IsInPhysicFreeze = 76;
+  PHBIPHIOEEG_EPRI_PLAYER_IsInTrapEndTime = 77;
+  PHBIPHIOEEG_EPRI_PLAYER_PICKED_BOUNTYCONTRACT = 78;
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_LEAD_EMOTE_SIMTICK = 79;
+  PHBIPHIOEEG_EPRI_PLAYER_CUR_LEAD_EMOTE = 80;
+  PHBIPHIOEEG_EPRI_PLAYER_ANDREWSKILL_EFFECTCOUNT = 81;
+  PHBIPHIOEEG_EPRI_PLAYER_ESCORT_TIME = 82;
+  PHBIPHIOEEG_EPRI_PLAYER_ARMOR_REDUCEDAMAGE_INCREMENT = 83;
+  PHBIPHIOEEG_EPRI_PLAYER_PARTY_WHEELROLL_LEVEL = 84;
+  PHBIPHIOEEG_EPRI_PLAYER_PARTY_DANCE_LEVEL = 85;
+  PHBIPHIOEEG_EPRI_PLAYER_PARTY_DANCE_ANIM = 86;
+  PHBIPHIOEEG_EPRI_PLAYER_TRAINING_PLAYERQUEUE_INFO = 87;
+  PHBIPHIOEEG_EPRI_PLAYER_PARTY_MOVIE_RATIO = 88;
+  PHBIPHIOEEG_EPRI_PLAYER_PARTY_PETRACE_VOTEINDEX = 89;
+  PHBIPHIOEEG_EPRI_PLAYER_RUSHINGPETS_MODEL = 90;
+  PHBIPHIOEEG_EPRI_PLAYER_DMM_FACTION_ID = 91;
+  PHBIPHIOEEG_EPRI_PLAYER_DMM_MORPH_MODEL = 92;
+  PHBIPHIOEEG_EPRI_PLAYER_HAPPYFRIDAY_DISABLEAIM = 93;
+  PHBIPHIOEEG_EPRI_PLAYER_PICKED_MISSION_BOUNTYCONTRACT = 94;
+  PHBIPHIOEEG_EPRI_PLAYER_NB = 95;
+}
+
+enum PHIFIIFMJKP {
+  PHIFIIFMJKP_ERR_NONE = 0;
+  PHIFIIFMJKP_ERR_PARSE_MESSAGE_FAILED = 1;
+  PHIFIIFMJKP_ERR_AUTH_FAILED = 2;
+  PHIFIIFMJKP_ERR_JOIN_MATCH_FAILED = 3;
+  PHIFIIFMJKP_ERR_CONNECT_TIMEOUT = 4;
+  PHIFIIFMJKP_ERR_JOIN_MATCH_FAILED_DEAD = 5;
+  PHIFIIFMJKP_ERR_JOIN_MATCH_FAILED_MATCHEND = 6;
+  PHIFIIFMJKP_ERR_JOIN_MATCH_FAILED_MAPNOTOPEN = 7;
+  PHIFIIFMJKP_ERR_JOIN_MATCH_FAILED_RoomFull = 8;
+  PHIFIIFMJKP_ERR_START_GAME_FAILED_DRAW = 9;
+}
+
+enum PHJFJECLELI {
+  PHJFJECLELI_EDamageZoneType_General = 0;
+  PHJFJECLELI_EDamageZoneType_ZombieThrowDot = 1;
+  PHJFJECLELI_EDamageZoneType_Magma = 2;
+}
+
+enum PJGHNHFMADO {
+  PJGHNHFMADO_EGetOffSkateboardReason_None = 0;
+  PJGHNHFMADO_EGetOffSkateboardReason_EnterRoom = 1;
+  PJGHNHFMADO_EGetOffSkateboardReason_State = 2;
+  PJGHNHFMADO_EGetOffSkateboardReason_InCd = 3;
+  PJGHNHFMADO_EGetOffSkateboardReason_GotHit = 4;
+}
+
+enum PKCEFACBDMP {
+  PKCEFACBDMP_EPHYSXSTATE_WALKING = 0;
+  PKCEFACBDMP_EPHYSXSTATE_FALLING = 1;
+  PKCEFACBDMP_EPHYSXSTATE_PARACHUTING = 2;
+  PKCEFACBDMP_EPHYSXSTATE_ONBOARD = 3;
+  PKCEFACBDMP_EPHYSXSTATE_SKYDIVING = 4;
+  PKCEFACBDMP_EPHYSXSTATE_HITFLY = 5;
+  PKCEFACBDMP_EPHYSXSTATE_SWIMMING = 6;
+  PKCEFACBDMP_EPHYSXSTATE_ONSTROP = 7;
+  PKCEFACBDMP_EPHYSXSTATE_FOOTBALL = 8;
+  PKCEFACBDMP_EPHYSXSTATE_JETFLY = 9;
+  PKCEFACBDMP_EPHYSXSTATE_GLIDING = 10;
+  PKCEFACBDMP_EPHYSXSTATE_ONGRAPPLINGHOOK = 11;
+  PKCEFACBDMP_EPHYSXSTATE_SKATEBOARDING = 12;
+  PKCEFACBDMP_EPHYSXSTATE_ONFERRISWHEEL = 13;
+  PKCEFACBDMP_EPHYSXSTATE_FLIGHTROAM = 14;
+  PKCEFACBDMP_EPHYSXSTATE_FAITHJUMPING = 15;
+  PKCEFACBDMP_EPHYSXSTATE_COUNT = 16;
+}
+
+enum PKOKCDICNEG {
+  PKOKCDICNEG_EPlayerForceSyncType_NoServerLock = 0;
+  PKOKCDICNEG_EPlayerForceSyncType_NormalForce = 1;
+  PKOKCDICNEG_EPlayerForceSyncType_Teleport = 2;
+  PKOKCDICNEG_EPlayerForceSyncType_ReParachute = 3;
+  PKOKCDICNEG_EPlayerForceSyncType_FreezeTeleport = 4;
+}
+
+enum PKPHACPPBEK {
+  PKPHACPPBEK_ELWSOMatchPhase_MatchMaking = 0;
+  PKPHACPPBEK_ELWSOMatchPhase_Introduction = 1;
+  PKPHACPPBEK_ELWSOMatchPhase_Prepare = 2;
+  PKPHACPPBEK_ELWSOMatchPhase_Fight = 3;
+  PKPHACPPBEK_ELWSOMatchPhase_WaitMatchEnd = 4;
+  PKPHACPPBEK_ELWSOMatchPhase_MatchEnd = 5;
+}
+
+enum PLCFFKMLFMJ {
+  PLCFFKMLFMJ_UGCRankSortMethodType_AscIgnoreZero = 0;
+  PLCFFKMLFMJ_UGCRankSortMethodType_Desc = 1;
+  PLCFFKMLFMJ_UGCRankSortMethodType_Asc = 2;
+}
+
+enum PLDDEIPAKJB {
+  PLDDEIPAKJB_EDestructibleState_Normal = 0;
+  PLDDEIPAKJB_EDestructibleState_Broken = 1;
+  PLDDEIPAKJB_EDestructibleState_Destroyed = 2;
+}
+
+enum PPAEAHFADLG {
+  PPAEAHFADLG_UNSPECIFIED = 0;
+  PPAEAHFADLG_ENoParamNotify_CSLadder_ReconnHint = 1;
+}
+
+enum PurchaseErrorCode {
+  PurchaseErrorCode_UNSPECIFIED = 0;
+  PurchaseErrorCode_ErrCode_ITEM_INFO_WRONG = 400;
+}
+
+enum ServiceMessageTypeHTTP {
+  ServiceMessageTypeHTTP_LogEvent = 0;
+  ServiceMessageTypeHTTP_Login = 1;
+  ServiceMessageTypeHTTP_DebugLogin = 2;
+  ServiceMessageTypeHTTP_ChooseRegion = 3;
+  ServiceMessageTypeHTTP_GetPlatformProfile = 4;
+  ServiceMessageTypeHTTP_AccountMatchStats = 5;
+  ServiceMessageTypeHTTP_GetWallet = 6;
+  ServiceMessageTypeHTTP_GetBackpack = 7;
+  ServiceMessageTypeHTTP_GetCardsAndIAPInfo = 8;
+  ServiceMessageTypeHTTP_IAPPurchase = 9;
+  ServiceMessageTypeHTTP_GetPBWSpecialStoreDesc = 10;
+  ServiceMessageTypeHTTP_GetPayBundleWindowDesc = 11;
+  ServiceMessageTypeHTTP_PayBundleWindowPurchase = 12;
+  ServiceMessageTypeHTTP_GetRebateReward = 13;
+  ServiceMessageTypeHTTP_GetRebateSubscriptionBonusStatus = 14;
+  ServiceMessageTypeHTTP_Billboard = 15;
+  ServiceMessageTypeHTTP_GetFriend = 16;
+  ServiceMessageTypeHTTP_SetFriendAlias = 17;
+  ServiceMessageTypeHTTP_RemoveFriendAlias = 18;
+  ServiceMessageTypeHTTP_GetFriendRequestList = 19;
+  ServiceMessageTypeHTTP_RemoveFriend = 20;
+  ServiceMessageTypeHTTP_DeclineFriendRequest = 21;
+  ServiceMessageTypeHTTP_ConfirmFriendRequest = 22;
+  ServiceMessageTypeHTTP_RequestAddingFriend = 23;
+  ServiceMessageTypeHTTP_GetBlockList = 24;
+  ServiceMessageTypeHTTP_BlockPlayer = 25;
+  ServiceMessageTypeHTTP_CancelBlock = 26;
+  ServiceMessageTypeHTTP_DeclineAllFriendRequests = 27;
+  ServiceMessageTypeHTTP_FuzzySearchAccountByName = 28;
+  ServiceMessageTypeHTTP_GetAccountInfoByAccountID = 29;
+  ServiceMessageTypeHTTP_GetRecommendedPlayersByCondition = 30;
+  ServiceMessageTypeHTTP_GetFacebookFriend = 31;
+  ServiceMessageTypeHTTP_GetPlatformFriends = 32;
+  ServiceMessageTypeHTTP_AddStarFriend = 33;
+  ServiceMessageTypeHTTP_RemoveStarFriend = 34;
+  ServiceMessageTypeHTTP_GetStore = 35;
+  ServiceMessageTypeHTTP_Purchase = 36;
+  ServiceMessageTypeHTTP_OpenTreasureBox = 37;
+  ServiceMessageTypeHTTP_GetRecommendedFriend = 38;
+  ServiceMessageTypeHTTP_Leaderboard = 39;
+  ServiceMessageTypeHTTP_GetClanWeekLeaderboardInfo = 40;
+  ServiceMessageTypeHTTP_GetPlayerStats = 41;
+  ServiceMessageTypeHTTP_GetAttendanceList = 42;
+  ServiceMessageTypeHTTP_AttendanceSignin = 43;
+  ServiceMessageTypeHTTP_ChooseLoadout = 44;
+  ServiceMessageTypeHTTP_LinkFacebookAccount = 45;
+  ServiceMessageTypeHTTP_Logout = 46;
+  ServiceMessageTypeHTTP_GetTopNDailyLeaderboard = 47;
+  ServiceMessageTypeHTTP_GetDailyLeaderboardByAccountID = 48;
+  ServiceMessageTypeHTTP_LoginGetSplash = 49;
+  ServiceMessageTypeHTTP_GetPresenceByAccountIds = 50;
+  ServiceMessageTypeHTTP_GetCBTGiftsAnnouncement = 51;
+  ServiceMessageTypeHTTP_ReadCBTGiftsAnnouncement = 52;
+  ServiceMessageTypeHTTP_GetAccountFreshInfo = 53;
+  ServiceMessageTypeHTTP_ClaimFreshSigninRewards = 54;
+  ServiceMessageTypeHTTP_ClaimFreshActivityRewards = 55;
+  ServiceMessageTypeHTTP_GetNewPlayerRewardsList = 56;
+  ServiceMessageTypeHTTP_GetActivityDesc = 57;
+  ServiceMessageTypeHTTP_GetActivityRewards = 58;
+  ServiceMessageTypeHTTP_GetBingoRewardsInfo = 59;
+  ServiceMessageTypeHTTP_FlipBingo = 60;
+  ServiceMessageTypeHTTP_GetBingoRewards = 61;
+  ServiceMessageTypeHTTP_FinishBingoActivity = 62;
+  ServiceMessageTypeHTTP_ActivityTrigger = 63;
+  ServiceMessageTypeHTTP_GetActivenessAndRewardInfo = 64;
+  ServiceMessageTypeHTTP_GetActivenessDesc = 65;
+  ServiceMessageTypeHTTP_GetActivenessReward = 66;
+  ServiceMessageTypeHTTP_QueryOrUploadSettingsInfo = 67;
+  ServiceMessageTypeHTTP_QueryOrDownloadSettingsInfo = 68;
+  ServiceMessageTypeHTTP_CSVConfig = 69;
+  ServiceMessageTypeHTTP_GetMatchDailyBonus = 70;
+  ServiceMessageTypeHTTP_CreateClan = 71;
+  ServiceMessageTypeHTTP_RequestJoinClan = 72;
+  ServiceMessageTypeHTTP_GetClanApplicantListByClanID = 73;
+  ServiceMessageTypeHTTP_ApproveJoinClanApplication = 74;
+  ServiceMessageTypeHTTP_DeclineJoinClanApplication = 75;
+  ServiceMessageTypeHTTP_InviteToClan = 76;
+  ServiceMessageTypeHTTP_ApproveJoinClanInvitation = 77;
+  ServiceMessageTypeHTTP_ChangeMemberTypeByCaptain = 78;
+  ServiceMessageTypeHTTP_ReassignCaptain = 79;
+  ServiceMessageTypeHTTP_RemoveClanMember = 80;
+  ServiceMessageTypeHTTP_QuitClan = 81;
+  ServiceMessageTypeHTTP_GetClanInfoByClanID = 82;
+  ServiceMessageTypeHTTP_GetClanInfoByClanName = 83;
+  ServiceMessageTypeHTTP_FuzzySearchClanByName = 84;
+  ServiceMessageTypeHTTP_GetClanMembers = 85;
+  ServiceMessageTypeHTTP_ModifyClanInfo = 86;
+  ServiceMessageTypeHTTP_ModifyClanName = 87;
+  ServiceMessageTypeHTTP_GetRandomClanList = 88;
+  ServiceMessageTypeHTTP_GetClanWarBasicInfo = 89;
+  ServiceMessageTypeHTTP_GetClanWarTeamMemberStatus = 90;
+  ServiceMessageTypeHTTP_GetClanWarTeamInfo = 91;
+  ServiceMessageTypeHTTP_GetClanWarRecruitInfo = 92;
+  ServiceMessageTypeHTTP_ModifyClanWarRecruitInfo = 93;
+  ServiceMessageTypeHTTP_CreateClanWarTeam = 94;
+  ServiceMessageTypeHTTP_JoinClanWarTeam = 95;
+  ServiceMessageTypeHTTP_QuitClanWarTeam = 96;
+  ServiceMessageTypeHTTP_InviteToClanWarTeam = 97;
+  ServiceMessageTypeHTTP_AppointClanWarTeamCaptain = 98;
+  ServiceMessageTypeHTTP_RemoveClanWarTeamMember = 99;
+  ServiceMessageTypeHTTP_PrepareForClanWar = 100;
+  ServiceMessageTypeHTTP_ApproveJoinClanWarTeamInvitation = 101;
+  ServiceMessageTypeHTTP_CheckAllClanWarMembersPrepareStatus = 102;
+  ServiceMessageTypeHTTP_CheckAccountIsMemberOfClanWarTeam = 103;
+  ServiceMessageTypeHTTP_ClaimClanWarTeamAward = 104;
+  ServiceMessageTypeHTTP_ClaimClanWarPersonalAward = 105;
+  ServiceMessageTypeHTTP_OpenBundle = 106;
+  ServiceMessageTypeHTTP_OpenOptionalBundle = 107;
+  ServiceMessageTypeHTTP_GetLadderMatchLeaderBoardRank = 108;
+  ServiceMessageTypeHTTP_GetProfiles = 109;
+  ServiceMessageTypeHTTP_GetSkills = 110;
+  ServiceMessageTypeHTTP_LoginGetProfile = 111;
+  ServiceMessageTypeHTTP_SetPregameShowChoices = 112;
+  ServiceMessageTypeHTTP_GetLimitedEventEPSetting = 113;
+  ServiceMessageTypeHTTP_GetLimitedEventEPInfo = 114;
+  ServiceMessageTypeHTTP_PurchaseLimitedEventEP = 115;
+  ServiceMessageTypeHTTP_ClaimLimitedEventEPReward = 116;
+  ServiceMessageTypeHTTP_ExchangeLimitedEventEPProgress = 117;
+  ServiceMessageTypeHTTP_GetLimitedEventInventorySetting = 118;
+  ServiceMessageTypeHTTP_GetLimitedEventInventoryInfo = 119;
+  ServiceMessageTypeHTTP_ClaimLimitedEventSettleRewards = 120;
+  ServiceMessageTypeHTTP_SelectProfile = 121;
+  ServiceMessageTypeHTTP_UnlockProfile = 122;
+  ServiceMessageTypeHTTP_UpgradeProfile = 123;
+  ServiceMessageTypeHTTP_EquipSkill = 124;
+  ServiceMessageTypeHTTP_ChangeClothes = 125;
+  ServiceMessageTypeHTTP_MajorModifyNickname = 126;
+  ServiceMessageTypeHTTP_DismissClan = 127;
+  ServiceMessageTypeHTTP_ExtendClanScale = 128;
+  ServiceMessageTypeHTTP_GetPlayerRankingInfo = 129;
+  ServiceMessageTypeHTTP_GetMailList = 130;
+  ServiceMessageTypeHTTP_ReadMail = 131;
+  ServiceMessageTypeHTTP_GetMatchStatsHistory = 132;
+  ServiceMessageTypeHTTP_ChooseBanner = 133;
+  ServiceMessageTypeHTTP_ChooseHeadPic = 134;
+  ServiceMessageTypeHTTP_ChoosePin = 135;
+  ServiceMessageTypeHTTP_ChooseSlots = 136;
+  ServiceMessageTypeHTTP_GetRoomList = 137;
+  ServiceMessageTypeHTTP_GetAds = 138;
+  ServiceMessageTypeHTTP_GetAdvert = 139;
+  ServiceMessageTypeHTTP_GetBundle = 140;
+  ServiceMessageTypeHTTP_GetTreasureBox = 141;
+  ServiceMessageTypeHTTP_GetEPInfo = 142;
+  ServiceMessageTypeHTTP_EPPurchase = 143;
+  ServiceMessageTypeHTTP_EPClaimReward = 144;
+  ServiceMessageTypeHTTP_EPClaimBadge = 145;
+  ServiceMessageTypeHTTP_EPPurchaseBadge = 146;
+  ServiceMessageTypeHTTP_EPPreorder = 147;
+  ServiceMessageTypeHTTP_GetEPDebrisIngame = 148;
+  ServiceMessageTypeHTTP_GetDailyQuestRewards = 149;
+  ServiceMessageTypeHTTP_GetEPTreasureBoxReward = 150;
+  ServiceMessageTypeHTTP_GetEPSubscriptionBonusStatus = 151;
+  ServiceMessageTypeHTTP_GetCurOrRecentRankingConfig = 152;
+  ServiceMessageTypeHTTP_GetGachaDesc = 153;
+  ServiceMessageTypeHTTP_GetGachaInfo = 154;
+  ServiceMessageTypeHTTP_GetGachaSpecialExchangeDesc = 155;
+  ServiceMessageTypeHTTP_GetGachaProbability = 156;
+  ServiceMessageTypeHTTP_ExchangeGachaExtraReward = 157;
+  ServiceMessageTypeHTTP_PurchaseGacha = 158;
+  ServiceMessageTypeHTTP_UnlockSkillSlot = 159;
+  ServiceMessageTypeHTTP_GetAvatarSkillSlots = 160;
+  ServiceMessageTypeHTTP_GetScrollMarquee = 161;
+  ServiceMessageTypeHTTP_GetUnlockProfileInfo = 162;
+  ServiceMessageTypeHTTP_GetGiftStore = 163;
+  ServiceMessageTypeHTTP_GetGiftStoreDetails = 164;
+  ServiceMessageTypeHTTP_SendGift = 165;
+  ServiceMessageTypeHTTP_GetPlayerPersonalShow = 166;
+  ServiceMessageTypeHTTP_GetPlayerBriefInfo = 167;
+  ServiceMessageTypeHTTP_GetHeroicInfo = 168;
+  ServiceMessageTypeHTTP_GetBattleTag = 169;
+  ServiceMessageTypeHTTP_GetFriendIDs = 170;
+  ServiceMessageTypeHTTP_GetPlatformFriendIDs = 171;
+  ServiceMessageTypeHTTP_GetBroadcastList = 172;
+  ServiceMessageTypeHTTP_MajorDelAccount = 173;
+  ServiceMessageTypeHTTP_SetShowRank = 174;
+  ServiceMessageTypeHTTP_GetExchangeStore = 175;
+  ServiceMessageTypeHTTP_GetWeeklyChallengeProcessRewards = 176;
+  ServiceMessageTypeHTTP_ExchangeStorePurchase = 177;
+  ServiceMessageTypeHTTP_GetVeteranRewardList = 178;
+  ServiceMessageTypeHTTP_VeteranClaimReward = 179;
+  ServiceMessageTypeHTTP_VeteranTaskTrigger = 180;
+  ServiceMessageTypeHTTP_GetVeteranTaskDesc = 181;
+  ServiceMessageTypeHTTP_GetVeteranTaskInfo = 182;
+  ServiceMessageTypeHTTP_GetVeteranTaskRewards = 183;
+  ServiceMessageTypeHTTP_GetVeteranTaskBigPrize = 184;
+  ServiceMessageTypeHTTP_ClaimVeteranReturnAward = 185;
+  ServiceMessageTypeHTTP_ClaimVeteranBundleAward = 186;
+  ServiceMessageTypeHTTP_GetVeteranConfigDesc = 187;
+  ServiceMessageTypeHTTP_ConfirmVeteranBundleItem = 188;
+  ServiceMessageTypeHTTP_GetTreasureBoxPR = 189;
+  ServiceMessageTypeHTTP_GetAllSwitchs = 190;
+  ServiceMessageTypeHTTP_GetHideAvatar = 191;
+  ServiceMessageTypeHTTP_GetAvatarAwakenTaskInfo = 192;
+  ServiceMessageTypeHTTP_RefreshAvatarAwakenTaskInfo = 193;
+  ServiceMessageTypeHTTP_GetAvatarAwakenComicInfo = 194;
+  ServiceMessageTypeHTTP_UnlockAvatarAwakenComic = 195;
+  ServiceMessageTypeHTTP_ClaimAwakenTaskRewards = 196;
+  ServiceMessageTypeHTTP_GetAwakenAvatarByAwakenComic = 197;
+  ServiceMessageTypeHTTP_BatchGetSelectedProfiles = 198;
+  ServiceMessageTypeHTTP_ClanSignIn = 199;
+  ServiceMessageTypeHTTP_TransformGeneralDebris = 200;
+  ServiceMessageTypeHTTP_GetClanSignInRewardsByLevel = 201;
+  ServiceMessageTypeHTTP_ClaimSignInReward = 202;
+  ServiceMessageTypeHTTP_GetClanRaceInfo = 203;
+  ServiceMessageTypeHTTP_ClaimClanRaceAward = 204;
+  ServiceMessageTypeHTTP_ExchangeAwardWithRP = 205;
+  ServiceMessageTypeHTTP_FriendInvite = 206;
+  ServiceMessageTypeHTTP_GetReturnPlayerDesc = 207;
+  ServiceMessageTypeHTTP_LoginGetBroadcast = 208;
+  ServiceMessageTypeHTTP_ChooseEmote = 209;
+  ServiceMessageTypeHTTP_LoginGetDesc = 210;
+  ServiceMessageTypeHTTP_GetAttendance = 211;
+  ServiceMessageTypeHTTP_ChooseShow = 212;
+  ServiceMessageTypeHTTP_ChooseGameBagShow = 213;
+  ServiceMessageTypeHTTP_GetPlayerRankingSeasonStats = 214;
+  ServiceMessageTypeHTTP_GetDailyRankingReward = 215;
+  ServiceMessageTypeHTTP_GetGiftRankDesc = 216;
+  ServiceMessageTypeHTTP_GetGiftRankRewardInfo = 217;
+  ServiceMessageTypeHTTP_GetGiftRankReward = 218;
+  ServiceMessageTypeHTTP_ChooseRankingCards = 219;
+  ServiceMessageTypeHTTP_ResetNeedLastSeasonInfo = 220;
+  ServiceMessageTypeHTTP_GetPetList = 221;
+  ServiceMessageTypeHTTP_SelectPet = 222;
+  ServiceMessageTypeHTTP_FeedPet = 223;
+  ServiceMessageTypeHTTP_RenamePet = 224;
+  ServiceMessageTypeHTTP_GetPetSkins = 225;
+  ServiceMessageTypeHTTP_GetPetActions = 226;
+  ServiceMessageTypeHTTP_SelectPetSkin = 227;
+  ServiceMessageTypeHTTP_DoGachaSpecialExchange = 228;
+  ServiceMessageTypeHTTP_EPVideoAdPortal = 229;
+  ServiceMessageTypeHTTP_GetAgoraToken = 230;
+  ServiceMessageTypeHTTP_BuyChatItems = 231;
+  ServiceMessageTypeHTTP_ChoosePVEPrimaryWeapon = 232;
+  ServiceMessageTypeHTTP_GetDiscountStore = 233;
+  ServiceMessageTypeHTTP_DiscountStorePurchase = 234;
+  ServiceMessageTypeHTTP_FestivalAttendanceSignin = 235;
+  ServiceMessageTypeHTTP_GetFestivalAttendanceInfo = 236;
+  ServiceMessageTypeHTTP_GetFestivalItemInfo = 237;
+  ServiceMessageTypeHTTP_FestivalGetRewards = 238;
+  ServiceMessageTypeHTTP_GetWinnerTakesAllInfo = 239;
+  ServiceMessageTypeHTTP_GetGoogleRewardsDesc = 240;
+  ServiceMessageTypeHTTP_NetworkLogEvent = 241;
+  ServiceMessageTypeHTTP_Settings = 242;
+  ServiceMessageTypeHTTP_Upload = 243;
+  ServiceMessageTypeHTTP_GetClanLuckyBagsInfo = 244;
+  ServiceMessageTypeHTTP_DrawClanLuckyBag = 245;
+  ServiceMessageTypeHTTP_BatchDrawClanLuckyBag = 246;
+  ServiceMessageTypeHTTP_GetGameBonusEventDesc = 247;
+  ServiceMessageTypeHTTP_GetFullscreenCg = 248;
+  ServiceMessageTypeHTTP_GetClanNews = 249;
+  ServiceMessageTypeHTTP_GetManualCollectInfo = 250;
+  ServiceMessageTypeHTTP_GetManualAllWeaponRewardStates = 251;
+  ServiceMessageTypeHTTP_GetManualAllMapRewardStates = 252;
+  ServiceMessageTypeHTTP_GetManualWeaponReward = 253;
+  ServiceMessageTypeHTTP_GetManualMapReward = 254;
+  ServiceMessageTypeHTTP_CreateTeam = 255;
+  ServiceMessageTypeHTTP_RequestJoinTeam = 256;
+  ServiceMessageTypeHTTP_ModifyTeamInfo = 257;
+  ServiceMessageTypeHTTP_AddTeamContactInfo = 258;
+  ServiceMessageTypeHTTP_GetTeamInfoByTeamID = 259;
+  ServiceMessageTypeHTTP_GetTeamMembers = 260;
+  ServiceMessageTypeHTTP_QuitTeam = 261;
+  ServiceMessageTypeHTTP_DismissTeam = 262;
+  ServiceMessageTypeHTTP_GetTeamApplicantListByTeamID = 263;
+  ServiceMessageTypeHTTP_ApproveJoinTeamApplication = 264;
+  ServiceMessageTypeHTTP_DeclineJoinTeamApplication = 265;
+  ServiceMessageTypeHTTP_InviteToTeam = 266;
+  ServiceMessageTypeHTTP_ApproveJoinTeamInvitation = 267;
+  ServiceMessageTypeHTTP_DeclineJoinTeamInvitation = 268;
+  ServiceMessageTypeHTTP_GetTeamInvitationList = 269;
+  ServiceMessageTypeHTTP_GetTeamInvitationListByTeamID = 270;
+  ServiceMessageTypeHTTP_FuzzySearchTeamByName = 271;
+  ServiceMessageTypeHTTP_RemoveTeamMember = 272;
+  ServiceMessageTypeHTTP_GetTopupEventInfo = 273;
+  ServiceMessageTypeHTTP_MysteryBonusSpin = 274;
+  ServiceMessageTypeHTTP_GetMysteryBonusProbability = 275;
+  ServiceMessageTypeHTTP_GetInGameBonusPR = 276;
+  ServiceMessageTypeHTTP_InitTeamChampionshipInfo = 277;
+  ServiceMessageTypeHTTP_GetTeamChampionshipInfo = 278;
+  ServiceMessageTypeHTTP_GetChampionshipConfig = 279;
+  ServiceMessageTypeHTTP_GetTeamChampionshipSeasonStats = 280;
+  ServiceMessageTypeHTTP_InstallmentPurchase = 281;
+  ServiceMessageTypeHTTP_GetInstallmentStore = 282;
+  ServiceMessageTypeHTTP_GetInstallmentItems = 283;
+  ServiceMessageTypeHTTP_GetAccountLifeSeasonStats = 284;
+  ServiceMessageTypeHTTP_GetTeamMatchStatsHistory = 285;
+  ServiceMessageTypeHTTP_MajorLogin = 286;
+  ServiceMessageTypeHTTP_MajorRegister = 287;
+  ServiceMessageTypeHTTP_GetLoginData = 288;
+  ServiceMessageTypeHTTP_MajorGuestBind = 289;
+  ServiceMessageTypeHTTP_MajorSecondaryAccountBind = 290;
+  ServiceMessageTypeHTTP_SetAntiAddictionAgeState = 291;
+  ServiceMessageTypeHTTP_MajorGetGlobalLeaderboard = 292;
+  ServiceMessageTypeHTTP_PlayerClaimRetentionReward = 293;
+  ServiceMessageTypeHTTP_GetSubscribeStore = 294;
+  ServiceMessageTypeHTTP_GetAccountSubscriptions = 295;
+  ServiceMessageTypeHTTP_ClaimSubscription = 296;
+  ServiceMessageTypeHTTP_GetLinkEquipSet = 297;
+  ServiceMessageTypeHTTP_OfferPurchase = 298;
+  ServiceMessageTypeHTTP_GetNewPlayerLevelUpTaskInfo = 299;
+  ServiceMessageTypeHTTP_GetBlockedIDs = 300;
+  ServiceMessageTypeHTTP_SetHideMyLobbyInPrefers = 301;
+  ServiceMessageTypeHTTP_SelectPetSkill = 302;
+  ServiceMessageTypeHTTP_ActivateAccount = 303;
+  ServiceMessageTypeHTTP_InitPlayerCSRankingInfo = 304;
+  ServiceMessageTypeHTTP_GetPlayerCSRankingInfo = 305;
+  ServiceMessageTypeHTTP_GetPlayerCSRankingSeasonStats = 306;
+  ServiceMessageTypeHTTP_GetCurOrRecentCSRankingConfig = 307;
+  ServiceMessageTypeHTTP_GetPlayerTCStats = 308;
+  ServiceMessageTypeHTTP_GetPlayerCSRankingInfoByAccountID = 309;
+  ServiceMessageTypeHTTP_GetCSRankMasterLevel = 310;
+  ServiceMessageTypeHTTP_GetRankMasterLevel = 311;
+  ServiceMessageTypeHTTP_InitPlayerPeriodicRankingInfo = 312;
+  ServiceMessageTypeHTTP_GetPlayerPeriodicRankingInfo = 313;
+  ServiceMessageTypeHTTP_GetCurOrRecentPeriodicRankingConfig = 314;
+  ServiceMessageTypeHTTP_GetPlayerPeriodicRankingInfoByAccountID = 315;
+  ServiceMessageTypeHTTP_NewbieChoice = 316;
+  ServiceMessageTypeHTTP_GetWeaponSkinOpenTime = 317;
+  ServiceMessageTypeHTTP_GetWeaponSkinUpgrade = 318;
+  ServiceMessageTypeHTTP_UpgradeWeaponSkin = 319;
+  ServiceMessageTypeHTTP_GetActGachaInfo = 320;
+  ServiceMessageTypeHTTP_GetEPArchivesInfo = 321;
+  ServiceMessageTypeHTTP_GetMysteryShopLuckyDraw = 322;
+  ServiceMessageTypeHTTP_GetMysteryShopInfo = 323;
+  ServiceMessageTypeHTTP_GetMysteryShopInfoList = 324;
+  ServiceMessageTypeHTTP_GetMysteryShopProbability = 325;
+  ServiceMessageTypeHTTP_GetMysteryPoolInfo = 326;
+  ServiceMessageTypeHTTP_MysteryPurchase = 327;
+  ServiceMessageTypeHTTP_PurchaseMysteryAnotherPool = 328;
+  ServiceMessageTypeHTTP_GetLimitedEventStore = 329;
+  ServiceMessageTypeHTTP_GetLimitedEventOpenInfo = 330;
+  ServiceMessageTypeHTTP_GetLimitedEventEntrances = 331;
+  ServiceMessageTypeHTTP_GetPlayerRampageInfo = 332;
+  ServiceMessageTypeHTTP_GetRampageConfig = 333;
+  ServiceMessageTypeHTTP_ChooseFaction = 334;
+  ServiceMessageTypeHTTP_LimitedEventStorePurchase = 335;
+  ServiceMessageTypeHTTP_EliminateGoodsFromLimitPool = 336;
+  ServiceMessageTypeHTTP_GetMonopolyConfig = 337;
+  ServiceMessageTypeHTTP_GetPlayerMonopolyInfo = 338;
+  ServiceMessageTypeHTTP_MonopolyRoll = 339;
+  ServiceMessageTypeHTTP_MonopolyEventChoose = 340;
+  ServiceMessageTypeHTTP_GetMVPInfo = 341;
+  ServiceMessageTypeHTTP_ClaimMVPProcessRewards = 342;
+  ServiceMessageTypeHTTP_GetLimitedEventOpenEntries = 343;
+  ServiceMessageTypeHTTP_GetAnniversaryNodesInfo = 344;
+  ServiceMessageTypeHTTP_GetAnniversarySetting = 345;
+  ServiceMessageTypeHTTP_ClaimAnniversaryRewards = 346;
+  ServiceMessageTypeHTTP_GetDispatchInfo = 347;
+  ServiceMessageTypeHTTP_ExecuteDispatchQuest = 348;
+  ServiceMessageTypeHTTP_ClaimDispatchQuestRewards = 349;
+  ServiceMessageTypeHTTP_GetBountySetting = 350;
+  ServiceMessageTypeHTTP_GetBountyWarmUpStatus = 351;
+  ServiceMessageTypeHTTP_GetBountyInfo = 352;
+  ServiceMessageTypeHTTP_GetPlayerPayLevelInfo = 353;
+  ServiceMessageTypeHTTP_ClaimPayLevelReward = 354;
+  ServiceMessageTypeHTTP_RoleDebrisPurchase = 355;
+  ServiceMessageTypeHTTP_ApplyForDeputyCaptain = 356;
+  ServiceMessageTypeHTTP_ExchangeClanBadge = 357;
+  ServiceMessageTypeHTTP_GetRankingSeasonInfo = 358;
+  ServiceMessageTypeHTTP_GetLeaderBoardThresholdScore = 359;
+  ServiceMessageTypeHTTP_GetMegaPunchSetting = 360;
+  ServiceMessageTypeHTTP_GetBigEventTokenTipsDesc = 361;
+  ServiceMessageTypeHTTP_GetBermudaSettings = 362;
+  ServiceMessageTypeHTTP_GetBermudaInfo = 363;
+  ServiceMessageTypeHTTP_ClaimBermudaAward = 364;
+  ServiceMessageTypeHTTP_GetMVPSetting = 365;
+  ServiceMessageTypeHTTP_ReRandomCompletionLottery = 366;
+  ServiceMessageTypeHTTP_CompletionLotteryGainItems = 367;
+  ServiceMessageTypeHTTP_GetLegendClothesDesc = 368;
+  ServiceMessageTypeHTTP_UpdateSocialBasicInfo = 369;
+  ServiceMessageTypeHTTP_GetGoliathSetting = 370;
+  ServiceMessageTypeHTTP_GetAccountGoliathInfo = 371;
+  ServiceMessageTypeHTTP_GetGoliathAFKGroupInfo = 372;
+  ServiceMessageTypeHTTP_CreateGoliathAFKGroup = 373;
+  ServiceMessageTypeHTTP_JoinGoliathAFKGroup = 374;
+  ServiceMessageTypeHTTP_ClaimGoliathAFKGroupAwards = 375;
+  ServiceMessageTypeHTTP_OpenGoliathAFKGroupActivity = 376;
+  ServiceMessageTypeHTTP_SetWeaponRack = 377;
+  ServiceMessageTypeHTTP_SetVehicleDisplay = 378;
+  ServiceMessageTypeHTTP_SetLobbyDisplay = 379;
+  ServiceMessageTypeHTTP_SetGlooDisplay = 380;
+  ServiceMessageTypeHTTP_SendMatchLikeInfo = 381;
+  ServiceMessageTypeHTTP_UpdateAuthInspect = 382;
+  ServiceMessageTypeHTTP_GetSupercarSetting = 383;
+  ServiceMessageTypeHTTP_GetSupercarInfo = 384;
+  ServiceMessageTypeHTTP_HelpToAccelerateSupercar = 385;
+  ServiceMessageTypeHTTP_TokenToAccelerateSupercar = 386;
+  ServiceMessageTypeHTTP_ClaimSupercarRewards = 387;
+  ServiceMessageTypeHTTP_SupercarChangeCar = 388;
+  ServiceMessageTypeHTTP_GetSpecialFriendsState = 389;
+  ServiceMessageTypeHTTP_GetSpecialFriendList = 390;
+  ServiceMessageTypeHTTP_CreateOrDismissSpecialRelation = 391;
+  ServiceMessageTypeHTTP_GetAccountSpecialFriendApps = 392;
+  ServiceMessageTypeHTTP_ConfirmSpecialRelationRequest = 393;
+  ServiceMessageTypeHTTP_GetIntimacyRankAwardInfo = 394;
+  ServiceMessageTypeHTTP_ClaimIntimacyAward = 395;
+  ServiceMessageTypeHTTP_GetIntimacyAllDesc = 396;
+  ServiceMessageTypeHTTP_DeclineSpecialFriendRequest = 397;
+  ServiceMessageTypeHTTP_CallbackDismissSpecialFriendRequest = 398;
+  ServiceMessageTypeHTTP_UnlockFittingSlot = 399;
+  ServiceMessageTypeHTTP_SaveFittingSlot = 400;
+  ServiceMessageTypeHTTP_GetUnlockedFittingSlots = 401;
+  ServiceMessageTypeHTTP_GetAllChummyDesc = 402;
+  ServiceMessageTypeHTTP_GetChummyState = 403;
+  ServiceMessageTypeHTTP_RegisterAsMentor = 404;
+  ServiceMessageTypeHTTP_GetRecommendedMentorList = 405;
+  ServiceMessageTypeHTTP_GetRecommendedStudentList = 406;
+  ServiceMessageTypeHTTP_RequestAddingChummy = 407;
+  ServiceMessageTypeHTTP_RequestDismissChummy = 408;
+  ServiceMessageTypeHTTP_ConfirmAddingChummy = 409;
+  ServiceMessageTypeHTTP_DeclineAddingChummy = 410;
+  ServiceMessageTypeHTTP_ConfirmDismissChummy = 411;
+  ServiceMessageTypeHTTP_DeclineDismissChummy = 412;
+  ServiceMessageTypeHTTP_RevokeDismissChummyRequest = 413;
+  ServiceMessageTypeHTTP_GetChummyRequests = 414;
+  ServiceMessageTypeHTTP_GetChummyIntimacyAwardInfo = 415;
+  ServiceMessageTypeHTTP_ClaimChummyIntimacyAward = 416;
+  ServiceMessageTypeHTTP_GetBooyahday21Setting = 417;
+  ServiceMessageTypeHTTP_GetBooyahday21Info = 418;
+  ServiceMessageTypeHTTP_ClaimBooyahday21ProcessRewards = 419;
+  ServiceMessageTypeHTTP_GetBooyahgoConfig = 420;
+  ServiceMessageTypeHTTP_GetPlayerBooyahgoInfo = 421;
+  ServiceMessageTypeHTTP_BooyahgoRoll = 422;
+  ServiceMessageTypeHTTP_GetPoolLeaderboard = 423;
+  ServiceMessageTypeHTTP_InitPoolLeaderboard = 424;
+  ServiceMessageTypeHTTP_PoolLeaderboardClaimReward = 425;
+  ServiceMessageTypeHTTP_GetPoolLeaderboardClaimedReward = 426;
+  ServiceMessageTypeHTTP_GetPoolLeaderboardSetting = 427;
+  ServiceMessageTypeHTTP_GetFFWS03Setting = 428;
+  ServiceMessageTypeHTTP_GetFFWS03GuessingInfo = 429;
+  ServiceMessageTypeHTTP_StartFFWS03Guessing = 430;
+  ServiceMessageTypeHTTP_ClaimFFWS03GuessingAward = 431;
+  ServiceMessageTypeHTTP_FFWS03GetManagerInfo = 432;
+  ServiceMessageTypeHTTP_FFWS03ChooseTeamCards = 433;
+  ServiceMessageTypeHTTP_FFWS03ChangeTeamCardsSequence = 434;
+  ServiceMessageTypeHTTP_FFWS03SingleTrain = 435;
+  ServiceMessageTypeHTTP_FFWS03Milestone = 436;
+  ServiceMessageTypeHTTP_FFWS03StartMatch = 437;
+  ServiceMessageTypeHTTP_DailyCheckInInfo = 438;
+  ServiceMessageTypeHTTP_GetFourSymbolsSetting = 439;
+  ServiceMessageTypeHTTP_GetFourSymbolsSignInInfo = 440;
+  ServiceMessageTypeHTTP_FourSymbolsSignIn = 441;
+  ServiceMessageTypeHTTP_ClaimFourSymbolsAccumulatedAwards = 442;
+  ServiceMessageTypeHTTP_GetFourSymbolsRoadInfo = 443;
+  ServiceMessageTypeHTTP_FourSymbolsRoadAdvance = 444;
+  ServiceMessageTypeHTTP_ClaimFourSymbolsRoadBigAward = 445;
+  ServiceMessageTypeHTTP_UploadWorkshop = 446;
+  ServiceMessageTypeHTTP_DownloadWorkshop = 447;
+  ServiceMessageTypeHTTP_GetWorkshopBasicInfo = 448;
+  ServiceMessageTypeHTTP_UnlockWorkshopSlot = 449;
+  ServiceMessageTypeHTTP_ShareWorkshopSlot = 450;
+  ServiceMessageTypeHTTP_DeleteWorkshopInfo = 451;
+  ServiceMessageTypeHTTP_PreviewWorkshopCode = 452;
+  ServiceMessageTypeHTTP_SubscribeWorkshopCode = 453;
+  ServiceMessageTypeHTTP_SearchWorkshopCode = 454;
+  ServiceMessageTypeHTTP_ReportWorkshopCode = 455;
+  ServiceMessageTypeHTTP_UpdateWorkshopBasicInfo = 456;
+  ServiceMessageTypeHTTP_GetWorkshopRecommendationInfo = 457;
+  ServiceMessageTypeHTTP_GetWorkshopLatestInfo = 458;
+  ServiceMessageTypeHTTP_GetWorkshopHistoryInfo = 459;
+  ServiceMessageTypeHTTP_GetWorkshopAccountInfo = 460;
+  ServiceMessageTypeHTTP_SendWorkshopLike = 461;
+  ServiceMessageTypeHTTP_GetWorkshopMatchInfo = 462;
+  ServiceMessageTypeHTTP_GetWorkshopPersonalRecommendationInfo = 463;
+  ServiceMessageTypeHTTP_GetAllCupConfig = 464;
+  ServiceMessageTypeHTTP_CreateCupTeam = 465;
+  ServiceMessageTypeHTTP_RequestJoinCupTeam = 466;
+  ServiceMessageTypeHTTP_ModifyCupTeamInfo = 467;
+  ServiceMessageTypeHTTP_GetCupTeamInfoByTeamID = 468;
+  ServiceMessageTypeHTTP_GetCupTeamMemberByMemberID = 469;
+  ServiceMessageTypeHTTP_GetCupTeamMembers = 470;
+  ServiceMessageTypeHTTP_QuitCupTeam = 471;
+  ServiceMessageTypeHTTP_DismissCupTeam = 472;
+  ServiceMessageTypeHTTP_GetCupTeamApplicantList = 473;
+  ServiceMessageTypeHTTP_GetCupTeamInvitationList = 474;
+  ServiceMessageTypeHTTP_GetSentCupTeamInvitationList = 475;
+  ServiceMessageTypeHTTP_ApproveJoinCupTeamApplication = 476;
+  ServiceMessageTypeHTTP_DeclineJoinCupTeamApplication = 477;
+  ServiceMessageTypeHTTP_InviteToCupTeam = 478;
+  ServiceMessageTypeHTTP_ApproveJoinCupTeamInvitation = 479;
+  ServiceMessageTypeHTTP_DeclineJoinCupTeamInvitation = 480;
+  ServiceMessageTypeHTTP_RemoveCupTeamMember = 481;
+  ServiceMessageTypeHTTP_VerifyAndLockCupTeam = 482;
+  ServiceMessageTypeHTTP_InitAccountCupInfo = 483;
+  ServiceMessageTypeHTTP_GetAccountCupInfo = 484;
+  ServiceMessageTypeHTTP_ToggleCupTicket = 485;
+  ServiceMessageTypeHTTP_ClaimCupReward = 486;
+  ServiceMessageTypeHTTP_GetAccountCupInfoBundleByAccountIDsOrderly = 487;
+  ServiceMessageTypeHTTP_GetLuckyWheelDesc = 488;
+  ServiceMessageTypeHTTP_GetLuckyWheelInfo = 489;
+  ServiceMessageTypeHTTP_SpinLuckyWheel = 490;
+  ServiceMessageTypeHTTP_BuyLuckyWheelShopItem = 491;
+  ServiceMessageTypeHTTP_RefreshLuckyWheelShop = 492;
+  ServiceMessageTypeHTTP_GetSutoritoSetting = 493;
+  ServiceMessageTypeHTTP_GetAccountSutoritoInfo = 494;
+  ServiceMessageTypeHTTP_SutoritoAttack = 495;
+  ServiceMessageTypeHTTP_SutoritoChoose = 496;
+  ServiceMessageTypeHTTP_GetMusicFestSetting = 497;
+  ServiceMessageTypeHTTP_GetMusicFestInfo = 498;
+  ServiceMessageTypeHTTP_MusicFestUsePuzzleToken = 499;
+  ServiceMessageTypeHTTP_MusicFestSendPuzzleToken = 500;
+  ServiceMessageTypeHTTP_MusicFestReceivePuzzleToken = 501;
+  ServiceMessageTypeHTTP_ClaimMusicFestPuzzleProgressRewards = 502;
+  ServiceMessageTypeHTTP_ClaimMusicFestPuzzleBlockRewards = 503;
+  ServiceMessageTypeHTTP_ClaimMusicFestCardReward = 504;
+  ServiceMessageTypeHTTP_GetMocoMonthSetting = 505;
+  ServiceMessageTypeHTTP_GetMocoMonthGameInfo = 506;
+  ServiceMessageTypeHTTP_SubmitMocoHackGameData = 507;
+  ServiceMessageTypeHTTP_GetMocoCurProcess = 508;
+  ServiceMessageTypeHTTP_GetVipCardDescs = 509;
+  ServiceMessageTypeHTTP_GetVipCardInfo = 510;
+  ServiceMessageTypeHTTP_ClaimVipCardAward = 511;
+  ServiceMessageTypeHTTP_GetVipCardStoreInfo = 512;
+  ServiceMessageTypeHTTP_ClaimExpiredVipCardAward = 513;
+  ServiceMessageTypeHTTP_VipCardStorePurchase = 514;
+  ServiceMessageTypeHTTP_GetCustomEventOpenInfo = 515;
+  ServiceMessageTypeHTTP_GetCustomEventProcessSetting = 516;
+  ServiceMessageTypeHTTP_GetCustomEventProcessInfo = 517;
+  ServiceMessageTypeHTTP_GetCustomEventCurrentProcess = 518;
+  ServiceMessageTypeHTTP_ClaimCustomEventProcessRewards = 519;
+  ServiceMessageTypeHTTP_GetJumpsuitSetting = 520;
+  ServiceMessageTypeHTTP_GetJumpsuitInfo = 521;
+  ServiceMessageTypeHTTP_CollectJumpsuitStorage = 522;
+  ServiceMessageTypeHTTP_ClaimJumpsuitStageAwards = 523;
+  ServiceMessageTypeHTTP_ClaimJumpsuitExtraBox = 524;
+  ServiceMessageTypeHTTP_HelpJumpsuitFriend = 525;
+  ServiceMessageTypeHTTP_GetJumpsuitFriendHelpToken = 526;
+  ServiceMessageTypeHTTP_PutJumpsuitToken = 527;
+  ServiceMessageTypeHTTP_SetAccountPrefers = 528;
+  ServiceMessageTypeHTTP_GetLimitedChestInfo = 529;
+  ServiceMessageTypeHTTP_PurchaseLimitedChest = 530;
+  ServiceMessageTypeHTTP_SelectLimitedChestPrize = 531;
+  ServiceMessageTypeHTTP_GetLimitedChestProbability = 532;
+  ServiceMessageTypeHTTP_GetNewVaultItemDesc = 533;
+  ServiceMessageTypeHTTP_HoodedkillerBAssassinate = 534;
+  ServiceMessageTypeHTTP_GetHoodedkillerBSetting = 535;
+  ServiceMessageTypeHTTP_GetHoodedkillerBInfo = 536;
+  ServiceMessageTypeHTTP_GetHurricaneBSetting = 537;
+  ServiceMessageTypeHTTP_GetHurricaneBAccountInfo = 538;
+  ServiceMessageTypeHTTP_GetHurricaneBCheckPointSetting = 539;
+  ServiceMessageTypeHTTP_SkipOffHurricaneBSelectedLevel = 540;
+  ServiceMessageTypeHTTP_StartHurricaneBSelectedLevel = 541;
+  ServiceMessageTypeHTTP_ProcessHurricaneBLevelSettlement = 542;
+  ServiceMessageTypeHTTP_GetHurricaneBTeamSetting = 543;
+  ServiceMessageTypeHTTP_JoinHurricaneBTeam = 544;
+  ServiceMessageTypeHTTP_GetHurricaneBTeamInfo = 545;
+  ServiceMessageTypeHTTP_GetHurricaneBTeamReward = 546;
+  ServiceMessageTypeHTTP_GetFriendsHurricaneBTeamInfo = 547;
+}
+
+message AIMFEGFEKBM {
+  uint32 PJNEFKEEFFI = 1;
+  int32 BDLDBPFPGHN = 2;
+  bool PDPCDAMOJCG = 3;
+}
+
+message APFBHDAOCKO {
+  uint32 KFAGOCNBNJO = 1;
+  uint32 GNMOCEINFIC = 2;
+  bool OGAFCJBHMFK = 3;
+}
+
+message BAJPKFPIKHB {
+  MHJLCENIECM OFEGPBBHBMC = 1;
+  uint32 AKPKHNCJDHE = 2;
+  uint32 GDHPGKNOLIO = 3;
+  uint32 OKCMCNILCBL = 4;
+}
+
+message BHCGDOPNLAC {
+  CJCONPEJOLP PIDDPDLIGJP = 1;
+  bool GAOIGFOJPAL = 2;
+  int32 DPKEOMCGKGJ = 3;
+  float IGLEKNPOPEH = 4;
+  string ACJPGKABGMG = 5;  // has default
+  EOJMIMOFFJD JCGAOHPJDCK = 6;
+}
+
+message BMLMDIHIKOI {
+  uint32 PJNEFKEEFFI = 1;
+  int32 EPEHBMAPDKF = 2;
+  repeated AIMFEGFEKBM JKDPPAJEGLC = 3;
+}
+
+message BPDHFLCPOLN {
+  int32 IDNEFEOPGIF = 1;
+  bool HAKMLEADCGE = 2;
+  int32 IBBCEKAHMID = 3;
+  float FBGMDCJLMGG = 4;
+}
+
+message CCFANLIJFIN {
+  uint32 KFAGOCNBNJO = 1;
+  uint32 CKCAHFGMLGE = 2;
+}
+
+message CJCONPEJOLP {
+  string KNGEOKPPMFL = 1;  // has default
+  GKHIPJFCCNI HMEBLIODHEO = 2;
+  repeated BHCGDOPNLAC GBMPAEIHFGN = 3;
+}
+
+message DBPGGHECCFD {
+  KLEHHINDFNA NBIPDAIMBJN = 1;
+  int32 ALFNFJMAKCC = 2;
+}
+
+message DEHIKKOIEGD {
+  repeated DBPGGHECCFD MHOFNBLGEOL = 1;
+}
+
+message DFEENNHEIMD {
+  repeated OJBGMIOAJFN LBBAKJINPAI = 1;
+  KCPLKJFFGDK AIFLKMEKNGF = 2;
+  repeated LAAIHPOLBPA ANEFJEAPIDJ = 3;
+}
+
+message DGPLHCMEGEA {
+  float BPMHKJKGPPI = 1;
+  float HKNBHABJAJE = 2;
+  float ILOAOHNGCDL = 3;
+}
+
+message EOJMIMOFFJD {
+  int32 NHJNFPKBBLI = 1;
+  int32 LGALHNNDGNE = 2;
+  int32 GPGDDPJHNIO = 3;
+}
+
+message FEIGJAGLKLM {
+  bytes OHNPJGGODHN = 1;
+  PLPOJKGPFDL CGGIELDGBKN = 2;
+  uint32 GFOFGGJNHLG = 3;
+}
+
+message HEEMHLGIDKJ {
+  string KNGEOKPPMFL = 1;  // has default
+  repeated DFEENNHEIMD DHOBGKEJLHA = 2;
+}
+
+message HMBEHFKBDAB {
+  string BNDLDFLHGIF = 1;  // has default
+  string KPFLJODODGH = 2;  // has default
+}
+
+message HOOHOMMBFAN {
+  string KNGEOKPPMFL = 1;  // has default
+  repeated JOAHJFNEHPD KAMACHPLGJK = 2;
+  KCPLKJFFGDK AIFLKMEKNGF = 3;
+  repeated LAAIHPOLBPA PJPDNMOANLB = 4;
+}
+
+message IFEAJLCOKOI {
+  uint32 KFAGOCNBNJO = 1;
+  uint32 OMONJPHHAKG = 2;
+  uint32 DCOAIEBIMCA = 3;
+}
+
+message IGPHAEPCICJ {
+  uint32 KFAGOCNBNJO = 1;
+  uint32 HICOIJICPCF = 2;
+}
+
+message JCPEKHFBFNI {
+  uint32 DNLFAAFEGJA = 1;
+  uint32 PJGJAKHIEKH = 2;
+  uint32 KFAGOCNBNJO = 3;
+  uint32 EFPMKOMIDCE = 4;
+  uint32 GFAHIBOCHML = 5;
+}
+
+message JFKPPNACDCI {
+  GPBIKBKCCKI FDMALNPFPOE = 1;
+  repeated PICNPIBCNGN FHCAGDALMKK = 2;
+}
+
+message JGKAPCGCLMH {
+  string BNDLDFLHGIF = 1;  // has default
+  int32 KPFLJODODGH = 2;
+}
+
+message JIGKKOKBLCK {
+  PDGNDCNOJCC PEMPBHDIKGF = 1;
+  FEIGJAGLKLM AKPMILKFPOH = 2;
+  LKNGAKLACGK EPEIENDDIIC = 3;
+  bytes DBEGJEKNEGH = 4;
+}
+
+message JOAHJFNEHPD {
+  LCIPBALGMFC OFACGADHIII = 1;
+}
+
+message KAFGHEBAPBF {
+  float BPMHKJKGPPI = 1;
+  float HKNBHABJAJE = 2;
+  float ILOAOHNGCDL = 3;
+  float MEKGBLHBNAE = 4;
+}
+
+message KCPLKJFFGDK {
+  string KNGEOKPPMFL = 1;  // has default
+  OHAAMABDKEN ECBADLAPEHK = 2;
+  CJCONPEJOLP ECBCNPHGEJE = 3;
+  CJCONPEJOLP DKOBGNGNAFC = 4;
+  NKLPCICJPND BFDKKODDJJB = 5;
+}
+
+message KDGJNNIKPPM {
+  repeated PJEMCNKALKH IIFBDPJCEJF = 1;
+  repeated JGKAPCGCLMH DBKHFBDLIBD = 2;
+  repeated LJGAIGGDGHI OOJPKCBHBIK = 3;
+  repeated HMBEHFKBDAB MDNAEBNFMNP = 4;
+  repeated PHHNKBAKLLG JPCNNLBJMMK = 5;
+}
+
+message LAAIHPOLBPA {
+  string KNGEOKPPMFL = 1;  // has default
+  JOBLHFHJHJA HMEBLIODHEO = 2;
+  repeated CJCONPEJOLP FPPJJJBLBAJ = 3;
+}
+
+message LBAKDLEBIIH {
+  repeated PICNPIBCNGN FHCAGDALMKK = 1;
+}
+
+message LBDNKHHGGNF {
+  repeated DGPLHCMEGEA LHPEHOEHFPE = 1;
+}
+
+message LBGPLOBJPBG {
+  uint32 KFAGOCNBNJO = 1;
+  uint32 MFNGGEBIABA = 2;
+  uint32 CNANOAEMNAA = 3;
+  uint32 FDAAADBFKJN = 4;
+}
+
+message LDJIHDBAJHL {
+  repeated HEEMHLGIDKJ MHOFNBLGEOL = 1;
+}
+
+message LJGAIGGDGHI {
+  string BNDLDFLHGIF = 1;  // has default
+  float KPFLJODODGH = 2;
+}
+
+message LKNGAKLACGK {
+  repeated CCFANLIJFIN NIFEGMOKGOF = 1;
+  repeated IGPHAEPCICJ FMJGBBFLFNJ = 2;
+  repeated IFEAJLCOKOI EGNIKKLHKPD = 3;
+  repeated OIJPJIMHPAH EDDDGKPDMFP = 4;
+  repeated LBGPLOBJPBG DNMBGKBGAAI = 5;
+  repeated PCOHLPBEODK NJEKMIEKPBG = 6;
+  repeated APFBHDAOCKO LJMCAPLFFGN = 7;
+}
+
+message MHJLCENIECM {
+  uint32 NMOHCFJIEMJ = 1;
+  uint32 DBGBPGFHKHE = 2;
+  uint32 BBONBGMNDKF = 3;
+}
+
+message MNGKNHENJOG {
+  repeated AIMFEGFEKBM JKDPPAJEGLC = 1;
+  repeated BMLMDIHIKOI PMBOPIJFOHK = 2;
+  DEHIKKOIEGD OGNEOLLNECM = 3;
+  repeated HOOHOMMBFAN JJBJCDCCJHA = 4;
+  LBAKDLEBIIH NIKNAKCKIFE = 5;
+  repeated JFKPPNACDCI KKDNGCDKELA = 6;
+  KDGJNNIKPPM NEICOFKLAEE = 7;
+}
+
+message NFEKCMOMHJJ {
+  repeated BPDHFLCPOLN EHIMODIEDDP = 1;
+}
+
+message NOHCBCKKJLK {
+  repeated int32 HDCMOBBMOHD = 1;
+}
+
+message OIJPJIMHPAH {
+  uint32 KFAGOCNBNJO = 1;
+  uint32 FMGKFIJCMDH = 2;
+}
+
+message OKBFAGMCOKP {
+  MHJLCENIECM OFEGPBBHBMC = 1;
+}
+
+message OMAFMFJKMPB {
+  MHJLCENIECM OFEGPBBHBMC = 1;
+  float PKOHDMDBCEN = 2;
+  uint32 OJENKLFCLFN = 3;
+}
+
+message PCOHLPBEODK {
+  uint32 KFAGOCNBNJO = 1;
+  uint32 KBMICAIJLLH = 2;
+}
+
+message PDGNDCNOJCC {
+  repeated JCPEKHFBFNI LKHJCNHFMLM = 1;
+}
+
+message PHHNKBAKLLG {
+  string BNDLDFLHGIF = 1;  // has default
+  NOHCBCKKJLK KPFLJODODGH = 2;
+}
+
+message PICNPIBCNGN {
+  string KNGEOKPPMFL = 1;  // has default
+  OHAAMABDKEN HMEBLIODHEO = 2;
+  BHCGDOPNLAC KPFLJODODGH = 3;
+}
+
+message PJEMCNKALKH {
+  string BNDLDFLHGIF = 1;  // has default
+  bool KPFLJODODGH = 2;
+}
+
+message PLOLPKGFELA {
+  DGPLHCMEGEA CEFBBPMLFMI = 1;
+  KAFGHEBAPBF PKNPKOGFHHE = 2;
+}
+
+message PLPOJKGPFDL {
+  uint32 OOOPBBEBGOA = 1;
+  uint32 ALNGNOKDJBK = 2;
+  uint32 DADDINPLJDP = 3;
+  bool PCMLBMFMHCI = 4;
+  uint32 JLKLMFHFHFF = 5;
+  uint32 IJNIBNCEDEC = 6;
+  float MOLCNOBCPIP = 7;
+  float GFKAKIJJHOE = 8;
+  bool HPJFLNBDGNJ = 9;
+}

@@ -1,0 +1,9 @@
+node_modules/
+.env
+logs/
+npm-debug.log*
+dist/
+original_to_read/
+test_logs/
+tools/
+.refactor_backup/

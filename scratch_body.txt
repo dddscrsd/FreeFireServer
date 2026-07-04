@@ -1,0 +1,131 @@
+  // ===== COW::UIModelLeaderBoard =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelIAPBundle =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelRebateCard =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelFriends =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelMall =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelPeriodicLadderMatch =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelLogin =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelMusicFest =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelOptionalDownload =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelClan =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelUser =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelHurricaneB =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelAvatarProfile =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelCollection =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelElitePass =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelProfile =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelVeteranSignin =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelClanRace =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelLadderMatch =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelActivity =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelManual =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelChampionship =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelPayment =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, null));
+
+  // ===== COW::UIModelCSLadderMatch =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelMysteryMall =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelRampage =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelSuperCar =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelBigEvent =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelRelationShip =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelChummy =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelSceneEdit =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, null));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelCupMatch =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, null));
+
+  // ===== COW::UIModelLuckyWheel =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelBigEventTemplate =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));
+
+  // ===== COW::UIModelNewVault =====
+  register(+String(s).replace(/'/g,')+, stub(+String(s).replace(/'/g,')+, null, +String(s).replace(/'/g,')+));

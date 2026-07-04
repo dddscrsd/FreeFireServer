@@ -1,0 +1,506 @@
+syntax = "proto3";
+
+package GCommon;
+
+enum _channel {
+  _channel_Stereo = 0;
+  _channel_Left = 1;
+  _channel_Right = 2;
+}
+
+enum EAudioType {
+  EAudioType_eOneShot = 0;
+  EAudioType_e2DLoop = 1;
+  EAudioType_e3DLoop = 2;
+}
+
+enum EBitArrayBooleanMode {
+  EBitArrayBooleanMode_AND_TURE = 0;
+  EBitArrayBooleanMode_OR_TRUE = 1;
+}
+
+enum State {
+  State_Active = 0;
+  State_DeActive = 1;
+}
+
+enum DisconnectedReason {
+  DisconnectedReason_Unknown = 0;
+  DisconnectedReason_MultiLogin = 1;
+  DisconnectedReason_InvalidClientVersion = 2;
+  DisconnectedReason_InBlackList = 3;
+  DisconnectedReason_LevelUp = 4;
+  DisconnectedReason_RoleChange = 5;
+  DisconnectedReason_AccountDelete = 6;
+  DisconnectedReason_ReachMaxResendCount = 7;
+}
+
+enum EAudioChannel {
+  EAudioChannel_Default = 0;
+  EAudioChannel_AvatarAudio = 1;
+  EAudioChannel_EmoteBGM = 2;
+  EAudioChannel_TeamBGM = 3;
+  EAudioChannel_MaxNB = 4;
+}
+
+enum EAudioDebugType {
+  EAudioDebugType_eMusic = 0;
+  EAudioDebugType_e2DShot = 1;
+  EAudioDebugType_e2DLoop = 2;
+  EAudioDebugType_e3DShot = 3;
+  EAudioDebugType_e3DLoop = 4;
+}
+
+enum EAudioEngineType {
+  EAudioEngineType_eUnity = 0;
+  EAudioEngineType_eNone = -1;
+  EAudioEngineType_eWwise = 1;
+}
+
+enum EDownloadContextMode {
+  EDownloadContextMode_AllFile = 0;
+  EDownloadContextMode_DesignatedFile = 1;
+}
+
+enum EDownloadContextState {
+  EDownloadContextState_None = 0;
+  EDownloadContextState_ReadyForStart = 1;
+  EDownloadContextState_Download = 2;
+  EDownloadContextState_Paused = 3;
+  EDownloadContextState_DownloadFinished = 4;
+}
+
+enum EEntityProxyType {
+  EEntityProxyType_Autonomous = 0;
+  EEntityProxyType_Simulated = 1;
+}
+
+enum EHttpDataType {
+  EHttpDataType_None = 0;
+  EHttpDataType_Protobuf = 1;
+  EHttpDataType_Json = 2;
+}
+
+enum EInputButtonType {
+  EInputButtonType_Circle = 0;
+  EInputButtonType_Box = 1;
+}
+
+enum ENetworkMaterialGroup {
+  ENetworkMaterialGroup_ENETMATGROUP_BillBoard = 0;
+  ENetworkMaterialGroup_ENETMATGROUP_ArenaScreen = 1;
+  ENetworkMaterialGroup_ENETMATGROUP_TrainingBillBoard = 2;
+}
+
+enum EProtoDataType {
+  EProtoDataType_Protobuf = 0;
+  EProtoDataType_Json = 1;
+}
+
+enum EReplicationInfoGroup {
+  EReplicationInfoGroup_INT8 = 0;
+  EReplicationInfoGroup_UINT8 = 1;
+  EReplicationInfoGroup_INT16 = 2;
+  EReplicationInfoGroup_UINT16 = 3;
+  EReplicationInfoGroup_INT32 = 4;
+  EReplicationInfoGroup_UINT32 = 5;
+  EReplicationInfoGroup_BOOL = 6;
+  EReplicationInfoGroup_FLOAT32 = 7;
+  EReplicationInfoGroup_UINT64 = 8;
+  EReplicationInfoGroup_INT64 = 9;
+  EReplicationInfoGroup_NB = 10;
+}
+
+enum ESoundOwner {
+  ESoundOwner_Default = 0;
+  ESoundOwner_Self = 1;
+  ESoundOwner_Friend = 2;
+  ESoundOwner_Enemy = 3;
+}
+
+enum ETaskFunction {
+  ETaskFunction_ePing = 0;
+  ETaskFunction_eTraceRoute = 1;
+  ETaskFunction_eCDNTest = 2;
+}
+
+enum ETaskType {
+  ETaskType_eNone = 0;
+  ETaskType_eIDC = 1;
+  ETaskType_eAutoPing = 2;
+  ETaskType_eConnectReport = 4;
+  ETaskType_eCDN = 8;
+  ETaskType_eSelfReport = 16;
+}
+
+enum ETraceRouteError {
+  ETraceRouteError_CMD_STATUS_SUCCESSFUL = 0;
+  ETraceRouteError_CMD_STATUS_FAILED = 1;
+  ETraceRouteError_CMD_STATUS_USER_STOP = 2;
+  ETraceRouteError_CMD_STATUS_ERROR = 3;
+  ETraceRouteError_CMD_STATUS_NETWORK_ERROR = 4;
+  ETraceRouteError_CMD_STATUS_ERROR_UNKNOW_HOST = 5;
+  ETraceRouteError_CMD_STATUS_ERROE_NULL_RESULT = 6;
+}
+
+enum EUIAnchor {
+  EUIAnchor_None = 0;
+  EUIAnchor_BottomLeft = 1;
+  EUIAnchor_Left = 2;
+  EUIAnchor_TopLeft = 3;
+  EUIAnchor_Top = 4;
+  EUIAnchor_TopRight = 5;
+  EUIAnchor_Right = 6;
+  EUIAnchor_BottomRight = 7;
+  EUIAnchor_Bottom = 8;
+  EUIAnchor_Center = 9;
+  EUIAnchor_TotalCount = 10;
+}
+
+enum EUIItemExportType {
+  EUIItemExportType_GameObject = 0;
+  EUIItemExportType_Panel = 1;
+  EUIItemExportType_Widget = 2;
+  EUIItemExportType_Button = 3;
+  EUIItemExportType_Label = 4;
+  EUIItemExportType_InputField = 5;
+  EUIItemExportType_Sprite = 6;
+  EUIItemExportType_Texture = 7;
+  EUIItemExportType_Transform = 8;
+  EUIItemExportType_ParticleSystem = 9;
+  EUIItemExportType_ProgressBar = 10;
+  EUIItemExportType_TextList = 11;
+  EUIItemExportType_TweenPosition = 12;
+  EUIItemExportType_TweenAlpha = 13;
+  EUIItemExportType_TweenScale = 14;
+  EUIItemExportType_Grid = 15;
+  EUIItemExportType_PopupList = 16;
+  EUIItemExportType_ScrollView = 17;
+  EUIItemExportType_Slider = 18;
+  EUIItemExportType_Toggle = 19;
+  EUIItemExportType_WrapContent = 20;
+  EUIItemExportType_CustomType = 21;
+  EUIItemExportType_Animator = 22;
+  EUIItemExportType_EasyList = 23;
+  EUIItemExportType_UIToggleButton = 24;
+  EUIItemExportType_UIToggleButtonGroup = 25;
+  EUIItemExportType_TweenFill = 26;
+  EUIItemExportType_UICheckboxButton = 27;
+  EUIItemExportType_Animation = 28;
+  EUIItemExportType_UIEffectSprite = 29;
+  EUIItemExportType_Table = 30;
+}
+
+enum HttpErrorCode {
+  HttpErrorCode_OK = 0;
+  HttpErrorCode_InvalidArgs = 1;
+  HttpErrorCode_Exception = 2;
+  HttpErrorCode_Timeout = 3;
+  HttpErrorCode_DataTypeError = 4;
+  HttpErrorCode_SSLAuthError = 5;
+  HttpErrorCode_DefaultHttpOK = 200;
+  HttpErrorCode_BadGateway = 502;
+  HttpErrorCode_ServiceUnavailable = 503;
+}
+
+enum EHttpChannel {
+  EHttpChannel_Main = 0;
+  EHttpChannel_Second = 1;
+}
+
+enum EProcessStatus {
+  EProcessStatus_NotStarted = 0;
+  EProcessStatus_Running = 1;
+  EProcessStatus_Finished = 2;
+  EProcessStatus_Exception = 3;
+}
+
+enum Alignment {
+  Alignment_Automatic = 0;
+  Alignment_Left = 1;
+  Alignment_Center = 2;
+  Alignment_Right = 3;
+  Alignment_Justified = 4;
+}
+
+enum LocLang {
+  LocLang_None = 0;
+  LocLang_English = 1;
+  LocLang_SimplifiedChinese = 2;
+  LocLang_TraditionalChinese = 3;
+  LocLang_Thai = 4;
+  LocLang_Vietnamese = 5;
+  LocLang_Indonesia = 6;
+  LocLang_BrazilianPortuguese = 7;
+  LocLang_Spanish = 8;
+  LocLang_Russian = 9;
+  LocLang_Korean = 10;
+  LocLang_French = 11;
+  LocLang_German = 12;
+  LocLang_Turkish = 13;
+  LocLang_Hindi = 14;
+  LocLang_Japanese = 15;
+  LocLang_Romanian = 16;
+  LocLang_Arabic = 17;
+  LocLang_Burmese = 18;
+  LocLang_Urdu = 19;
+}
+
+enum LocUseCase {
+  LocUseCase_Both = 0;
+  LocUseCase_LobbyOnly = 1;
+  LocUseCase_IngameOnly = 2;
+  LocUseCase_HotFix = 3;
+}
+
+enum ImageLocalizeType {
+  ImageLocalizeType_Sprite = 0;
+  ImageLocalizeType_Atlas = 1;
+}
+
+enum ExternalAudioChannel {
+  ExternalAudioChannel_Mic = 0;
+  ExternalAudioChannel_Remote = 1;
+  ExternalAudioChannel_Mixed = 2;
+}
+
+enum SmokeTypes {
+  SmokeTypes_Noise = 0;
+  SmokeTypes_Sin = 1;
+  SmokeTypes_SinNoise = 2;
+}
+
+enum CurveTypes {
+  CurveTypes_Linear = 0;
+  CurveTypes_Quadratic = 1;
+  CurveTypes_Cubic = 2;
+  CurveTypes_Quartic = 3;
+  CurveTypes_Quintic = 4;
+  CurveTypes_Sinusoidal = 5;
+  CurveTypes_Exponential = 6;
+  CurveTypes_Circular = 7;
+}
+
+enum LocalNotificationImportance {
+  LocalNotificationImportance_None = 0;
+  LocalNotificationImportance_Unspecified = -1000;
+  LocalNotificationImportance_Min = 1;
+  LocalNotificationImportance_Low = 2;
+  LocalNotificationImportance_Default = 3;
+  LocalNotificationImportance_High = 4;
+  LocalNotificationImportance_Max = 5;
+}
+
+enum LocalNotificationAuthorizationStatus {
+  LocalNotificationAuthorizationStatus_NotDetermined = 0;
+  LocalNotificationAuthorizationStatus_Denied = 1;
+  LocalNotificationAuthorizationStatus_Authorized = 2;
+}
+
+enum PermissionGrantResult {
+  PermissionGrantResult_Granted = 0;
+  PermissionGrantResult_Denied = -1;
+}
+
+enum WebReqState {
+  WebReqState_Running = 0;
+  WebReqState_Finished = 1;
+  WebReqState_Error = 2;
+  WebReqState_Cancled = 3;
+}
+
+enum ResDownloadType {
+  ResDownloadType_None = 0;
+  ResDownloadType_CompulsoryRes = 1;
+  ResDownloadType_OptionalClothRes = 2;
+  ResDownloadType_OptionalVoiceRes = 3;
+  ResDownloadType_OptionalLocRes = 4;
+  ResDownloadType_OptionalMapRes = 5;
+  ResDownloadType_OptionalMap1Res = 6;
+  ResDownloadType_OptionalPetRes = 7;
+  ResDownloadType_OptionalWerewolves = 8;
+  ResDownloadType_OptionalRushB = 9;
+  ResDownloadType_OptionalRushingPetsRes = 10;
+  ResDownloadType_OptionalMapMaxRes = 11;
+  ResDownloadType_OptionalMap2Res = 12;
+  ResDownloadType_OptionalLudoRes = 13;
+  ResDownloadType_OptionalFullScreenCGRes = 14;
+  ResDownloadType_OptionalMap4Res = 15;
+  ResDownloadType_MAX = 16;
+}
+
+enum ResErrorCode {
+  ResErrorCode_OK = 0;
+  ResErrorCode_CorruptFile = 1;
+  ResErrorCode_SaveFailed = 2;
+  ResErrorCode_DownloadFailed = 3;
+  ResErrorCode_SSLAuthFailed = 4;
+  ResErrorCode_InsufficientStorage = 5;
+  ResErrorCode_UnZipped = 6;
+}
+
+enum ResFileType {
+  ResFileType_Compulsory = 0;
+  ResFileType_None = -1;
+  ResFileType_OptionalCloth = 1;
+  ResFileType_OptionalVoice = 2;
+  ResFileType_OptionalLoc = 3;
+  ResFileType_OptionalMap = 4;
+  ResFileType_OptionalMap1 = 5;
+  ResFileType_OptionalPet = 6;
+  ResFileType_OptionalWerewolves = 7;
+  ResFileType_OptionalRushB = 8;
+  ResFileType_OptionalRushingPets = 9;
+  ResFileType_OptionalMapMax = 10;
+  ResFileType_OptionalMap2 = 11;
+  ResFileType_OptionalLudo = 12;
+  ResFileType_OptionalFullScreenCG = 13;
+  ResFileType_OptionalMap4 = 14;
+}
+
+enum ResHotUpdateResult {
+  ResHotUpdateResult_ERROR = 0;
+  ResHotUpdateResult_COLDUPDATE = 1;
+  ResHotUpdateResult_HOTUPDATE = 2;
+  ResHotUpdateResult_PASS = 3;
+}
+
+enum EResourceConfigLevelSetting {
+  EResourceConfigLevelSetting_None = 0;
+  EResourceConfigLevelSetting_Replace = 1;
+  EResourceConfigLevelSetting_Hide = 2;
+}
+
+enum ELoadAbOption {
+  ELoadAbOption_NotAb = 0;
+  ELoadAbOption_AbWithName = 1;
+  ELoadAbOption_AbWithPath = 2;
+  ELoadAbOption_AbWithNameOrPath = 3;
+  ELoadAbOption_StreamAb = 4;
+}
+
+enum ReqState {
+  ReqState_Waiting = 0;
+  ReqState_InProgress = 1;
+  ReqState_Cached = 2;
+  ReqState_Completed = 3;
+  ReqState_Cancelled = 4;
+  ReqState_Recycled = 5;
+}
+
+enum OpState {
+  OpState_Local = 0;
+  OpState_Download = 1;
+  OpState_Cache = 2;
+  OpState_CacheUnzipped = 3;
+}
+
+enum ERotateAxis {
+  ERotateAxis_X = 0;
+  ERotateAxis_Y = 1;
+  ERotateAxis_Z = 2;
+}
+
+enum PositionType {
+  PositionType_Above = 0;
+  PositionType_Behind = 1;
+}
+
+enum SupResDownloadType {
+  SupResDownloadType_None = 0;
+  SupResDownloadType_ClothRes = 1;
+  SupResDownloadType_MapRes = 2;
+  SupResDownloadType_ModeRes = 3;
+  SupResDownloadType_OtherRes = 4;
+  SupResDownloadType_UpperLimit = 5;
+}
+
+enum TCPMessageIDReserved {
+  TCPMessageIDReserved_UNSPECIFIED = 0;
+  TCPMessageIDReserved_TCP_INIT = 1;
+  TCPMessageIDReserved_TCP_HEARTBEAT = 2;
+  TCPMessageIDReserved_TCP_USER = 3;
+}
+
+enum UDPMessageIDReserved {
+  UDPMessageIDReserved_UNSPECIFIED = 0;
+  UDPMessageIDReserved_UDP_HELLO = 1;
+  UDPMessageIDReserved_UDP_ACK = 2;
+  UDPMessageIDReserved_UDP_PING = 3;
+  UDPMessageIDReserved_UDP_BYEBYE = 4;
+  UDPMessageIDReserved_UDP_LONGTIMENOSEE = 5;
+}
+
+enum RECVRET {
+  RECVRET_ENQUEUE = 0;
+  RECVRET_PENDING = 1;
+  RECVRET_DROP = 2;
+}
+
+enum ETouchCheck {
+  ETouchCheck_Press = 0;
+  ETouchCheck_Release = 1;
+}
+
+enum Pivot {
+  Pivot_HorizontalCenter = 0;
+  Pivot_RightToLeft = 1;
+  Pivot_LeftToRight = 2;
+  Pivot_TopToBottom = 3;
+}
+
+enum SwitchType {
+  SwitchType_Alpha = 0;
+  SwitchType_Active = 1;
+}
+
+enum Verts {
+  Verts_LeftBottom = 0;
+  Verts_LeftTop = 1;
+  Verts_RightTop = 2;
+  Verts_RightBottom = 3;
+}
+
+enum EAxisDataType {
+  EAxisDataType_Left = 0;
+  EAxisDataType_Right = 1;
+  EAxisDataType_WeaponSlider = 2;
+}
+
+enum VibrateEffectType {
+  VibrateEffectType_UNSPECIFIED = 0;
+  VibrateEffectType_OnHearEnemyShoot = 1;
+  VibrateEffectType_OnLocalHitByEnemyShoot = 2;
+  VibrateEffectType_OnHearEnemyFootStep = 3;
+  VibrateEffectType_OnHearEnemyVehicleRun = 4;
+  VibrateEffectType_OnLocalVehicleHitByShoot = 5;
+  VibrateEffectType_OnLocalVehicleHitCollision = 6;
+  VibrateEffectType_OnLocalVehicleRun = 7;
+  VibrateEffectType_OnSilenceWeaponFire = 8;
+}
+
+enum ThreadRequestType {
+  ThreadRequestType_UNSPECIFIED = 0;
+  ThreadRequestType_None = -1;
+  ThreadRequestType_Stop = 1;
+  ThreadRequestType_Play = 2;
+}
+
+enum VibrateSettingType {
+  VibrateSettingType_MainSet = 0;
+  VibrateSettingType_VisibleVoiceSet = 1;
+  VibrateSettingType_CharacterSet = 2;
+  VibrateSettingType_WeaponSet = 3;
+  VibrateSettingType_VehicleSet = 4;
+}
+
+enum VibrateStyle {
+  VibrateStyle_UNSPECIFIED = 0;
+  VibrateStyle_MATCHSUCCESS = 1;
+  VibrateStyle_GROUPINVITE = 2;
+  VibrateStyle_KNOCKDOWNENEMY = 3;
+  VibrateStyle_STARTUPVEHICLE = 4;
+  VibrateStyle_VEHICLEHIT = 5;
+  VibrateStyle_HITED = 6;
+  VibrateStyle_GACHA = 7;
+}

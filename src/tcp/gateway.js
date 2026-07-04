@@ -1,0 +1,244 @@
+'use strict';
+
+/**
+ * FF 1.70 TCP gateway (notification channel, port 10300).
+ *
+ * The persistent, bidirectional socket the client keeps open after login so the
+ * server can push messages at any time. Handshake + framing + crypto are
+ * documented in protocol/TCP_PROTOCOL.md and validated against the live client.
+ *
+ *   client connects -> sends Cmd=1 (AES(UTF8(login_token)))
+ *   server resolves the token to an account, replies single 0x02 (init ack)
+ *   client heartbeats (Cmd=2) every 8s; server echoes 0x02 to keep it alive
+ *   server may push at any time: push()/kick()
+ */
+
+const net = require('net');
+const logger = require('../logger');
+const player = require('../db/player');
+const { lookup } = require('../protocol/protos');
+const { CMD, INIT_ACK, decrypt, parseClientFrames, encodeServerFrame } = require('./framing');
+const tcpRouter = require('./router');
+const matchmaker = require('./matchmaker');
+
+// account uid -> { socket, account, region, lastSeen }
+const sessions = new Map();
+
+function register(entry) {
+  const prev = sessions.get(entry.account.uid);
+  if (prev && prev.socket !== entry.socket) {
+    try { prev.socket.destroy(); } catch (e) { /* ignore */ }
+  }
+  sessions.set(entry.account.uid, entry);
+}
+
+function handleConnection(socket) {
+  const peer = `${socket.remoteAddress}:${socket.remotePort}`;
+  socket.setNoDelay(true);
+  logger.info(`[tcp] connection from ${peer}`);
+
+  let buf = Buffer.alloc(0);
+  let entry = null; // set once authenticated
+
+  socket.on('data', (chunk) => {
+    buf = Buffer.concat([buf, chunk]);
+    let parsed;
+    try {
+      parsed = parseClientFrames(buf);
+    } catch (err) {
+      logger.error(`[tcp] frame parse error from ${peer}: ${err.message}`);
+      socket.destroy();
+      return;
+    }
+    buf = parsed.rest;
+    for (const f of parsed.frames) {
+      try {
+        entry = handleFrame(socket, f, entry, peer) || entry;
+      } catch (err) {
+        logger.error(`[tcp] handler error (cmd=${f.cmd}) from ${peer}: ${err.stack || err}`);
+      }
+    }
+  });
+
+  socket.on('close', () => {
+    if (entry && sessions.get(entry.account.uid) && sessions.get(entry.account.uid).socket === socket) {
+      sessions.delete(entry.account.uid);
+      matchmaker.cancel(entry.account.uid);
+      logger.info(`[tcp] disconnected uid=${entry.account.uid} (${peer})`);
+    } else {
+      logger.info(`[tcp] disconnected ${entry ? 'uid=' + entry.account.uid + ' (stale) ' : '(unauth) '}${peer}`);
+    }
+  });
+  socket.on('error', (e) => logger.warn(`[tcp] socket error ${peer}: ${e.code}`));
+}
+
+// Returns the (new) session entry when auth happens, else undefined.
+function handleFrame(socket, f, entry, peer) {
+  // Heartbeat: echo a bare 0x02 so the client's 180s liveness timer resets.
+  if (f.cmd === CMD.HEARTBEAT) {
+    socket.write(INIT_ACK);
+    if (entry) entry.lastSeen = Date.now();
+    return;
+  }
+
+  // Auth: Cmd=1 payload = AES(UTF8(session token from MajorLoginRes.token)).
+  if (f.cmd === CMD.AUTH) {
+    let token;
+    try {
+      token = decrypt(f.payload).toString('utf8');
+    } catch (err) {
+      logger.warn(`[tcp] ${peer}: auth payload decrypt failed -> closing`);
+      socket.destroy();
+      return;
+    }
+    const account = token ? player.getByToken(token) : null;
+    if (!account) {
+      logger.warn(`[tcp] ${peer}: unknown/expired token -> closing`);
+      socket.destroy();
+      return;
+    }
+    const newEntry = { socket, account, region: f.region, lastSeen: Date.now() };
+    register(newEntry);
+    socket.write(INIT_ACK); // server init ack
+    logger.info(`[tcp] authenticated uid=${account.uid} nickname="${account.nickname || ''}" region=${f.region} (${peer})`);
+    return newEntry;
+  }
+
+  // Application message: Cmd = base protocol (tcp.EProtocol.Proto, e.g. 3 =
+  // MATCHMAKING). Payload = AES(ProtoReq{cmd=subcmd, data=inner request}).
+  if (!entry) {
+    logger.warn(`[tcp] ${peer}: app msg cmd=${f.cmd} before auth -> ignoring`);
+    return;
+  }
+  entry.lastSeen = Date.now();
+  // f.payload is a view into the recv buffer; copy so async dispatch is safe.
+  const payload = f.payload ? Buffer.from(f.payload) : null;
+  handleApp(socket, entry, f.cmd, payload).catch(
+    (err) => logger.error(`[tcp] ${peer}: app handling failed: ${err.stack || err}`));
+}
+
+// Decode a client app message (ProtoReq), route it, and send the MessageNotify
+// response (frame cmd = the request's base protocol).
+async function handleApp(socket, entry, protocol, payload) {
+  let reqBytes;
+  try {
+    reqBytes = payload ? decrypt(payload) : Buffer.alloc(0);
+  } catch (e) {
+    logger.warn(`[tcp] uid=${entry.account.uid} protocol=${protocol}: payload decrypt failed`);
+    return;
+  }
+
+  const ProtoReq = lookup('ProtoReq');
+  let preq;
+  try {
+    preq = ProtoReq.toObject(ProtoReq.decode(reqBytes), { longs: Number, enums: Number, bytes: Buffer, defaults: true });
+  } catch (e) {
+    logger.warn(`[tcp] uid=${entry.account.uid} protocol=${protocol}: ProtoReq decode failed`);
+    return;
+  }
+
+  const subcmd = preq.cmd;
+  const ctx = {
+    account: entry.account,
+    protocol,
+    subcmd,
+    reqData: Buffer.isBuffer(preq.data) ? preq.data : Buffer.alloc(0),
+    region: entry.region,
+    logger,
+    gateway: module.exports
+  };
+
+  const result = await tcpRouter.dispatch(ctx);
+  if (!result) {
+    logger.info(`[tcp] uid=${entry.account.uid} unrouted protocol=${protocol} subcmd=${subcmd} (${reqBytes.length}B)`);
+    return;
+  }
+  if (result.noReply) return; // handler consumed it without a response
+
+  let content = Buffer.alloc(0);
+  if (result.resType) {
+    const T = lookup(result.resType);
+    if (T) content = Buffer.from(T.encode(T.fromObject(result.resObj)).finish());
+  }
+  const resCmd = result.resCmd != null ? result.resCmd : subcmd;
+  sendNotify(socket, entry.account.uid, protocol, result.ret || 0, resCmd, content);
+  logger.info(`[tcp] uid=${entry.account.uid} -> ${result.resType || 'MessageNotify'} ` +
+    `(protocol=${protocol} cmd=${resCmd} ret=${result.ret || 0}, ${content.length}B)`);
+}
+
+// Wrap `content` in a MessageNotify and send it as a framed, AES-encrypted
+// packet (frame cmd = protocol).
+function sendNotify(socket, accountId, protocol, ret, cmd, content) {
+  const MessageNotify = lookup('MessageNotify');
+  const bytes = MessageNotify.encode(MessageNotify.fromObject({
+    account_id: accountId, protocol, ret, cmd, content: content || Buffer.alloc(0)
+  })).finish();
+  // server->client payload is PLAINTEXT protobuf (client never decrypts recvs).
+  socket.write(encodeServerFrame(protocol, Buffer.from(bytes)));
+}
+
+// --- server push API -------------------------------------------------------
+
+/**
+ * Send raw bytes as a frame with command `cmd`. NOTE: server->client payloads
+ * are PLAINTEXT protobuf — the client's receive path (ServiceClient
+ * ::HandleRecvPacket) deserializes the payload directly and never decrypts.
+ * (Only client->server is AES-encrypted; we decrypt those on the way in.)
+ */
+function pushRaw(accountId, cmd, plaintextBuf) {
+  const entry = sessions.get(accountId);
+  if (!entry) return false;
+  entry.socket.write(encodeServerFrame(cmd, plaintextBuf || Buffer.alloc(0)));
+  return true;
+}
+
+/**
+ * Send a MessageNotify to a connected account: encode `obj` as `typeName`, wrap
+ * it as MessageNotify{protocol, ret, cmd, content} and frame it (plaintext).
+ * Used for server-initiated pushes (e.g. the matchmaker's SussNtf). Returns
+ * false if the account is not connected.
+ */
+function notify(accountId, protocol, cmd, typeName, obj, ret) {
+  const entry = sessions.get(accountId);
+  if (!entry) return false;
+  let content = Buffer.alloc(0);
+  if (typeName) {
+    const T = lookup(typeName);
+    if (T) content = Buffer.from(T.encode(T.fromObject(obj || {})).finish());
+  }
+  sendNotify(entry.socket, accountId, protocol, ret || 0, cmd, content);
+  return true;
+}
+
+/** Encode a protobuf object of `typeName` and push it as command `cmd`. */
+function push(accountId, cmd, typeName, obj) {
+  const T = lookup(typeName);
+  if (!T) throw new Error(`[tcp] push: unknown proto type '${typeName}'`);
+  const payload = Buffer.from(T.encode(T.fromObject(obj || {})).finish());
+  return pushRaw(accountId, cmd, payload);
+}
+
+/**
+ * Kick/ban a connected account: send Cmd=11, then close. The client disconnects
+ * on receipt (parsed reason, or "Unknown" if it can't parse). `reasonPayload`
+ * (a Buffer) is optional; the exact kick-reason protobuf is a TODO — see
+ * protocol/TCP_PROTOCOL.md.
+ */
+function kick(accountId, reasonPayload) {
+  const entry = sessions.get(accountId);
+  if (!entry) return false;
+  const payload = reasonPayload && reasonPayload.length ? reasonPayload : Buffer.from([0]);
+  entry.socket.write(encodeServerFrame(CMD.KICK, payload));
+  logger.info(`[tcp] kick uid=${accountId}`);
+  setTimeout(() => { try { entry.socket.destroy(); } catch (e) { /* ignore */ } }, 250);
+  return true;
+}
+
+function isOnline(accountId) { return sessions.has(accountId); }
+function onlineCount() { return sessions.size; }
+
+function createGateway() {
+  return net.createServer(handleConnection);
+}
+
+module.exports = { createGateway, notify, push, pushRaw, kick, isOnline, onlineCount, sessions };

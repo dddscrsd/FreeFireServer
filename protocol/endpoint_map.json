@@ -1,0 +1,3954 @@
+[
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard17RequestFriendInfoEN6System6ObjectEbbb",
+  "cmd": 0,
+  "cmd_hex": "0x0",
+  "reqType": null,
+  "resType": "AccountFriendRes",
+  "endpoint": "LogEvent"
+ },
+ {
+  "caller": "_ZN3COW11EventLogger12SendEventLogEN6System6StringEN3COW11EventLogger15EventLoggerBaseE",
+  "cmd": 0,
+  "cmd_hex": "0x0",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "LogEvent"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin19RequestRegionChooseEN6System6StringE",
+  "cmd": 3,
+  "cmd_hex": "0x3",
+  "reqType": "CSChooseRegionReq",
+  "resType": "CSChooseRegionRes",
+  "endpoint": "ChooseRegion"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin25RequestGetPlatformProfileEv",
+  "cmd": 4,
+  "cmd_hex": "0x4",
+  "reqType": "PlatformProfileReq",
+  "resType": "PlatformProfileRes",
+  "endpoint": "GetPlatformProfile"
+ },
+ {
+  "caller": "_ZN3COW12UIModelMatch25RequestMatchResultViaHTTPEv",
+  "cmd": 5,
+  "cmd_hex": "0x5",
+  "reqType": "CSGetAccountMatchStatsReq",
+  "resType": "CSGetAccountMatchStatsRes",
+  "endpoint": "AccountMatchStats"
+ },
+ {
+  "caller": "_ZN3COW16UIModelInventory13RequestWalletEb",
+  "cmd": 6,
+  "cmd_hex": "0x6",
+  "reqType": "CSGetWalletReq",
+  "resType": "CSGetWalletRes",
+  "endpoint": "GetWallet"
+ },
+ {
+  "caller": "_ZN3COW16UIModelInventory15RequestBackpackEj",
+  "cmd": 7,
+  "cmd_hex": "0x7",
+  "reqType": "CSGetBackpackReq",
+  "resType": "CSGetBackpackRes",
+  "endpoint": "GetBackpack"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection25RequestBackpackCollectionEv",
+  "cmd": 7,
+  "cmd_hex": "0x7",
+  "reqType": "CSGetBackpackReq",
+  "resType": "CSGetBackpackRes",
+  "endpoint": "GetBackpack"
+ },
+ {
+  "caller": "_ZN3COW16UIModelIAPBundle16RequestIAPBundleEv",
+  "cmd": 8,
+  "cmd_hex": "0x8",
+  "reqType": null,
+  "resType": "GetCardsAndIAPInfoRes",
+  "endpoint": "GetCardsAndIAPInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranBundle15RequestPurchaseEv",
+  "cmd": 9,
+  "cmd_hex": "0x9",
+  "reqType": "CSIAPPurchaseReq",
+  "resType": "CSIAPPurchaseRes",
+  "endpoint": "IAPPurchase"
+ },
+ {
+  "caller": "_ZN3COW16UIModelIAPBundle15RequestPurchaseEv",
+  "cmd": 9,
+  "cmd_hex": "0x9",
+  "reqType": "CSIAPPurchaseReq",
+  "resType": "CSIAPPurchaseRes",
+  "endpoint": "IAPPurchase"
+ },
+ {
+  "caller": "_ZN3COW16UIModelIAPBundle29RequestPurchaseForRecommittedEA_N6System5Int32Ei",
+  "cmd": 9,
+  "cmd_hex": "0x9",
+  "reqType": "CSIAPPurchaseReq",
+  "resType": "CSIAPPurchaseRes",
+  "endpoint": "IAPPurchase"
+ },
+ {
+  "caller": "_ZN3COW16UIModelIAPBundle22RequestDiamondPurchaseEN3COW18IAPBundleStoreDataE",
+  "cmd": 9,
+  "cmd_hex": "0x9",
+  "reqType": "CSIAPPurchaseReq",
+  "resType": "CSIAPPurchaseRes",
+  "endpoint": "IAPPurchase"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment20UpdatePaymentBundlesEbb",
+  "cmd": 11,
+  "cmd_hex": "0xb",
+  "reqType": null,
+  "resType": "CSGetPayBundleWindowDescRes",
+  "endpoint": "GetPayBundleWindowDesc"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment28ExchangePendingPaymentBundleEv",
+  "cmd": 12,
+  "cmd_hex": "0xc",
+  "reqType": "CSPayBundleWindowPurchaseReq",
+  "resType": "CSPayBundleWindowPurchaseRes",
+  "endpoint": "PayBundleWindowPurchase"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment16BuyPaymentBundleEjN5proto6EStore14PbwConsumeTypeE",
+  "cmd": 12,
+  "cmd_hex": "0xc",
+  "reqType": "CSPayBundleWindowPurchaseReq",
+  "resType": "CSPayBundleWindowPurchaseRes",
+  "endpoint": "PayBundleWindowPurchase"
+ },
+ {
+  "caller": "_ZN3COW17UIModelRebateCard26SubscriptionBonusAvailableEN3COW14RebateCardTypeE",
+  "cmd": 14,
+  "cmd_hex": "0xe",
+  "reqType": "CSGetRebateSubscriptionBonusStatusReq",
+  "resType": "CSGetRebateSubscriptionBonusStatusRes",
+  "endpoint": "GetRebateSubscriptionBonusStatus"
+ },
+ {
+  "caller": "_ZN3COW17UIModelMemberShip26SubscriptionBonusAvailableEN5proto8EVipCard11VipCardTypeE",
+  "cmd": 14,
+  "cmd_hex": "0xe",
+  "reqType": "CSGetRebateSubscriptionBonusStatusReq",
+  "resType": "CSGetRebateSubscriptionBonusStatusRes",
+  "endpoint": "GetRebateSubscriptionBonusStatus"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends21RefreshGameFriendListEN6System6ActionEbjb",
+  "cmd": 16,
+  "cmd_hex": "0x10",
+  "reqType": "CSGetFriendListReq",
+  "resType": "AccountFriendRes",
+  "endpoint": "GetFriend"
+ },
+ {
+  "caller": "_ZN3COW26UIModelPeriodicLadderMatch24RequestLeaderBoardFriendEv",
+  "cmd": 16,
+  "cmd_hex": "0x10",
+  "reqType": "CSGetFriendListReq",
+  "resType": "AccountFriendRes",
+  "endpoint": "GetFriend"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch26RequestCSLeaderBoardFriendEv",
+  "cmd": 16,
+  "cmd_hex": "0x10",
+  "reqType": "CSGetFriendListReq",
+  "resType": "AccountFriendRes",
+  "endpoint": "GetFriend"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends21RequestSetFriendAliasEmN6System6StringE",
+  "cmd": 17,
+  "cmd_hex": "0x11",
+  "reqType": "CSSetFriendAliasReq",
+  "resType": "AccountFriendRes",
+  "endpoint": "SetFriendAlias"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends21RequestDelFriendAliasEm",
+  "cmd": 18,
+  "cmd_hex": "0x12",
+  "reqType": "CSRemoveFriendAliasReq",
+  "resType": "AccountFriendRes",
+  "endpoint": "RemoveFriendAlias"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends24RefreshFriendRequestListEbb",
+  "cmd": 19,
+  "cmd_hex": "0x13",
+  "reqType": null,
+  "resType": "AccountInfoBasicBundleRes",
+  "endpoint": "GetFriendRequestList"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends19RemoveFriendRequestEmm",
+  "cmd": 20,
+  "cmd_hex": "0x14",
+  "reqType": "CSRemoveFriendReq",
+  "resType": "CSRemoveFriendRes",
+  "endpoint": "RemoveFriend"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends20DeclineFriendRequestEmmb",
+  "cmd": 21,
+  "cmd_hex": "0x15",
+  "reqType": "CSFriendReq",
+  "resType": "Empty",
+  "endpoint": "DeclineFriendRequest"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends20ConfirmFriendRequestEmmb",
+  "cmd": 22,
+  "cmd_hex": "0x16",
+  "reqType": "CSFriendReq",
+  "resType": "AccountInfoWithPresence",
+  "endpoint": "ConfirmFriendRequest"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends16AddFriendRequestEmmN3COW14EFriendAddFromEjb",
+  "cmd": 23,
+  "cmd_hex": "0x17",
+  "reqType": "CSFriendReq",
+  "resType": "Empty",
+  "endpoint": "RequestAddingFriend"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends16RefreshBlackListEbbb",
+  "cmd": 24,
+  "cmd_hex": "0x18",
+  "reqType": null,
+  "resType": "AccountInfoBasicBundleRes",
+  "endpoint": "GetBlockList"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends18BlockPlayerRequestEmb",
+  "cmd": 25,
+  "cmd_hex": "0x19",
+  "reqType": "CSBlockPlayerReq",
+  "resType": "Empty",
+  "endpoint": "BlockPlayer"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends18CancelBlockRequestEmb",
+  "cmd": 26,
+  "cmd_hex": "0x1a",
+  "reqType": "CSDeleteBlockPlayerReq",
+  "resType": "Empty",
+  "endpoint": "CancelBlock"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends22RefuseAllFriendRequestEb",
+  "cmd": 27,
+  "cmd_hex": "0x1b",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "DeclineAllFriendRequests"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends13SearchAccountEN6System6StringEbj",
+  "cmd": 28,
+  "cmd_hex": "0x1c",
+  "reqType": "CSFuzzySearchAccountByNameReq",
+  "resType": "AccountInfoBasicBundleRes",
+  "endpoint": "FuzzySearchAccountByName"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends18RequestAccountInfoEmN6System6ActionIN5proto16AccountInfoBasicEEE",
+  "cmd": 29,
+  "cmd_hex": "0x1d",
+  "reqType": "AccountIDReq",
+  "resType": "AccountInfoBasic",
+  "endpoint": "GetAccountInfoByAccountID"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends13SearchAccountEmbj",
+  "cmd": 29,
+  "cmd_hex": "0x1d",
+  "reqType": "AccountIDReq",
+  "resType": "AccountInfoBasic",
+  "endpoint": "GetAccountInfoByAccountID"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends18SearchByConditionsEN5proto7ESocial8LanguageEN5proto7ESocial6GenderEN5proto7ESocial10TimeActiveEN5proto7ESocial10ModePreferEb",
+  "cmd": 30,
+  "cmd_hex": "0x1e",
+  "reqType": "CSGetRecommandedFriendsByCdtReq",
+  "resType": "CSGetRecommendedFriendsByCdtRes",
+  "endpoint": "GetRecommendedPlayersByCondition"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends25RefreshPlatformFriendListEbjb",
+  "cmd": 32,
+  "cmd_hex": "0x20",
+  "reqType": "CSGetPlatformFriendListReq",
+  "resType": "AccountFriendRes",
+  "endpoint": "GetPlatformFriends"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall11GetStoreResEb",
+  "cmd": 35,
+  "cmd_hex": "0x23",
+  "reqType": "CSGetStoreReq",
+  "resType": "CSGetStoreRes",
+  "endpoint": "GetStore"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall8PurchaseEjjN5proto10EInventory12CurrencyTypeEjbbb",
+  "cmd": 36,
+  "cmd_hex": "0x24",
+  "reqType": "CSPurchaseReq",
+  "resType": "CSPurchaseRes",
+  "endpoint": "Purchase"
+ },
+ {
+  "caller": "_ZN3COW19UILevelUpController17RequstToOpenChestEv",
+  "cmd": 37,
+  "cmd_hex": "0x25",
+  "reqType": "CSOpenTreasureBoxReq",
+  "resType": "CSOpenTreasureBoxRes",
+  "endpoint": "OpenTreasureBox"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall9OpenGrateEjjbN3COW27UICommonRewardWndController12WndStyleEnumE",
+  "cmd": 37,
+  "cmd_hex": "0x25",
+  "reqType": "CSOpenTreasureBoxReq",
+  "resType": "CSOpenTreasureBoxRes",
+  "endpoint": "OpenTreasureBox"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends20GetRecommendedFriendEb",
+  "cmd": 38,
+  "cmd_hex": "0x26",
+  "reqType": "Empty",
+  "resType": "CSGetRecommendedFriendRes",
+  "endpoint": "GetRecommendedFriend"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard26RequestBigEventLeaderBoardEjiimmN6System6StringEjbjjb",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": "CSLeaderboardReq",
+  "resType": "AccountLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard30HandleAccountRegionLeaderBoardEjN5proto16CSLeaderboardReqE",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": null,
+  "resType": "AccountLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard27HandleClanRegionLeaderBoardEjN5proto16CSLeaderboardReqE",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": null,
+  "resType": "ClanLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard35HandleChampionshipRegionLeaderBoardEjN5proto16CSLeaderboardReqE",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": null,
+  "resType": "TeamLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard46_HandleAccountGlobalLeaderBoard_c__AnonStorey36__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": null,
+  "resType": "AccountLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard43_HandleClanGlobalLeaderBoard_c__AnonStorey56__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": null,
+  "resType": "ClanLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW26UIModelPeriodicLadderMatch24RequestLeaderBoardRegionEv",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": "CSLeaderboardReq",
+  "resType": "AccountLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch26RequestCSLeaderBoardRegionEv",
+  "cmd": 39,
+  "cmd_hex": "0x27",
+  "reqType": "CSLeaderboardReq",
+  "resType": "AccountLeaderboardRes",
+  "endpoint": "Leaderboard"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard30RequestClanWeekLeaderBoardInfoEN6System6ActionE",
+  "cmd": 40,
+  "cmd_hex": "0x28",
+  "reqType": null,
+  "resType": "CSGetClanWeekLeaderboardInfoRes",
+  "endpoint": "GetClanWeekLeaderboardInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile19RequestPersonalDataEjm",
+  "cmd": 41,
+  "cmd_hex": "0x29",
+  "reqType": "CSGetPlayerStatsReq",
+  "resType": "CSGetPlayerStatsRes",
+  "endpoint": "GetPlayerStats"
+ },
+ {
+  "caller": "_ZN3COW24UIModelAnnoucementReward26RequestTurntableAttendanceEv",
+  "cmd": 42,
+  "cmd_hex": "0x2a",
+  "reqType": null,
+  "resType": "CSGetAttendanceListRes",
+  "endpoint": "GetAttendanceList"
+ },
+ {
+  "caller": "_ZN3COW24UIModelAnnoucementReward16AttendanceSigninEN3COW13AwardItemInfoEi",
+  "cmd": 43,
+  "cmd_hex": "0x2b",
+  "reqType": "CSAttendanceSigninReq",
+  "resType": "CSAttendanceSigninRes",
+  "endpoint": "AttendanceSignin"
+ },
+ {
+  "caller": "_ZN3COW24UIModelAnnoucementReward25TurntableAttendanceSigninEv",
+  "cmd": 43,
+  "cmd_hex": "0x2b",
+  "reqType": "CSAttendanceSigninReq",
+  "resType": null,
+  "endpoint": "AttendanceSignin"
+ },
+ {
+  "caller": "_ZN3COW16UIModelInventory13ChooseLoadOutEjjb",
+  "cmd": 44,
+  "cmd_hex": "0x2c",
+  "reqType": "CSChooseLoadoutReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseLoadout"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin13RequestLogoutEN3COW12UIModelLogin11ELogoutTypeEb",
+  "cmd": 46,
+  "cmd_hex": "0x2e",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "Logout"
+ },
+ {
+  "caller": "_ZN3COW19UIModelAnnouncement37RequestAnnouncementSplashActivityDataEfb",
+  "cmd": 49,
+  "cmd_hex": "0x31",
+  "reqType": "CSAnnouncementReq",
+  "resType": "LoginSplashRes",
+  "endpoint": "LoginGetSplash"
+ },
+ {
+  "caller": "_ZN3COW16UIModelNewPlayer23RequestAccountFreshInfoEj",
+  "cmd": 53,
+  "cmd_hex": "0x35",
+  "reqType": null,
+  "resType": "CSGetAccountFreshInfoRes",
+  "endpoint": "GetAccountFreshInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelNewPlayer23RequestClaimFreshRewardEj",
+  "cmd": 54,
+  "cmd_hex": "0x36",
+  "reqType": "CSClaimFreshSigninRewardsReq",
+  "resType": "Empty",
+  "endpoint": "ClaimFreshSigninRewards"
+ },
+ {
+  "caller": "_ZN3COW16UIModelNewPlayer32RequestClaimFreshActivityRewardsEjb",
+  "cmd": 55,
+  "cmd_hex": "0x37",
+  "reqType": "CSClaimFreshActivityRewardsReq",
+  "resType": "Empty",
+  "endpoint": "ClaimFreshActivityRewards"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity19RequestActivityDescEf",
+  "cmd": 57,
+  "cmd_hex": "0x39",
+  "reqType": "CSGetActivityDescReq",
+  "resType": "CSGetActivityDescRes",
+  "endpoint": "GetActivityDesc"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity20RequestActivityAwardEA_N6System6UInt32EbbN3COW27UICommonRewardWndController12WndStyleEnumEb",
+  "cmd": 58,
+  "cmd_hex": "0x3a",
+  "reqType": "CSGetActivityRewardsReq",
+  "resType": "CSGetActivityRewardsRes",
+  "endpoint": "GetActivityRewards"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity31RequestActivityAwardInGameSceneEj",
+  "cmd": 58,
+  "cmd_hex": "0x3a",
+  "reqType": "CSGetActivityRewardsReq",
+  "resType": "CSGetActivityRewardsRes",
+  "endpoint": "GetActivityRewards"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest24RequestAllPhotoFininshedEv",
+  "cmd": 58,
+  "cmd_hex": "0x3a",
+  "reqType": "CSGetActivityRewardsReq",
+  "resType": "CSGetActivityRewardsRes",
+  "endpoint": "GetActivityRewards"
+ },
+ {
+  "caller": "_ZN3COW12UIModelBingo16RequestBingoInfoEjb",
+  "cmd": 59,
+  "cmd_hex": "0x3b",
+  "reqType": null,
+  "resType": "CSGetBingoRewardsInfoRes",
+  "endpoint": "GetBingoRewardsInfo"
+ },
+ {
+  "caller": "_ZN3COW12UIModelBingo15RequestFlipCardEN3COW12UIModelBingo9BingoCardE",
+  "cmd": 60,
+  "cmd_hex": "0x3c",
+  "reqType": "CSFlipBingoReq",
+  "resType": "CSFlipBingoRes",
+  "endpoint": "FlipBingo"
+ },
+ {
+  "caller": "_ZN3COW12UIModelBingo18RequestBingoRewardEj",
+  "cmd": 61,
+  "cmd_hex": "0x3d",
+  "reqType": "CSGetBingoRewardsReq",
+  "resType": "CSGetBingoRewardsRes",
+  "endpoint": "GetBingoRewards"
+ },
+ {
+  "caller": "_ZN3COW12UIModelBingo22RequestQuickFinishTaskEN3COW12UIModelBingo9BingoCardEb",
+  "cmd": 62,
+  "cmd_hex": "0x3e",
+  "reqType": "CSFinishBingoActivityReq",
+  "resType": "Empty",
+  "endpoint": "FinishBingoActivity"
+ },
+ {
+  "caller": "_ZN3COW35UIImageSharePreviewWindowController9DoneShareEbN3COW11EventLogger13SharePlatformE",
+  "cmd": 63,
+  "cmd_hex": "0x3f",
+  "reqType": "CSActivityTriggerReq",
+  "resType": "CSActivityTriggerReq",
+  "endpoint": "ActivityTrigger"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan22RequestActivityTriggerEv",
+  "cmd": 63,
+  "cmd_hex": "0x3f",
+  "reqType": "CSActivityTriggerReq",
+  "resType": "Empty",
+  "endpoint": "ActivityTrigger"
+ },
+ {
+  "caller": "_ZN3COW27ActivityPreloginDescription9OnOperateEv",
+  "cmd": 63,
+  "cmd_hex": "0x3f",
+  "reqType": "CSActivityTriggerReq",
+  "resType": "CSActivityTriggerReq",
+  "endpoint": "ActivityTrigger"
+ },
+ {
+  "caller": "_ZN3COW23UIModelOptionalDownload13NotifyServiceEN7GCommon15ResDownloadTypeE",
+  "cmd": 63,
+  "cmd_hex": "0x3f",
+  "reqType": "CSActivityTriggerReq",
+  "resType": "Empty",
+  "endpoint": "ActivityTrigger"
+ },
+ {
+  "caller": "_ZN3COW14UIModelSetting18CheckUploadSettingEv",
+  "cmd": 67,
+  "cmd_hex": "0x43",
+  "reqType": "CSPlayerSettingsReq",
+  "resType": "CSSettingsTransferRes",
+  "endpoint": "QueryOrUploadSettingsInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelSetting20RequestUploadSettingEv",
+  "cmd": 67,
+  "cmd_hex": "0x43",
+  "reqType": "CSPlayerSettingsReq",
+  "resType": "CSSettingsTransferRes",
+  "endpoint": "QueryOrUploadSettingsInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelSetting20CheckDownloadSettingEv",
+  "cmd": 68,
+  "cmd_hex": "0x44",
+  "reqType": "CSDownloadPlayerSettingsReq",
+  "resType": "CSPlayerSettingsRes",
+  "endpoint": "QueryOrDownloadSettingsInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelSetting15DownloadSettingEv",
+  "cmd": 68,
+  "cmd_hex": "0x44",
+  "reqType": "CSDownloadPlayerSettingsReq",
+  "resType": "CSPlayerSettingsRes",
+  "endpoint": "QueryOrDownloadSettingsInfo"
+ },
+ {
+  "caller": "_ZN3COW12UIModelQuest17RequestDailyBonusEv",
+  "cmd": 70,
+  "cmd_hex": "0x46",
+  "reqType": null,
+  "resType": "CSMatchDailyBonusRes",
+  "endpoint": "GetMatchDailyBonus"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan17RequestCreateClanEN6System6StringES2_N5proto10EInventory12CurrencyTypeEjjjbjjjj",
+  "cmd": 71,
+  "cmd_hex": "0x47",
+  "reqType": "CSCreateClanReq",
+  "resType": "CSClanIDRes",
+  "endpoint": "CreateClan"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan23RequestApplyForJoinClanEm",
+  "cmd": 72,
+  "cmd_hex": "0x48",
+  "reqType": "CSJoinClanReq",
+  "resType": "Empty",
+  "endpoint": "RequestJoinClan"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan22RequestClanApplicationEv",
+  "cmd": 73,
+  "cmd_hex": "0x49",
+  "reqType": "CSClanIDReq",
+  "resType": "AccountInfoBasicBundleRes",
+  "endpoint": "GetClanApplicantListByClanID"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan12InviteToClanEm",
+  "cmd": 76,
+  "cmd_hex": "0x4c",
+  "reqType": "CSInviteToClanReq",
+  "resType": "Empty",
+  "endpoint": "InviteToClan"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan21ProcessClanInvitationEbmmbb",
+  "cmd": 77,
+  "cmd_hex": "0x4d",
+  "reqType": "CSProcessInviteToClanReq",
+  "resType": "CSProcessInviteToClanRes",
+  "endpoint": "ApproveJoinClanInvitation"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan11OperateClanEN3COW14EClanOperationEm",
+  "cmd": 80,
+  "cmd_hex": "0x50",
+  "reqType": "CSRemoveClanMemberReq",
+  "resType": "Empty",
+  "endpoint": "RemoveClanMember"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan8ExitClanEbN6System6ActionE",
+  "cmd": 81,
+  "cmd_hex": "0x51",
+  "reqType": "CSQuitClanReq",
+  "resType": "Empty",
+  "endpoint": "QuitClan"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan14SearchClanListEm",
+  "cmd": 82,
+  "cmd_hex": "0x52",
+  "reqType": "CSClanInfoReq",
+  "resType": "ClanInfo",
+  "endpoint": "GetClanInfoByClanID"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan15RequestClanInfoEmjN6System6ActionE",
+  "cmd": 82,
+  "cmd_hex": "0x52",
+  "reqType": "CSClanInfoReq",
+  "resType": "ClanInfo",
+  "endpoint": "GetClanInfoByClanID"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan14RequestDetailsEv",
+  "cmd": 82,
+  "cmd_hex": "0x52",
+  "reqType": "CSClanInfoReq",
+  "resType": "ClanInfo",
+  "endpoint": "GetClanInfoByClanID"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan14SearchClanListEN6System6StringE",
+  "cmd": 84,
+  "cmd_hex": "0x54",
+  "reqType": "CSClanNameReq",
+  "resType": "CSClanInfoBundleRes",
+  "endpoint": "FuzzySearchClanByName"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan17RequestMemberListEbA_N6System6ObjectEbb",
+  "cmd": 85,
+  "cmd_hex": "0x55",
+  "reqType": "CSClanIDReq",
+  "resType": "ClanMemberListWithAccountInfo",
+  "endpoint": "GetClanMembers"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan14ModifyClanInfoEN6System6StringES2_jjjjjj",
+  "cmd": 86,
+  "cmd_hex": "0x56",
+  "reqType": "CSModifyClanInfoReq",
+  "resType": "Empty",
+  "endpoint": "ModifyClanInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan14ModifyClanInfoEjb",
+  "cmd": 86,
+  "cmd_hex": "0x56",
+  "reqType": "CSModifyClanInfoReq",
+  "resType": "Empty",
+  "endpoint": "ModifyClanInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan14ModifyClanNameEN6System6StringE",
+  "cmd": 87,
+  "cmd_hex": "0x57",
+  "reqType": "CSModifyClanNameReq",
+  "resType": "Empty",
+  "endpoint": "ModifyClanName"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan15RequestClanListEN5proto5EClan12ClanMainTypeEjj",
+  "cmd": 88,
+  "cmd_hex": "0x58",
+  "reqType": null,
+  "resType": "CSClanInfoBundleRes",
+  "endpoint": "GetRandomClanList"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan24RequestClanWarStaticDataEv",
+  "cmd": 89,
+  "cmd_hex": "0x59",
+  "reqType": null,
+  "resType": "CSClanWarBasicInfoRes",
+  "endpoint": "GetClanWarBasicInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan30RequestClanWarTeamMemberStatusEb",
+  "cmd": 90,
+  "cmd_hex": "0x5a",
+  "reqType": "CSClanIDReq",
+  "resType": "CSGetClanWarTeamMemberStatusRes",
+  "endpoint": "GetClanWarTeamMemberStatus"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan22RequestClanWarTeamInfoEv",
+  "cmd": 91,
+  "cmd_hex": "0x5b",
+  "reqType": "CSClanIDReq",
+  "resType": "CSClanWarTeamInfoRes",
+  "endpoint": "GetClanWarTeamInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan25RequestClanWarRecruitInfoEv",
+  "cmd": 92,
+  "cmd_hex": "0x5c",
+  "reqType": "CSGetClanWarRecruitInfoReq",
+  "resType": "CSGetClanWarRecruitInfoRes",
+  "endpoint": "GetClanWarRecruitInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan19SendClanGroupInviteEjjjj",
+  "cmd": 93,
+  "cmd_hex": "0x5d",
+  "reqType": "CSModifyClanWarRecruitInfoReq",
+  "resType": "Empty",
+  "endpoint": "ModifyClanWarRecruitInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan23RequestLeaveClanWarTeamEN6System6ActionE",
+  "cmd": 96,
+  "cmd_hex": "0x60",
+  "reqType": "CSClanIDReq",
+  "resType": "Empty",
+  "endpoint": "QuitClanWarTeam"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan26RequestInviteToClanWarTeamEm",
+  "cmd": 97,
+  "cmd_hex": "0x61",
+  "reqType": "CSInviteToClanWarTeamReq",
+  "resType": "Empty",
+  "endpoint": "InviteToClanWarTeam"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan24RequestPrepareForClanWarEv",
+  "cmd": 100,
+  "cmd_hex": "0x64",
+  "reqType": "CSPrepareForClanWarReq",
+  "resType": "Empty",
+  "endpoint": "PrepareForClanWar"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan29RequestApproveJoinClanWarTeamEmm",
+  "cmd": 101,
+  "cmd_hex": "0x65",
+  "reqType": "CSApproveJoinClanWarTeamReq",
+  "resType": "CSApproveJoinClanWarTeamInvitationRes",
+  "endpoint": "ApproveJoinClanWarTeamInvitation"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan35RequestCheckAllMembersPrepareStatusEv",
+  "cmd": 102,
+  "cmd_hex": "0x66",
+  "reqType": "CSClanIDReq",
+  "resType": "Empty",
+  "endpoint": "CheckAllClanWarMembersPrepareStatus"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan33RequestCheckIsMemberOfClanWarTeamEv",
+  "cmd": 103,
+  "cmd_hex": "0x67",
+  "reqType": "CSCheckClanWarTeamMemberReq",
+  "resType": "CSCheckClanWarTeamMemberRes",
+  "endpoint": "CheckAccountIsMemberOfClanWarTeam"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan21RequestClaimTeamAwardEj",
+  "cmd": 104,
+  "cmd_hex": "0x68",
+  "reqType": "CSClaimClanWarTeamAwardReq",
+  "resType": "Empty",
+  "endpoint": "ClaimClanWarTeamAward"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan25RequestClaimPersonalAwardEv",
+  "cmd": 105,
+  "cmd_hex": "0x69",
+  "reqType": "CSClanIDReq",
+  "resType": "CSClaimClanWarPersonalAwardRes",
+  "endpoint": "ClaimClanWarPersonalAward"
+ },
+ {
+  "caller": "_ZN3COW19UIModelLinkActivity14AutoOpenBundleEjbN6System6ActionIN6System11Collections7Generic4ListIN3COW20CommonRewardItemInfoEEEN6System6StringEEE",
+  "cmd": 106,
+  "cmd_hex": "0x6a",
+  "reqType": "CSOpenBundleReq",
+  "resType": "CSOpenBundleRes",
+  "endpoint": "OpenBundle"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile14AutoOpenBundleEjN6System6ActionE",
+  "cmd": 106,
+  "cmd_hex": "0x6a",
+  "reqType": "CSOpenBundleReq",
+  "resType": "CSOpenBundleRes",
+  "endpoint": "OpenBundle"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall10OpenBundleEjN3COW27UICommonRewardWndController12WndStyleEnumE",
+  "cmd": 106,
+  "cmd_hex": "0x6a",
+  "reqType": "CSOpenBundleReq",
+  "resType": "CSOpenBundleRes",
+  "endpoint": "OpenBundle"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall18PickOptionalBundleEjN3COW27UICommonRewardWndController12WndStyleEnumE",
+  "cmd": 107,
+  "cmd_hex": "0x6b",
+  "reqType": "CSOpenOptionalBundleReq",
+  "resType": "CSOpenBundleRes",
+  "endpoint": "OpenOptionalBundle"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall18PickOptionalBundleEjjN3COW27UICommonRewardWndController12WndStyleEnumE",
+  "cmd": 107,
+  "cmd_hex": "0x6b",
+  "reqType": "CSOpenOptionalBundleReq",
+  "resType": "CSOpenBundleRes",
+  "endpoint": "OpenOptionalBundle"
+ },
+ {
+  "caller": "_ZN3COW11UIModelUser29GetLadderMatchLeaderBoardRankEv",
+  "cmd": 108,
+  "cmd_hex": "0x6c",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "GetLadderMatchLeaderBoardRank"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile19RequestMyAvatarListEjb",
+  "cmd": 109,
+  "cmd_hex": "0x6d",
+  "reqType": "AvatarProfile",
+  "resType": "CSGetProfileListRes",
+  "endpoint": "GetProfiles"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile22ForceRequestAvatarListEv",
+  "cmd": 109,
+  "cmd_hex": "0x6d",
+  "reqType": null,
+  "resType": "CSGetProfileListRes",
+  "endpoint": "GetProfiles"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile16RequestSkillListEj",
+  "cmd": 110,
+  "cmd_hex": "0x6e",
+  "reqType": null,
+  "resType": "CSGetSkillListRes",
+  "endpoint": "GetSkills"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile22RequestLoginGetProfileEj",
+  "cmd": 111,
+  "cmd_hex": "0x6f",
+  "reqType": null,
+  "resType": "LoginProfileRes",
+  "endpoint": "LoginGetProfile"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB29RequestGetHurricaneBEPSettingEv",
+  "cmd": 113,
+  "cmd_hex": "0x71",
+  "reqType": "CSGetLimitedEventEPSettingReq",
+  "resType": "CSGetLimitedEventEPSettingRes",
+  "endpoint": "GetLimitedEventEPSetting"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB16RequestGetEPInfoEb",
+  "cmd": 114,
+  "cmd_hex": "0x72",
+  "reqType": "CSGetLimitedEventEPInfoReq",
+  "resType": "CSGetLimitedEventEPInfoRes",
+  "endpoint": "GetLimitedEventEPInfo"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB17RequestEPPurchaseEv",
+  "cmd": 115,
+  "cmd_hex": "0x73",
+  "reqType": "CSPurchaseLimitedEventEPReq",
+  "resType": "Empty",
+  "endpoint": "PurchaseLimitedEventEP"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB18RequestClaimRewardEN6System11Collections7Generic4ListIN5proto6unlockEEE",
+  "cmd": 116,
+  "cmd_hex": "0x74",
+  "reqType": "CSClaimLimitedEventEPRewardReq",
+  "resType": "Empty",
+  "endpoint": "ClaimLimitedEventEPReward"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB25RequestExchangeEPProgressEi",
+  "cmd": 117,
+  "cmd_hex": "0x75",
+  "reqType": "CSExchangeLimitedEventEPProgressReq",
+  "resType": "Empty",
+  "endpoint": "ExchangeLimitedEventEPProgress"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent28RequestEventInventorySettingEj",
+  "cmd": 118,
+  "cmd_hex": "0x76",
+  "reqType": "CSGetLimitedEventInventorySettingReq",
+  "resType": "CSGetLimitedEventInventorySettingRes",
+  "endpoint": "GetLimitedEventInventorySetting"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent25RequestEventInventoryInfoEj",
+  "cmd": 119,
+  "cmd_hex": "0x77",
+  "reqType": "CSGetLimitedEventInventoryInfoReq",
+  "resType": "CSGetLimitedEventInventoryInfoRes",
+  "endpoint": "GetLimitedEventInventoryInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent36RequestClaimLimitedEventSettleRewardEjN6System6StringE",
+  "cmd": 120,
+  "cmd_hex": "0x78",
+  "reqType": "CSClaimLimitedEventSettleRewardsReq",
+  "resType": "Empty",
+  "endpoint": "ClaimLimitedEventSettleRewards"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile20ChangeSelectedAvatarEjb",
+  "cmd": 121,
+  "cmd_hex": "0x79",
+  "reqType": "CSSelectProfileReq",
+  "resType": "CSSelectProfileRes",
+  "endpoint": "SelectProfile"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile26ChangeSimpleSelectedAvatarEj",
+  "cmd": 121,
+  "cmd_hex": "0x79",
+  "reqType": "CSSelectProfileReq",
+  "resType": "CSSelectProfileRes",
+  "endpoint": "SelectProfile"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile19ChangeOnlyMsgAvatarEj",
+  "cmd": 121,
+  "cmd_hex": "0x79",
+  "reqType": "CSSelectProfileReq",
+  "resType": "CSSelectProfileRes",
+  "endpoint": "SelectProfile"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile27RequestUnlockAvatarHiddenlyEj",
+  "cmd": 122,
+  "cmd_hex": "0x7a",
+  "reqType": "CSUnlockProfileReq",
+  "resType": "CSUnlockProfileRes",
+  "endpoint": "UnlockProfile"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile20RequestUnlockProfileEjN5proto10EInventory12CurrencyTypeEb",
+  "cmd": 122,
+  "cmd_hex": "0x7a",
+  "reqType": "CSUnlockProfileReq",
+  "resType": "CSUnlockProfileRes",
+  "endpoint": "UnlockProfile"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile17RequestEquipSkillEjii",
+  "cmd": 124,
+  "cmd_hex": "0x7c",
+  "reqType": "CSEquipSkillReq",
+  "resType": "CSEquipSkillRes",
+  "endpoint": "EquipSkill"
+ },
+ {
+  "caller": "_ZN3COW13UIModelAvatar30RequestChooseClothWithCallbackEN6System6ActionE",
+  "cmd": 125,
+  "cmd_hex": "0x7d",
+  "reqType": "CSChangeClothesReq",
+  "resType": "CSChangeClothesRes",
+  "endpoint": "ChangeClothes"
+ },
+ {
+  "caller": "_ZN3COW13UIModelAvatar21RequestNewChooseClothEjbbN6System6ActionE",
+  "cmd": 125,
+  "cmd_hex": "0x7d",
+  "reqType": "CSChangeClothesReq",
+  "resType": "CSChangeClothesRes",
+  "endpoint": "ChangeClothes"
+ },
+ {
+  "caller": "_ZN3COW13UIModelAvatar18RequestChooseClothEjbb",
+  "cmd": 125,
+  "cmd_hex": "0x7d",
+  "reqType": "CSChangeClothesReq",
+  "resType": "CSChangeClothesRes",
+  "endpoint": "ChangeClothes"
+ },
+ {
+  "caller": "_ZN3COW11UIModelUser10UserRenameEN6System6StringEb",
+  "cmd": 126,
+  "cmd_hex": "0x7e",
+  "reqType": "CSModifyNicknameReq",
+  "resType": "CSModifyNicknameReq",
+  "endpoint": "MajorModifyNickname"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan11DismissClanEv",
+  "cmd": 127,
+  "cmd_hex": "0x7f",
+  "reqType": "CSClanIDReq",
+  "resType": "Empty",
+  "endpoint": "DismissClan"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan15ExtendClanScaleEv",
+  "cmd": 128,
+  "cmd_hex": "0x80",
+  "reqType": "CSClanIDReq",
+  "resType": "CSExtendClanScaleRes",
+  "endpoint": "ExtendClanScale"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan15ExtendClanScaleEv",
+  "cmd": 128,
+  "cmd_hex": "0x80",
+  "reqType": "CSClanIDReq",
+  "resType": "CSExtendClanScaleRes",
+  "endpoint": "ExtendClanScale"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan21_ExtendClanScale_m__DEN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 128,
+  "cmd_hex": "0x80",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "ExtendClanScale"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch21GetRankInfoFromServerEj",
+  "cmd": 129,
+  "cmd_hex": "0x81",
+  "reqType": "CSPlayerRankingInfoReq",
+  "resType": "CSPlayerRankingInfoRes",
+  "endpoint": "GetPlayerRankingInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMail15RequestMailListEj",
+  "cmd": 130,
+  "cmd_hex": "0x82",
+  "reqType": "CSGetMailListReq",
+  "resType": "CSGetMailListRes",
+  "endpoint": "GetMailList"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMail15RequestReadMailEN6System11Collections7Generic4ListIN5proto8MailInfoEEEN5proto5EMail6StatusEbb",
+  "cmd": 131,
+  "cmd_hex": "0x83",
+  "reqType": "CSReadMailReq",
+  "resType": "CSReadMailRes",
+  "endpoint": "ReadMail"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile20RequestHistoryRecordEm",
+  "cmd": 132,
+  "cmd_hex": "0x84",
+  "reqType": "AccountIDReq",
+  "resType": "CSGetMatchStatsListRes",
+  "endpoint": "GetMatchStatsHistory"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection19RequestChooseBannerEj",
+  "cmd": 133,
+  "cmd_hex": "0x85",
+  "reqType": "CSChooseBannerReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseBanner"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection20RequestChooseHeadPicEj",
+  "cmd": 134,
+  "cmd_hex": "0x86",
+  "reqType": "CSChooseHeadPicReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseHeadPic"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection16RequestChoosePinEj",
+  "cmd": 135,
+  "cmd_hex": "0x87",
+  "reqType": "CSChoosePinReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChoosePin"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection25RequestDressUpChooseSlotsEN6System11Collections7Generic4ListIjEEN6System6ActionE",
+  "cmd": 136,
+  "cmd_hex": "0x88",
+  "reqType": "CSChooseSlotsReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseSlots"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection18RequestChooseSlotsEN6System11Collections7Generic4ListIjEE",
+  "cmd": 136,
+  "cmd_hex": "0x88",
+  "reqType": "CSChooseSlotsReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseSlots"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection18RequestChooseSlotsEjjN6System6ActionE",
+  "cmd": 136,
+  "cmd_hex": "0x88",
+  "reqType": "CSChooseSlotsReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseSlots"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection18RequestChooseSlotsEjj",
+  "cmd": 136,
+  "cmd_hex": "0x88",
+  "reqType": "CSChooseSlotsReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseSlots"
+ },
+ {
+  "caller": "_ZN3COW15UIModelStoreBox12GetBundleResEj",
+  "cmd": 140,
+  "cmd_hex": "0x8c",
+  "reqType": null,
+  "resType": "CSGetBundleRes",
+  "endpoint": "GetBundle"
+ },
+ {
+  "caller": "_ZN3COW15UIModelStoreBox19CSGetTreasureBoxResEj",
+  "cmd": 141,
+  "cmd_hex": "0x8d",
+  "reqType": null,
+  "resType": "CSGetTreasureBoxRes",
+  "endpoint": "GetTreasureBox"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass24GetEPEventInfoFromServerEj",
+  "cmd": 142,
+  "cmd_hex": "0x8e",
+  "reqType": null,
+  "resType": "CSGetEPInfoRes",
+  "endpoint": "GetEPInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass10PurchaseEPEb",
+  "cmd": 143,
+  "cmd_hex": "0x8f",
+  "reqType": "CSEPPurchaseReq",
+  "resType": "CSEPPurchaseRes",
+  "endpoint": "EPPurchase"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass11ClaimRewardEN6System11Collections7Generic4ListIN5proto6unlockEEEbb",
+  "cmd": 144,
+  "cmd_hex": "0x90",
+  "reqType": "CSEPClaimRewardReq",
+  "resType": "CSEPClaimRewardRes",
+  "endpoint": "EPClaimReward"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass20ClaimChallengeRewardEN6System11Collections7Generic4ListIjEEN3COW13ChallengeTypeEj",
+  "cmd": 145,
+  "cmd_hex": "0x91",
+  "reqType": "CSEPClaimBadgeReq",
+  "resType": "CSEPClaimBadgeRes",
+  "endpoint": "EPClaimBadge"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass16ClaimQuestRewardEN6System11Collections7Generic4ListIjEEN3COW11EPQuestTypeEj",
+  "cmd": 145,
+  "cmd_hex": "0x91",
+  "reqType": "CSEPClaimBadgeReq",
+  "resType": "CSEPClaimBadgeRes",
+  "endpoint": "EPClaimBadge"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass13PurchaseBadgeEij",
+  "cmd": 146,
+  "cmd_hex": "0x92",
+  "reqType": "CSEPPurchaseBadgeReq",
+  "resType": "CSEPPurchaseBadgeRes",
+  "endpoint": "EPPurchaseBadge"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass14PreorderNextEPEv",
+  "cmd": 147,
+  "cmd_hex": "0x93",
+  "reqType": null,
+  "resType": "CSEPPreorderRes",
+  "endpoint": "EPPreorder"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass26GetEPDebrisRewardLastMatchEv",
+  "cmd": 148,
+  "cmd_hex": "0x94",
+  "reqType": null,
+  "resType": "CSGetEPDebrisIngameRes",
+  "endpoint": "GetEPDebrisIngame"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass20GetDailyQuestRewardsEj",
+  "cmd": 149,
+  "cmd_hex": "0x95",
+  "reqType": "CSGetDailyQuestRewardsReq",
+  "resType": "CSGetDailyQuestRewardsRes",
+  "endpoint": "GetDailyQuestRewards"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass28FetchSubscriptionBonusStatusEb",
+  "cmd": 151,
+  "cmd_hex": "0x97",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetEPSubscriptionBonusStatus"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch29GetSeasonInfoConfigFromServerEN3COW18UIModelLadderMatch18OnFinishedDelegateEj",
+  "cmd": 152,
+  "cmd_hex": "0x98",
+  "reqType": "Empty",
+  "resType": "CSGetCurrentOrRecentRankingSeasonConfigRes",
+  "endpoint": "GetCurOrRecentRankingConfig"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha19RequestGachaDescResEj",
+  "cmd": 153,
+  "cmd_hex": "0x99",
+  "reqType": null,
+  "resType": "CSGetGachaDescRes",
+  "endpoint": "GetGachaDesc"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha19RequestGachaInfoResEjb",
+  "cmd": 154,
+  "cmd_hex": "0x9a",
+  "reqType": null,
+  "resType": "CSGetGachaInfoRes",
+  "endpoint": "GetGachaInfo"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha31RequestGachaSpecialExchangeDescEv",
+  "cmd": 155,
+  "cmd_hex": "0x9b",
+  "reqType": "CSGetGachaSpecialExchangeDescReq",
+  "resType": "CSGetGachaSpecialExchangeDescRes",
+  "endpoint": "GetGachaSpecialExchangeDesc"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha23RequestGachaProbabilityEjj",
+  "cmd": 156,
+  "cmd_hex": "0x9c",
+  "reqType": "CSGetLotteryProbabilityReq",
+  "resType": "CSGetLotteryProbabilityRes",
+  "endpoint": "GetGachaProbability"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha8PurchaseEjN3COW12UIModelGacha13GachaDrawTypeEN5proto8ELottery11ConsumeTypeEbj",
+  "cmd": 158,
+  "cmd_hex": "0x9e",
+  "reqType": "CSLotteryReq",
+  "resType": "CSLotteryRes",
+  "endpoint": "PurchaseGacha"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest20RequestPurchaseGachaEjN3COW12UIModelGacha13GachaDrawTypeEj",
+  "cmd": 158,
+  "cmd_hex": "0x9e",
+  "reqType": "CSLotteryReq",
+  "resType": "CSLotteryRes",
+  "endpoint": "PurchaseGacha"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile22RequestUnLockSkillSlotEjiN5proto10EInventory12CurrencyTypeE",
+  "cmd": 159,
+  "cmd_hex": "0x9f",
+  "reqType": "CSUnlockSkillSlotReq",
+  "resType": "CSUnlockSkillSlotRes",
+  "endpoint": "UnlockSkillSlot"
+ },
+ {
+  "caller": "_ZN3COW11UIModelGift12GetGiftStoreEb",
+  "cmd": 163,
+  "cmd_hex": "0xa3",
+  "reqType": null,
+  "resType": "CSGetGiftStoreRes",
+  "endpoint": "GetGiftStore"
+ },
+ {
+  "caller": "_ZN3COW11UIModelGift19GetGiftStoreDetailsEb",
+  "cmd": 164,
+  "cmd_hex": "0xa4",
+  "reqType": null,
+  "resType": "CSGetGiftStoreDetailsRes",
+  "endpoint": "GetGiftStoreDetails"
+ },
+ {
+  "caller": "_ZN3COW11UIModelGift8SendGiftEA_N6System6UInt64EN5proto20EGiftStore_BuddyTypeEN6System6StringEjN5proto10EInventory12CurrencyTypeEjj",
+  "cmd": 165,
+  "cmd_hex": "0xa5",
+  "reqType": "CSSendGiftReq",
+  "resType": "CSSendGiftRes",
+  "endpoint": "SendGift"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile20RequestShowBoardOnlyEm",
+  "cmd": 166,
+  "cmd_hex": "0xa6",
+  "reqType": "AccountIDReq",
+  "resType": "AccountPersonalShowInfo",
+  "endpoint": "GetPlayerPersonalShow"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile20RequestShowBoardDataEmbb",
+  "cmd": 166,
+  "cmd_hex": "0xa6",
+  "reqType": "AccountIDReq",
+  "resType": "AccountPersonalShowInfo",
+  "endpoint": "GetPlayerPersonalShow"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile19RequestPersonalInfoEmN6System6ActionE",
+  "cmd": 166,
+  "cmd_hex": "0xa6",
+  "reqType": "AccountIDReq",
+  "resType": "AccountPersonalShowInfo",
+  "endpoint": "GetPlayerPersonalShow"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile22RequestPlayerBriefInfoEm",
+  "cmd": 167,
+  "cmd_hex": "0xa7",
+  "reqType": "AccountIDReq",
+  "resType": "AccountBriefInfo",
+  "endpoint": "GetPlayerBriefInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile27RequestPlayerHeroicMarkInfoEm",
+  "cmd": 168,
+  "cmd_hex": "0xa8",
+  "reqType": "AccountIDReq",
+  "resType": "CSGetHeroicInfoRes",
+  "endpoint": "GetHeroicInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile16RequestBattleTagEmb",
+  "cmd": 169,
+  "cmd_hex": "0xa9",
+  "reqType": "AccountIDReq",
+  "resType": "CSGetBattleTagRes",
+  "endpoint": "GetBattleTag"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends23RequestGameFriendIDListEbN6System6ActionE",
+  "cmd": 170,
+  "cmd_hex": "0xaa",
+  "reqType": "CSGetFriendIDsReq",
+  "resType": "AccountIDSlice",
+  "endpoint": "GetFriendIDs"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends27RequestPlatformFriendIDListEb",
+  "cmd": 171,
+  "cmd_hex": "0xab",
+  "reqType": "CSGetPlatformFriendListReq",
+  "resType": "AccountIDSlice",
+  "endpoint": "GetPlatformFriendIDs"
+ },
+ {
+  "caller": "_ZN3COW16UIModelBroadcast24RequestBroadcastDataOnlyEv",
+  "cmd": 172,
+  "cmd_hex": "0xac",
+  "reqType": null,
+  "resType": "CSGetBroadcastListRes",
+  "endpoint": "GetBroadcastList"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin17RequestDelAccountEv",
+  "cmd": 173,
+  "cmd_hex": "0xad",
+  "reqType": "CSDelAccountReq",
+  "resType": "Empty",
+  "endpoint": "MajorDelAccount"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch11SetShowRankEb",
+  "cmd": 174,
+  "cmd_hex": "0xae",
+  "reqType": "CSSetShowRankReq",
+  "resType": "CSSetShowRankRes",
+  "endpoint": "SetShowRank"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall19GetExchangeStoreResEbb",
+  "cmd": 175,
+  "cmd_hex": "0xaf",
+  "reqType": "CSGetExchangeStoreReq",
+  "resType": "CSGetExchangeStoreRes",
+  "endpoint": "GetExchangeStore"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass24ClaimEPWeeklyQuestRewardEjj",
+  "cmd": 176,
+  "cmd_hex": "0xb0",
+  "reqType": "CSGetWeeklyProcessRewardsReq",
+  "resType": "CSGetWeeklyProcessRewardsRes",
+  "endpoint": "GetWeeklyChallengeProcessRewards"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall8ExchangeEN5proto21ExchangeStoreItemDescEjj",
+  "cmd": 177,
+  "cmd_hex": "0xb1",
+  "reqType": "CSExchangeStorePurchaseReq",
+  "resType": "CSExchangeStorePurchaseRes",
+  "endpoint": "ExchangeStorePurchase"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin13RequestSigninEi",
+  "cmd": 179,
+  "cmd_hex": "0xb3",
+  "reqType": "CSVeteranClaimRewardReq",
+  "resType": "Empty",
+  "endpoint": "VeteranClaimReward"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin11GetTaskDescEb",
+  "cmd": 181,
+  "cmd_hex": "0xb5",
+  "reqType": "Empty",
+  "resType": "CSGetVeteranTaskDescRes",
+  "endpoint": "GetVeteranTaskDesc"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin27_GetTaskDesc_c__AnonStorey56__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 181,
+  "cmd_hex": "0xb5",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetVeteranTaskDesc"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin11GetTaskInfoEbb",
+  "cmd": 182,
+  "cmd_hex": "0xb6",
+  "reqType": "Empty",
+  "resType": "CSGetVeteranTaskInfoRes",
+  "endpoint": "GetVeteranTaskInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin27_GetTaskInfo_c__AnonStorey66__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 182,
+  "cmd_hex": "0xb6",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetVeteranTaskInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin14GetTaskRewardsEN5proto21ClientVeteranTaskDescEi",
+  "cmd": 183,
+  "cmd_hex": "0xb7",
+  "reqType": "CSGetVeteranTaskRewardsReq",
+  "resType": "CSGetVeteranTaskRewardsRes",
+  "endpoint": "GetVeteranTaskRewards"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin30_GetTaskRewards_c__AnonStorey76__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 183,
+  "cmd_hex": "0xb7",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetVeteranTaskRewards"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin15GetTaskBigPrizeEi",
+  "cmd": 184,
+  "cmd_hex": "0xb8",
+  "reqType": "CSGetVeteranTaskBigPrizeReq",
+  "resType": "CSGetVeteranTaskBigPrizeRes",
+  "endpoint": "GetVeteranTaskBigPrize"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin31_GetTaskBigPrize_c__AnonStorey86__m__1EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 184,
+  "cmd_hex": "0xb8",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetVeteranTaskBigPrize"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin30RequestClaimVeteranReturnAwardEv",
+  "cmd": 185,
+  "cmd_hex": "0xb9",
+  "reqType": null,
+  "resType": "CSClaimVeteranReturnAwardRes",
+  "endpoint": "ClaimVeteranReturnAward"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin30RequestClaimVeteranBundleAwardEi",
+  "cmd": 186,
+  "cmd_hex": "0xba",
+  "reqType": "CSClaimVeteranBundleAwardReq",
+  "resType": "Empty",
+  "endpoint": "ClaimVeteranBundleAward"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin26RequestGetVeteranAwardDescEv",
+  "cmd": 187,
+  "cmd_hex": "0xbb",
+  "reqType": null,
+  "resType": "CSGetVeteranConfigDescRes",
+  "endpoint": "GetVeteranConfigDesc"
+ },
+ {
+  "caller": "_ZN3COW20UIModelVeteranSignin31RequestConfirmVeteranBundleItemEA_N6System6UInt32E",
+  "cmd": 188,
+  "cmd_hex": "0xbc",
+  "reqType": "CSConfirmVeteranBundleItemReq",
+  "resType": "Empty",
+  "endpoint": "ConfirmVeteranBundleItem"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall29RequestTreasureBoxProbabilityEjN6System6ActionE",
+  "cmd": 189,
+  "cmd_hex": "0xbd",
+  "reqType": "CSGetTreasureBoxPRReq",
+  "resType": "CSGetTreasureBoxPRRes",
+  "endpoint": "GetTreasureBoxPR"
+ },
+ {
+  "caller": "_ZN3COW16GameRegionSwitch18RequestRegionSwithEj",
+  "cmd": 190,
+  "cmd_hex": "0xbe",
+  "reqType": null,
+  "resType": "CSGetAllSwitchsRes",
+  "endpoint": "GetAllSwitchs"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile18RequestHideAvatarsEv",
+  "cmd": 191,
+  "cmd_hex": "0xbf",
+  "reqType": null,
+  "resType": "CSGetHideAvatarRes",
+  "endpoint": "GetHideAvatar"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile27RequestAvatarAwakenTaskDescEb",
+  "cmd": 192,
+  "cmd_hex": "0xc0",
+  "reqType": null,
+  "resType": "CSGetAvatarAwakenTaskInfoRes",
+  "endpoint": "GetAvatarAwakenTaskInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile34RequestRefreshAvatarAwakenTaskInfoEj",
+  "cmd": 193,
+  "cmd_hex": "0xc1",
+  "reqType": "CSRefreshAvatarAwakenTaskInfoReq",
+  "resType": "CSRefreshAvatarAwakenTaskInfoRes",
+  "endpoint": "RefreshAvatarAwakenTaskInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile31RequestGetAvatarAwakenComicInfoEv",
+  "cmd": 194,
+  "cmd_hex": "0xc2",
+  "reqType": null,
+  "resType": "CSGetAvatarAwakenComicInfoRes",
+  "endpoint": "GetAvatarAwakenComicInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile30RequestUnlockAvatarAwakenComicEjj",
+  "cmd": 195,
+  "cmd_hex": "0xc3",
+  "reqType": "CSUnlockAvatarAwakenComicReq",
+  "resType": "Empty",
+  "endpoint": "UnlockAvatarAwakenComic"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile28RequestClaimAwakenTaskRewardEjj",
+  "cmd": 196,
+  "cmd_hex": "0xc4",
+  "reqType": "CSClaimAwakenTaskRewardsReq",
+  "resType": "CSClaimAwakenTaskRewardsRes",
+  "endpoint": "ClaimAwakenTaskRewards"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile24RequestClaimAvatarAwakenEj",
+  "cmd": 197,
+  "cmd_hex": "0xc5",
+  "reqType": "CSGetAwakenAvatarByAwakenComicReq",
+  "resType": "CSGetAwakenAvatarByAwakenComicRes",
+  "endpoint": "GetAwakenAvatarByAwakenComic"
+ },
+ {
+  "caller": "_ZN3COW20UIModelAvatarProfile27RequestGeAvatarProfileBatchEN6System11Collections7Generic4ListImEEj",
+  "cmd": 198,
+  "cmd_hex": "0xc6",
+  "reqType": "CSBatchGetProfileReq",
+  "resType": "CSBatchGetProfileRes",
+  "endpoint": "BatchGetSelectedProfiles"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan17RequestSigninDataEv",
+  "cmd": 199,
+  "cmd_hex": "0xc7",
+  "reqType": null,
+  "resType": "CSClanSignInRes",
+  "endpoint": "ClanSignIn"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan26RequestNextLevelSigninDataEv",
+  "cmd": 201,
+  "cmd_hex": "0xc9",
+  "reqType": "CSGetClanSignInRewardsByLevelReq",
+  "resType": "CSClanSignInRes",
+  "endpoint": "GetClanSignInRewardsByLevel"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan11SinginClaimEN6System9DayOfWeekE",
+  "cmd": 202,
+  "cmd_hex": "0xca",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "ClaimSignInReward"
+ },
+ {
+  "caller": "_ZN3COW15UIModelClanRace15RequestClanInfoEN6System6ActionE",
+  "cmd": 203,
+  "cmd_hex": "0xcb",
+  "reqType": "CSClanIDReq",
+  "resType": "CSGetClanRaceInfoRes",
+  "endpoint": "GetClanRaceInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelClanRace18ClaimClanRaceAwardEv",
+  "cmd": 204,
+  "cmd_hex": "0xcc",
+  "reqType": "CSClanIDReq",
+  "resType": "Empty",
+  "endpoint": "ClaimClanRaceAward"
+ },
+ {
+  "caller": "_ZN3COW15UIModelClanRace24_ClaimClanRaceAward_m__1EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 204,
+  "cmd_hex": "0xcc",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "ClaimClanRaceAward"
+ },
+ {
+  "caller": "_ZN3COW15UIModelClanRace19ExchangeAwardWithRPEj",
+  "cmd": 205,
+  "cmd_hex": "0xcd",
+  "reqType": "CSExchangeAwardWithRPReq",
+  "resType": "Empty",
+  "endpoint": "ExchangeAwardWithRP"
+ },
+ {
+  "caller": "_ZN3COW15UIModelClanRace35_ExchangeAwardWithRP_c__AnonStorey26__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 205,
+  "cmd_hex": "0xcd",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "ExchangeAwardWithRP"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity17SendFriendReunionEmjbj",
+  "cmd": 206,
+  "cmd_hex": "0xce",
+  "reqType": "CSFriendInviteReq",
+  "resType": "Empty",
+  "endpoint": "FriendInvite"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity26GetReunionPlayerLevelLimitEb",
+  "cmd": 207,
+  "cmd_hex": "0xcf",
+  "reqType": null,
+  "resType": "CSGetReturnPlayerSettingDescRes",
+  "endpoint": "GetReturnPlayerDesc"
+ },
+ {
+  "caller": "_ZN3COW16UIModelBroadcast17LoginGetBroadcastEb",
+  "cmd": 208,
+  "cmd_hex": "0xd0",
+  "reqType": "CSScrollMarqueeReq",
+  "resType": "LoginBroadcastRes",
+  "endpoint": "LoginGetBroadcast"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection18RequestChooseEmoteEjj",
+  "cmd": 209,
+  "cmd_hex": "0xd1",
+  "reqType": "CSChooseEmoteReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseEmote"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin24RequestStaticDescOnLoginEv",
+  "cmd": 210,
+  "cmd_hex": "0xd2",
+  "reqType": "CSLoginDescReq",
+  "resType": "LoginDescRes",
+  "endpoint": "LoginGetDesc"
+ },
+ {
+  "caller": "_ZN3COW24UIModelAnnoucementReward20RequestAttendanceResEjb",
+  "cmd": 211,
+  "cmd_hex": "0xd3",
+  "reqType": "CSGetAttendanceReq",
+  "resType": "GetAttendanceRes",
+  "endpoint": "GetAttendance"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection17RequestChooseShowEjN3COW23CSSharedItemDataManager17CollectionSubTypeE",
+  "cmd": 212,
+  "cmd_hex": "0xd4",
+  "reqType": "CSChooseShowReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseShow"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection27RequestDressUpChooseBagShowEj",
+  "cmd": 213,
+  "cmd_hex": "0xd5",
+  "reqType": "CSChooseGameBagShowReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseGameBagShow"
+ },
+ {
+  "caller": "_ZN3COW17UIModelCollection20RequestChooseBagShowEj",
+  "cmd": 213,
+  "cmd_hex": "0xd5",
+  "reqType": "CSChooseGameBagShowReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseGameBagShow"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch27GetPlayerRankingSeasonStatsEv",
+  "cmd": 214,
+  "cmd_hex": "0xd6",
+  "reqType": "CSPlayerRankingSeasonStatsReq",
+  "resType": "CSPlayerRankingSeasonStatsRes",
+  "endpoint": "GetPlayerRankingSeasonStats"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch20GetLadderHasFirstWinEbb",
+  "cmd": 215,
+  "cmd_hex": "0xd7",
+  "reqType": null,
+  "resType": "CSGetDailyRankingRewardRes",
+  "endpoint": "GetDailyRankingReward"
+ },
+ {
+  "caller": "_ZN3COW11UIModelGift19RequestGiftRankDescEv",
+  "cmd": 216,
+  "cmd_hex": "0xd8",
+  "reqType": null,
+  "resType": "CSGetGiftRankDescRes",
+  "endpoint": "GetGiftRankDesc"
+ },
+ {
+  "caller": "_ZN3COW11UIModelGift25RequestGiftRankRewardInfoEj",
+  "cmd": 217,
+  "cmd_hex": "0xd9",
+  "reqType": "CSGetGiftRankRewardInfoReq",
+  "resType": "CSGetGiftRankRewardInfoRes",
+  "endpoint": "GetGiftRankRewardInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelGift24RequestGetGiftRankRewardEjN5proto6EStore12GiftRankTypeEj",
+  "cmd": 218,
+  "cmd_hex": "0xda",
+  "reqType": "CSGetGiftRankRewardReq",
+  "resType": "CSGetGiftRankRewardRes",
+  "endpoint": "GetGiftRankReward"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch14ChooseRankCardEj",
+  "cmd": 219,
+  "cmd_hex": "0xdb",
+  "reqType": "CSChooseRankingCardsReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChooseRankingCards"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch19SetSeasonChangeInfoEj",
+  "cmd": 220,
+  "cmd_hex": "0xdc",
+  "reqType": "CSResetNeedLastSeasonInfoReq",
+  "resType": "Empty",
+  "endpoint": "ResetNeedLastSeasonInfo"
+ },
+ {
+  "caller": "_ZN3COW10UIModelPet16GetMyPetInfoDataEb",
+  "cmd": 221,
+  "cmd_hex": "0xdd",
+  "reqType": null,
+  "resType": "CSGetPetListRes",
+  "endpoint": "GetPetList"
+ },
+ {
+  "caller": "_ZN3COW10UIModelPet9SelectPetEjb",
+  "cmd": 222,
+  "cmd_hex": "0xde",
+  "reqType": "CSSelectPetReq",
+  "resType": "CSGetPetListRes",
+  "endpoint": "SelectPet"
+ },
+ {
+  "caller": "_ZN3COW10UIModelPet7FeedPetEjjj",
+  "cmd": 223,
+  "cmd_hex": "0xdf",
+  "reqType": "CSFeedPetReq",
+  "resType": "CSFeedPetRes",
+  "endpoint": "FeedPet"
+ },
+ {
+  "caller": "_ZN3COW10UIModelPet9RenamePetEjN6System6StringE",
+  "cmd": 224,
+  "cmd_hex": "0xe0",
+  "reqType": "CSRenamePetReq",
+  "resType": "CSRenameRes",
+  "endpoint": "RenamePet"
+ },
+ {
+  "caller": "_ZN3COW10UIModelPet13SelectPetSkinEjjb",
+  "cmd": 227,
+  "cmd_hex": "0xe3",
+  "reqType": "CSSelectPetSkinReq",
+  "resType": "Empty",
+  "endpoint": "SelectPetSkin"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha29RequestDoGachaSpecialExchangeEN5proto24ChestSpecialExchangeDescEj",
+  "cmd": 228,
+  "cmd_hex": "0xe4",
+  "reqType": "CSDoGachaSpecialExchangeReq",
+  "resType": "CSDoGachaSpecialExchangeRes",
+  "endpoint": "DoGachaSpecialExchange"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass23GetEPVideoUrlFromServerEv",
+  "cmd": 229,
+  "cmd_hex": "0xe5",
+  "reqType": "CSEPVideoAdPortalReq",
+  "resType": "CSEPVideoAdPortalRes",
+  "endpoint": "EPVideoAdPortal"
+ },
+ {
+  "caller": "_ZN3COW11UIModelChat10BuyStickerEj",
+  "cmd": 231,
+  "cmd_hex": "0xe7",
+  "reqType": "CSBuyChatItemsReq",
+  "resType": "Empty",
+  "endpoint": "BuyChatItems"
+ },
+ {
+  "caller": "_ZN3COW10UIModelPVE22ChoosePVEPrimaryWeaponEjmbj",
+  "cmd": 232,
+  "cmd_hex": "0xe8",
+  "reqType": "CSChoosePVEPrimaryWeaponReq",
+  "resType": "CSGetSelectedItemsRes",
+  "endpoint": "ChoosePVEPrimaryWeapon"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall20GetDiscountStoreDescEbj",
+  "cmd": 233,
+  "cmd_hex": "0xe9",
+  "reqType": null,
+  "resType": "CSGetDiscountStoreDescRes",
+  "endpoint": "GetDiscountStore"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall20PurchaseDiscountItemEjbN5proto10EInventory12CurrencyTypeEjj",
+  "cmd": 234,
+  "cmd_hex": "0xea",
+  "reqType": "CSDiscountStorePurchaseReq",
+  "resType": "CSDiscountStorePurchaseRes",
+  "endpoint": "DiscountStorePurchase"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity22MegaFestivalAutoSigninEv",
+  "cmd": 235,
+  "cmd_hex": "0xeb",
+  "reqType": null,
+  "resType": "CSFestivalAttendanceSigninRes",
+  "endpoint": "FestivalAttendanceSignin"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity29_MegaFestivalAutoSignin_m__10EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 235,
+  "cmd_hex": "0xeb",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "FestivalAttendanceSignin"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity29GetMegaFestivalAttendanceInfoEb",
+  "cmd": 236,
+  "cmd_hex": "0xec",
+  "reqType": null,
+  "resType": "CSGetFestivalAttendanceInfoRes",
+  "endpoint": "GetFestivalAttendanceInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity21ClaimMegaFestivalItemEj",
+  "cmd": 238,
+  "cmd_hex": "0xee",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "FestivalGetRewards"
+ },
+ {
+  "caller": "_ZN3COW15UIModelActivity37_ClaimMegaFestivalItem_c__AnonStorey86__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 238,
+  "cmd_hex": "0xee",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "FestivalGetRewards"
+ },
+ {
+  "caller": "_ZN3COW21UIModelMapOpeningInfo21GetWinnerTakesAllInfoEv",
+  "cmd": 239,
+  "cmd_hex": "0xef",
+  "reqType": null,
+  "resType": "CSGetWinnerTakesAllInfoRes",
+  "endpoint": "GetWinnerTakesAllInfo"
+ },
+ {
+  "caller": "_ZN3COW11EventLogger19SendNetworkEventLogEN6System6StringEN6System6ObjectE",
+  "cmd": 241,
+  "cmd_hex": "0xf1",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "NetworkLogEvent"
+ },
+ {
+  "caller": "_ZN3COW23UIModelConnectionReport20SelfNetworkDetectionEv",
+  "cmd": 242,
+  "cmd_hex": "0xf2",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "Settings"
+ },
+ {
+  "caller": "_ZN3COW23UIModelConnectionReport24OnDectectionTaskFinishedEv",
+  "cmd": 243,
+  "cmd_hex": "0xf3",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "Upload"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan24RequestClanLuckyBagsInfoEmb",
+  "cmd": 244,
+  "cmd_hex": "0xf4",
+  "reqType": "CSClanIDReq",
+  "resType": "CSGetClanLuckyBagInfoRes",
+  "endpoint": "GetClanLuckyBagsInfo"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan23RequestDrawClanLuckyBagEN5proto12ClanLuckyBagEN5proto5EClan12LuckyBagTypeE",
+  "cmd": 245,
+  "cmd_hex": "0xf5",
+  "reqType": "CSDrawClanLuckyBagReq",
+  "resType": "CSDrawClanLuckyBagRes",
+  "endpoint": "DrawClanLuckyBag"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan26RequestDrawAllClanLuckyBagEN6System11Collections7Generic4ListImEES5_b",
+  "cmd": 246,
+  "cmd_hex": "0xf6",
+  "reqType": "CSBatchDrawClanLuckyBagReq",
+  "resType": "CSBatchDrawClanLuckyBagRes",
+  "endpoint": "BatchDrawClanLuckyBag"
+ },
+ {
+  "caller": "_ZN3COW21UIModelGameBonusEvent25RequestGameBonusEventDescEb",
+  "cmd": 247,
+  "cmd_hex": "0xf7",
+  "reqType": null,
+  "resType": "CSGetGameBonusEventDescRes",
+  "endpoint": "GetGameBonusEventDesc"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan17RequestMyClanNewsEv",
+  "cmd": 249,
+  "cmd_hex": "0xf9",
+  "reqType": "CSGetClanNewsReq",
+  "resType": "CSClanNewsRes",
+  "endpoint": "GetClanNews"
+ },
+ {
+  "caller": "_ZN3COW13UIModelManual18RequestCollectInfoEbbb",
+  "cmd": 250,
+  "cmd_hex": "0xfa",
+  "reqType": null,
+  "resType": "CSGetManualCollectInfoRes",
+  "endpoint": "GetManualCollectInfo"
+ },
+ {
+  "caller": "_ZN3COW13UIModelManual28RequestAllWeaponRewardStatesEbb",
+  "cmd": 251,
+  "cmd_hex": "0xfb",
+  "reqType": null,
+  "resType": "CSGetManualAllWeaponRewardStatesRes",
+  "endpoint": "GetManualAllWeaponRewardStates"
+ },
+ {
+  "caller": "_ZN3COW13UIModelManual25RequestAllMapRewardStatesEbb",
+  "cmd": 252,
+  "cmd_hex": "0xfc",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetManualAllMapRewardStates"
+ },
+ {
+  "caller": "_ZN3COW13UIModelManual19RequestWeaponRewardEj",
+  "cmd": 253,
+  "cmd_hex": "0xfd",
+  "reqType": "CSGetManualWeaponRewardReq",
+  "resType": "CSGetManualWeaponRewardRes",
+  "endpoint": "GetManualWeaponReward"
+ },
+ {
+  "caller": "_ZN3COW13UIModelManual35_RequestWeaponReward_c__AnonStorey56__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 253,
+  "cmd_hex": "0xfd",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetManualWeaponReward"
+ },
+ {
+  "caller": "_ZN3COW13UIModelManual16RequestMapRewardEj",
+  "cmd": 254,
+  "cmd_hex": "0xfe",
+  "reqType": "CSGetManualMapRewardReq",
+  "resType": "CSGetManualMapRewardRes",
+  "endpoint": "GetManualMapReward"
+ },
+ {
+  "caller": "_ZN3COW13UIModelManual32_RequestMapReward_c__AnonStorey66__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 254,
+  "cmd_hex": "0xfe",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "GetManualMapReward"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship17RequestCreateTeamEN6System6StringES2_S2_jjN5proto13EChampionship13TeamScaleTypeE",
+  "cmd": 255,
+  "cmd_hex": "0xff",
+  "reqType": "CSCreateTeamReq",
+  "resType": "CSTeamIDRes",
+  "endpoint": "CreateTeam"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship15RequestJoinTeamEmm",
+  "cmd": 256,
+  "cmd_hex": "0x100",
+  "reqType": "CSJoinTeamReq",
+  "resType": "Empty",
+  "endpoint": "RequestJoinTeam"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship21RequestModifyTeamInfoEN6System6StringES2_jj",
+  "cmd": 257,
+  "cmd_hex": "0x101",
+  "reqType": "CSModifyTeamInfoReq",
+  "resType": "Empty",
+  "endpoint": "ModifyTeamInfo"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship26RequestEditTeamContactInfoEN6System6StringE",
+  "cmd": 258,
+  "cmd_hex": "0x102",
+  "reqType": "CSAddTeamContactInfoReq",
+  "resType": "Empty",
+  "endpoint": "AddTeamContactInfo"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship23RequestTeamInfoByTeamIDEmb",
+  "cmd": 259,
+  "cmd_hex": "0x103",
+  "reqType": "TeamIDReq",
+  "resType": "TeamInfo",
+  "endpoint": "GetTeamInfoByTeamID"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship18RequestTeamMembersEmbb",
+  "cmd": 260,
+  "cmd_hex": "0x104",
+  "reqType": "TeamIDReq",
+  "resType": "TeamMemberListWithAccountInfo",
+  "endpoint": "GetTeamMembers"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship15RequestQuitTeamEbbmm",
+  "cmd": 261,
+  "cmd_hex": "0x105",
+  "reqType": "CSQuitTeamReq",
+  "resType": "Empty",
+  "endpoint": "QuitTeam"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship18RequestDismissTeamEbbmm",
+  "cmd": 262,
+  "cmd_hex": "0x106",
+  "reqType": "CSDismissTeamReq",
+  "resType": "Empty",
+  "endpoint": "DismissTeam"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship24RequestTeamApplicantListEv",
+  "cmd": 263,
+  "cmd_hex": "0x107",
+  "reqType": "TeamIDReq",
+  "resType": "AccountInfoBasicBundleRes",
+  "endpoint": "GetTeamApplicantListByTeamID"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship25RequestDeclineApplicationEA_N6System6UInt64E",
+  "cmd": 265,
+  "cmd_hex": "0x109",
+  "reqType": "CSDeclineJoinApplicationReq",
+  "resType": "Empty",
+  "endpoint": "DeclineJoinTeamApplication"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship13RequestInviteEm",
+  "cmd": 266,
+  "cmd_hex": "0x10a",
+  "reqType": "CSInviteToTeamReq",
+  "resType": "Empty",
+  "endpoint": "InviteToTeam"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship32RequestApproveJoinTeamInvitationEmm",
+  "cmd": 267,
+  "cmd_hex": "0x10b",
+  "reqType": "CSApproveInviteToTeamReq",
+  "resType": "Empty",
+  "endpoint": "ApproveJoinTeamInvitation"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship32RequestDeclineJoinTeamInvitationEA_N6System6UInt64E",
+  "cmd": 268,
+  "cmd_hex": "0x10c",
+  "reqType": "CSDeclineInviteToTeamReq",
+  "resType": "Empty",
+  "endpoint": "DeclineJoinTeamInvitation"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship21RequestInvitationListEv",
+  "cmd": 269,
+  "cmd_hex": "0x10d",
+  "reqType": null,
+  "resType": "AccountInfoBasicBundleRes",
+  "endpoint": "GetTeamInvitationList"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship20RequestInvitedIdListEv",
+  "cmd": 270,
+  "cmd_hex": "0x10e",
+  "reqType": "CSTeamIDReq",
+  "resType": "CSTeamInvitationList",
+  "endpoint": "GetTeamInvitationListByTeamID"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment17RequestTopupEventEjbj",
+  "cmd": 273,
+  "cmd_hex": "0x111",
+  "reqType": "CSTopupEventInfoReq",
+  "resType": "CSTopupEventInfoRes",
+  "endpoint": "GetTopupEventInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment23RequestMysteryBonusSpinEv",
+  "cmd": 274,
+  "cmd_hex": "0x112",
+  "reqType": null,
+  "resType": "CSMysteryBonusSpinRes",
+  "endpoint": "MysteryBonusSpin"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment33RequestGetMysteryBonusProbabilityEv",
+  "cmd": 275,
+  "cmd_hex": "0x113",
+  "reqType": null,
+  "resType": "CSGetMysteryBonusProbabilityRes",
+  "endpoint": "GetMysteryBonusProbability"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall29RequestInGameBonusProbabilityEjN6System6ActionE",
+  "cmd": 276,
+  "cmd_hex": "0x114",
+  "reqType": "CSGetInGameBonusPRReq",
+  "resType": "CSGetInGameBonusPRRes",
+  "endpoint": "GetInGameBonusPR"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship31RequestInitTeamChampionshipInfoEjj",
+  "cmd": 277,
+  "cmd_hex": "0x115",
+  "reqType": "CSInitTeamChampionshipInfoReq",
+  "resType": "CSTeamChampionshipInfoRes",
+  "endpoint": "InitTeamChampionshipInfo"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship30RequestGetTeamChampionshipInfoEjj",
+  "cmd": 278,
+  "cmd_hex": "0x116",
+  "reqType": "CSGetTeamChampionshipInfoReq",
+  "resType": "CSTeamChampionshipInfoRes",
+  "endpoint": "GetTeamChampionshipInfo"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship25RequestChampionshipConfigEjjj",
+  "cmd": 279,
+  "cmd_hex": "0x117",
+  "reqType": "CSGetChampionshipConfigReq",
+  "resType": "CSGetChampionshipConfigRes",
+  "endpoint": "GetChampionshipConfig"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship28RequestChampionshipStatsInfoEmjjb",
+  "cmd": 280,
+  "cmd_hex": "0x118",
+  "reqType": "CSTeamChampionshipSeasonStatsReq",
+  "resType": "CSTeamChampionshipSeasonStatsRes",
+  "endpoint": "GetTeamChampionshipSeasonStats"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall30RequestPurchaseInstallmentItemEjbb",
+  "cmd": 281,
+  "cmd_hex": "0x119",
+  "reqType": "CSInstallmentPurchaseReq",
+  "resType": "CSInstallmentPurchaseRes",
+  "endpoint": "InstallmentPurchase"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall27RequestInstallmentStoreDescEb",
+  "cmd": 282,
+  "cmd_hex": "0x11a",
+  "reqType": "CSGetInstallmentStoreDescReq",
+  "resType": "CSGetInstallmentStoreDescRes",
+  "endpoint": "GetInstallmentStore"
+ },
+ {
+  "caller": "_ZN3COW16UIModelInventory23RequestInstallmentItemsEj",
+  "cmd": 283,
+  "cmd_hex": "0x11b",
+  "reqType": null,
+  "resType": "CSGetInstallmentItemsRes",
+  "endpoint": "GetInstallmentItems"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship29RequestAccountLifeSeasonStatsEmj",
+  "cmd": 284,
+  "cmd_hex": "0x11c",
+  "reqType": "CSAccountLifeSeasonStatsReq",
+  "resType": "CSAccountLifeSeasonStats",
+  "endpoint": "GetAccountLifeSeasonStats"
+ },
+ {
+  "caller": "_ZN3COW19UIModelChampionship28RequestTeamMatchStatsHistoryEm",
+  "cmd": 285,
+  "cmd_hex": "0x11d",
+  "reqType": "CSTeamMatchStatsHistoryReq",
+  "resType": "CSTeamMatchStatsHistoryRes",
+  "endpoint": "GetTeamMatchStatsHistory"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin12RequestLoginEv",
+  "cmd": 286,
+  "cmd_hex": "0x11e",
+  "reqType": "LoginReq",
+  "resType": "MajorLoginRes",
+  "endpoint": "MajorLogin"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin23RequestPlatformRegisterEN6System6StringEj",
+  "cmd": 287,
+  "cmd_hex": "0x11f",
+  "reqType": "PlatformRegisterReq",
+  "resType": "PlatformRegisterRes",
+  "endpoint": "MajorRegister"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin11RequestBindEN3COW12PlatformTypeES2_N6System6StringES4_",
+  "cmd": 289,
+  "cmd_hex": "0x121",
+  "reqType": "PlatformGuestBindReq",
+  "resType": "PlatformGuestBindRes",
+  "endpoint": "MajorGuestBind"
+ },
+ {
+  "caller": "_ZN3COW12UIModelLogin20RequestSecondaryBindEN3COW12PlatformTypeEN6System6StringES4_",
+  "cmd": 290,
+  "cmd_hex": "0x122",
+  "reqType": "PlatformSecondaryAccountBindReq",
+  "resType": "SecondaryAccountBindRes",
+  "endpoint": "MajorSecondaryAccountBind"
+ },
+ {
+  "caller": "_ZN24UIBasicSettingController18SendSetAgeStateReqEv",
+  "cmd": 291,
+  "cmd_hex": "0x123",
+  "reqType": "CSSetAntiAddictionAgeStateReq",
+  "resType": "CSSetAntiAddictionAgeStateReq",
+  "endpoint": "SetAntiAddictionAgeState"
+ },
+ {
+  "caller": "_ZN3COW21UIAgeVerifyController18SendSetAgeStateReqEv",
+  "cmd": 291,
+  "cmd_hex": "0x123",
+  "reqType": "CSSetAntiAddictionAgeStateReq",
+  "resType": "CSSetAntiAddictionAgeStateReq",
+  "endpoint": "SetAntiAddictionAgeState"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard30HandleAccountGlobalLeaderBoardEjN5proto16CSLeaderboardReqE",
+  "cmd": 292,
+  "cmd_hex": "0x124",
+  "reqType": null,
+  "resType": "AccountLeaderboardRes",
+  "endpoint": "MajorGetGlobalLeaderboard"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLeaderBoard27HandleClanGlobalLeaderBoardEjN5proto16CSLeaderboardReqE",
+  "cmd": 292,
+  "cmd_hex": "0x124",
+  "reqType": null,
+  "resType": "ClanLeaderboardRes",
+  "endpoint": "MajorGetGlobalLeaderboard"
+ },
+ {
+  "caller": "_ZN3COW32UIModelRetentionPushNotification15CheckForRewardsEN5proto8LoginResE",
+  "cmd": 293,
+  "cmd_hex": "0x125",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "PlayerClaimRetentionReward"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment24FetchSubscriptionBundlesEj",
+  "cmd": 294,
+  "cmd_hex": "0x126",
+  "reqType": "CSGetSubcribeStoreReq",
+  "resType": "CSGetSubcribeStoreRes",
+  "endpoint": "GetSubscribeStore"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment30UpdateSubscriptionBundleStatusEj",
+  "cmd": 295,
+  "cmd_hex": "0x127",
+  "reqType": null,
+  "resType": "CSGetAccountSubscriptionsRes",
+  "endpoint": "GetAccountSubscriptions"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment24_ClaimSubscriptionBundleEj",
+  "cmd": 296,
+  "cmd_hex": "0x128",
+  "reqType": null,
+  "resType": "CSClaimSubscriptionRes",
+  "endpoint": "ClaimSubscription"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall13OfferPurchaseEN5proto14OfferGoodsDescE",
+  "cmd": 298,
+  "cmd_hex": "0x12a",
+  "reqType": "CSOfferPurchaseReq",
+  "resType": "CSOfferPurchaseRes",
+  "endpoint": "OfferPurchase"
+ },
+ {
+  "caller": "_ZN3COW14UIModelFriends34RequestedRecommendedFriendInitDataEv",
+  "cmd": 300,
+  "cmd_hex": "0x12c",
+  "reqType": "Empty",
+  "resType": "CSGetBlockedPlayerRes",
+  "endpoint": "GetBlockedIDs"
+ },
+ {
+  "caller": "_ZN3COW14UIModelSetting35RequestCsSetHideMyLobbyInPrefersReqEb",
+  "cmd": 301,
+  "cmd_hex": "0x12d",
+  "reqType": "CSSetHideMyLobbyInPrefersReq",
+  "resType": "Empty",
+  "endpoint": "SetHideMyLobbyInPrefers"
+ },
+ {
+  "caller": "_ZN3COW10UIModelPet14SelectPetSkillEjj",
+  "cmd": 302,
+  "cmd_hex": "0x12e",
+  "reqType": "CSSelectPetSkillReq",
+  "resType": "Empty",
+  "endpoint": "SelectPetSkill"
+ },
+ {
+  "caller": "_ZN3COW11UIModelUser10CheckCdKeyEN6System6StringES2_",
+  "cmd": 303,
+  "cmd_hex": "0x12f",
+  "reqType": "CSActivateAccountReq",
+  "resType": "CSActivateAccountReq",
+  "endpoint": "ActivateAccount"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch23InitPlayerCSRankingInfoEb",
+  "cmd": 304,
+  "cmd_hex": "0x130",
+  "reqType": "Empty",
+  "resType": "CSPlayerCSRankingInfoRes",
+  "endpoint": "InitPlayerCSRankingInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch22GetPlayerCSRankingInfoEb",
+  "cmd": 305,
+  "cmd_hex": "0x131",
+  "reqType": "CSPlayerRankingInfoReq",
+  "resType": "CSPlayerCSRankingInfoRes",
+  "endpoint": "GetPlayerCSRankingInfo"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch29GetCurOrRecentCSRankingConfigEv",
+  "cmd": 307,
+  "cmd_hex": "0x133",
+  "reqType": "Empty",
+  "resType": "CSGetCurrentOrRecentCSRankingSeasonConfigRes",
+  "endpoint": "GetCurOrRecentCSRankingConfig"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch25RequestCSRankingStatsByIdEm",
+  "cmd": 308,
+  "cmd_hex": "0x134",
+  "reqType": "CSGetPlayerTCStatsReq",
+  "resType": "CSGetPlayerTCStatsRes",
+  "endpoint": "GetPlayerTCStats"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch16GetCSPlayerStatsEmjb",
+  "cmd": 308,
+  "cmd_hex": "0x134",
+  "reqType": "CSGetPlayerTCStatsReq",
+  "resType": "CSGetPlayerTCStatsRes",
+  "endpoint": "GetPlayerTCStats"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch24RequestCsRankingInfoByIdEm",
+  "cmd": 309,
+  "cmd_hex": "0x135",
+  "reqType": "CSGetPlayerCSRankingInfoByAccountIDReq",
+  "resType": "CSPlayerCSRankingInfoRes",
+  "endpoint": "GetPlayerCSRankingInfoByAccountID"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch29ResquestCSRankMasterLevelInfoEj",
+  "cmd": 310,
+  "cmd_hex": "0x136",
+  "reqType": "CSSeasonIDReq",
+  "resType": "CSGetCSRankMasterLevelRes",
+  "endpoint": "GetCSRankMasterLevel"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch27ResquestRankMasterLevelInfoEj",
+  "cmd": 311,
+  "cmd_hex": "0x137",
+  "reqType": "CSSeasonIDReq",
+  "resType": "CSGetRankMasterLevelRes",
+  "endpoint": "GetRankMasterLevel"
+ },
+ {
+  "caller": "_ZN3COW26UIModelPeriodicLadderMatch28RequestInitPlayerRankingInfoEb",
+  "cmd": 312,
+  "cmd_hex": "0x138",
+  "reqType": null,
+  "resType": "CSPlayerPeriodicRankingInfoRes",
+  "endpoint": "InitPlayerPeriodicRankingInfo"
+ },
+ {
+  "caller": "_ZN3COW26UIModelPeriodicLadderMatch22RequestGetRankingsInfoEb",
+  "cmd": 313,
+  "cmd_hex": "0x139",
+  "reqType": null,
+  "resType": "CSPlayerPeriodicRankingInfoRes",
+  "endpoint": "GetPlayerPeriodicRankingInfo"
+ },
+ {
+  "caller": "_ZN3COW26UIModelPeriodicLadderMatch42RequestGetCurOrRecentPeriodicRankingConfigEv",
+  "cmd": 314,
+  "cmd_hex": "0x13a",
+  "reqType": "Empty",
+  "resType": "CSGetCurOrRecentPeriodicRankingConfigRes",
+  "endpoint": "GetCurOrRecentPeriodicRankingConfig"
+ },
+ {
+  "caller": "_ZN3COW26UIModelPeriodicLadderMatch22RequestRankingInfoByIdEm",
+  "cmd": 315,
+  "cmd_hex": "0x13b",
+  "reqType": "CSGetPlayerPeriodicRankingInfoByAccountIDReq",
+  "resType": "CSPlayerPeriodicRankingInfoRes",
+  "endpoint": "GetPlayerPeriodicRankingInfoByAccountID"
+ },
+ {
+  "caller": "_ZN3COW25UIModelWeaponSkinUpgrader17GetOpenningSetIdsEb",
+  "cmd": 317,
+  "cmd_hex": "0x13d",
+  "reqType": null,
+  "resType": "CSGetWeaponSkinOpenTimeRes",
+  "endpoint": "GetWeaponSkinOpenTime"
+ },
+ {
+  "caller": "_ZN3COW25UIModelWeaponSkinUpgrader17UpgradeWeaponSkinEN3COW14WeaponSkinDataE",
+  "cmd": 319,
+  "cmd_hex": "0x13f",
+  "reqType": "CSUpgradeWeaponSkinReq",
+  "resType": "CSUpgradeWeaponSkinRes",
+  "endpoint": "UpgradeWeaponSkin"
+ },
+ {
+  "caller": "_ZN3COW16UIModelElitePass24RequestGetEPDocumentInfoEv",
+  "cmd": 321,
+  "cmd_hex": "0x141",
+  "reqType": null,
+  "resType": "CSGetEPArchivesInfoRes",
+  "endpoint": "GetEPArchivesInfo"
+ },
+ {
+  "caller": "_ZN3COW18UIModelMysteryMall27RequestMysteryMallLuckyDrawEv",
+  "cmd": 322,
+  "cmd_hex": "0x142",
+  "reqType": "CSGetMysteryLuckyDrawReq",
+  "resType": "CSGetMysteryLuckyDrawRes",
+  "endpoint": "GetMysteryShopLuckyDraw"
+ },
+ {
+  "caller": "_ZN3COW18UIModelMysteryMall25RequestGetMysteryMallInfoEjb",
+  "cmd": 323,
+  "cmd_hex": "0x143",
+  "reqType": "CSGetMysteryShopInfoReq",
+  "resType": "CSGetMysteryShopInfoRes",
+  "endpoint": "GetMysteryShopInfo"
+ },
+ {
+  "caller": "_ZN3COW18UIModelMysteryMall28RequestGetAllMysteryMallInfoEb",
+  "cmd": 324,
+  "cmd_hex": "0x144",
+  "reqType": null,
+  "resType": "CSGetMysteryShopInfoListRes",
+  "endpoint": "GetMysteryShopInfoList"
+ },
+ {
+  "caller": "_ZN3COW18UIModelMysteryMall32RequestGetMysteryShopProbabilityEv",
+  "cmd": 325,
+  "cmd_hex": "0x145",
+  "reqType": "CSGetMysteryShopProbabilityReq",
+  "resType": "CSGetMysteryShopProbabilityRes",
+  "endpoint": "GetMysteryShopProbability"
+ },
+ {
+  "caller": "_ZN3COW18UIModelMysteryMall21RequestGetMysteryPoolEj",
+  "cmd": 326,
+  "cmd_hex": "0x146",
+  "reqType": "CSGetMysteryPoolInfoReq",
+  "resType": "CSGetMysteryPoolInfoRes",
+  "endpoint": "GetMysteryPoolInfo"
+ },
+ {
+  "caller": "_ZN3COW18UIModelMysteryMall26RequestPurchaseMysteryItemEN5proto20MysteryPoolStoreItemEj",
+  "cmd": 327,
+  "cmd_hex": "0x147",
+  "reqType": "CSMysteryShopPurchaseReq",
+  "resType": "CSMysteryShopPurchaseRes",
+  "endpoint": "MysteryPurchase"
+ },
+ {
+  "caller": "_ZN3COW18UIModelMysteryMall26RequestPurchaseAnotherPoolEv",
+  "cmd": 328,
+  "cmd_hex": "0x148",
+  "reqType": "CSPurchaseMysteryAnotherPoolReq",
+  "resType": "CSPurchaseMysteryAnotherPoolReq",
+  "endpoint": "PurchaseMysteryAnotherPool"
+ },
+ {
+  "caller": "_ZN3COW14UIModelRampage11GetStoreResEN5proto13ELimitedEvent14RampageFactionE",
+  "cmd": 329,
+  "cmd_hex": "0x149",
+  "reqType": "CSGetLimitedEventStoreReq",
+  "resType": "CSGetLimitedEventStoreRes",
+  "endpoint": "GetLimitedEventStore"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent32RequestBigEventExchangeStoreDataEN5proto13ELimitedEvent7EventIDEN5proto13ELimitedEvent9StoreTypeE",
+  "cmd": 329,
+  "cmd_hex": "0x149",
+  "reqType": "CSGetLimitedEventStoreReq",
+  "resType": "CSGetLimitedEventStoreRes",
+  "endpoint": "GetLimitedEventStore"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent26RequestGetBigEventOpenInfoEv",
+  "cmd": 330,
+  "cmd_hex": "0x14a",
+  "reqType": null,
+  "resType": "CSGetLimitedEventOpenInfoRes",
+  "endpoint": "GetLimitedEventOpenInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelRampage25RequestAccountRampageInfoEj",
+  "cmd": 332,
+  "cmd_hex": "0x14c",
+  "reqType": null,
+  "resType": "CSGetPlayerRampageInfoRes",
+  "endpoint": "GetPlayerRampageInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelRampage20RequestRampageConfigEj",
+  "cmd": 333,
+  "cmd_hex": "0x14d",
+  "reqType": null,
+  "resType": "CSGetRampageConfigRes",
+  "endpoint": "GetRampageConfig"
+ },
+ {
+  "caller": "_ZN3COW14UIModelRampage20RequestChooseFactionEN5proto13ELimitedEvent14RampageFactionE",
+  "cmd": 334,
+  "cmd_hex": "0x14e",
+  "reqType": "CSChooseFactionReq",
+  "resType": "CSChooseFactionRes",
+  "endpoint": "ChooseFaction"
+ },
+ {
+  "caller": "_ZN3COW14UIModelRampage15RequesePurchaseEN5proto26BigEventStoreCommodityDescEj",
+  "cmd": 335,
+  "cmd_hex": "0x14f",
+  "reqType": "CSLimitedEventStorePurchaseReq",
+  "resType": "CSLimitedEventStorePurchaseRes",
+  "endpoint": "LimitedEventStorePurchase"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent28RequestExchangeStorePurchaseEN5proto13ELimitedEvent7EventIDEN5proto13ELimitedEvent9StoreTypeEN5proto26BigEventStoreCommodityDescEj",
+  "cmd": 335,
+  "cmd_hex": "0x14f",
+  "reqType": "CSLimitedEventStorePurchaseReq",
+  "resType": "CSLimitedEventStorePurchaseRes",
+  "endpoint": "LimitedEventStorePurchase"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha28RequestRemoveGachaLimitItemsEjj",
+  "cmd": 336,
+  "cmd_hex": "0x150",
+  "reqType": "CSEliminateGoodsFromLimitPoolReq",
+  "resType": "CSEliminateGoodsFromLimitPoolRes",
+  "endpoint": "EliminateGoodsFromLimitPool"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment15GetPayLevelInfoEjb",
+  "cmd": 353,
+  "cmd_hex": "0x161",
+  "reqType": "CSGetPlayerPayLevelInfoReq",
+  "resType": "CSGetPlayerPayLevelInfoRes",
+  "endpoint": "GetPlayerPayLevelInfo"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment19ClaimPayLevelRewardEjj",
+  "cmd": 354,
+  "cmd_hex": "0x162",
+  "reqType": "CSClaimPayLevelRewardReq",
+  "resType": "Empty",
+  "endpoint": "ClaimPayLevelReward"
+ },
+ {
+  "caller": "_ZN3COW14UIModelPayment35_ClaimPayLevelReward_c__AnonStorey66__m__0EN7GCommon13HttpErrorCodeEN6System6ObjectE",
+  "cmd": 354,
+  "cmd_hex": "0x162",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "ClaimPayLevelReward"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall28PurchaseAvatarDebrisCallbackEjjjN5proto10EInventory12CurrencyTypeEjN6System6ActionE",
+  "cmd": 355,
+  "cmd_hex": "0x163",
+  "reqType": "CSRoleDebrisPurchaseReq",
+  "resType": "CSRoleDebrisPurchaseRes",
+  "endpoint": "RoleDebrisPurchase"
+ },
+ {
+  "caller": "_ZN3COW11UIModelMall20PurchaseAvatarDebrisEjjjN5proto10EInventory12CurrencyTypeEjj",
+  "cmd": 355,
+  "cmd_hex": "0x163",
+  "reqType": "CSRoleDebrisPurchaseReq",
+  "resType": "CSRoleDebrisPurchaseRes",
+  "endpoint": "RoleDebrisPurchase"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan25RequestApplyDeputyCaptainEv",
+  "cmd": 356,
+  "cmd_hex": "0x164",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "ApplyForDeputyCaptain"
+ },
+ {
+  "caller": "_ZN3COW11UIModelClan24RequestExchangeClanBadgeEj",
+  "cmd": 357,
+  "cmd_hex": "0x165",
+  "reqType": "CSExchangeClanBadgeReq",
+  "resType": "CSExchangeClanBadgeRes",
+  "endpoint": "ExchangeClanBadge"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch13GetSeasonDataEjj",
+  "cmd": 358,
+  "cmd_hex": "0x166",
+  "reqType": "CSGetRankingSeasonInfoReq",
+  "resType": "CSGetRankingSeasonInfoRes",
+  "endpoint": "GetRankingSeasonInfo"
+ },
+ {
+  "caller": "_ZN3COW18UIModelLadderMatch21GetRankThresholdScoreEjN6System6StringE",
+  "cmd": 359,
+  "cmd_hex": "0x167",
+  "reqType": "CSLeaderboardReq",
+  "resType": "CSGetLeaderBoardThresholdScoreRes",
+  "endpoint": "GetLeaderBoardThresholdScore"
+ },
+ {
+  "caller": "_ZN3COW20UIModelCSLadderMatch21GetRankThresholdScoreEjN6System6StringEb",
+  "cmd": 359,
+  "cmd_hex": "0x167",
+  "reqType": "CSLeaderboardReq",
+  "resType": "CSGetLeaderBoardThresholdScoreRes",
+  "endpoint": "GetLeaderBoardThresholdScore"
+ },
+ {
+  "caller": "_ZN3COW15UIModelSuperCar17InitTokenTipsDescEv",
+  "cmd": 361,
+  "cmd_hex": "0x169",
+  "reqType": "CSGetBigEventTokenTipsDescReq",
+  "resType": "CSGetBigEventTokenTipsDescRes",
+  "endpoint": "GetBigEventTokenTipsDesc"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent20RequestTokenTipsDescEN5proto13ELimitedEvent7EventIDE",
+  "cmd": 361,
+  "cmd_hex": "0x169",
+  "reqType": "CSGetBigEventTokenTipsDescReq",
+  "resType": "CSGetBigEventTokenTipsDescRes",
+  "endpoint": "GetBigEventTokenTipsDesc"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest17InitTokenTipsDescEv",
+  "cmd": 361,
+  "cmd_hex": "0x169",
+  "reqType": "CSGetBigEventTokenTipsDescReq",
+  "resType": "CSGetBigEventTokenTipsDescRes",
+  "endpoint": "GetBigEventTokenTipsDesc"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha34RequestLegendaryGachaRerandomItemsEjA_N6System6UInt32E",
+  "cmd": 366,
+  "cmd_hex": "0x16e",
+  "reqType": "CSReRandomCompletionLotteryReq",
+  "resType": "CSLotteryRes",
+  "endpoint": "ReRandomCompletionLottery"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha30RequestLegendaryGachaGainItemsEjA_N6System6UInt32E",
+  "cmd": 367,
+  "cmd_hex": "0x16f",
+  "reqType": "CSCompletionLotteryGainItemsReq",
+  "resType": "CSCompletionLotteryGainItemsRes",
+  "endpoint": "CompletionLotteryGainItems"
+ },
+ {
+  "caller": "_ZN3COW16UIModelInventory22RequestLegendClothDescEjbj",
+  "cmd": 368,
+  "cmd_hex": "0x170",
+  "reqType": "CSGetLegendClothesDescReq",
+  "resType": "CSGetLegendClothesDescRes",
+  "endpoint": "GetLegendClothesDesc"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile24RequestSetPesonalSettingEN5proto26CSUpdateSocialBasicInfoReqEb",
+  "cmd": 369,
+  "cmd_hex": "0x171",
+  "reqType": null,
+  "resType": "CSSocialBasicInfoRes",
+  "endpoint": "UpdateSocialBasicInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent26RequestAccountAFKGroupInfoEb",
+  "cmd": 371,
+  "cmd_hex": "0x173",
+  "reqType": null,
+  "resType": "CSGetAccountGoliathInfo",
+  "endpoint": "GetAccountGoliathInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent19RequestAFKGroupInfoEmb",
+  "cmd": 372,
+  "cmd_hex": "0x174",
+  "reqType": "CSGetGoliathAFKGroupInfoReq",
+  "resType": "CSGetGoliathAFKGroupInfoRes",
+  "endpoint": "GetGoliathAFKGroupInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent21RequestCreateAFKGroupEv",
+  "cmd": 373,
+  "cmd_hex": "0x175",
+  "reqType": null,
+  "resType": "CSCreateGoliathAFKGroupRes",
+  "endpoint": "CreateGoliathAFKGroup"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent19RequestJoinAFKGroupEmN5proto13ELimitedEvent22GoliathGroupJoinSourceEb",
+  "cmd": 374,
+  "cmd_hex": "0x176",
+  "reqType": "CSJoinGoliathAFKGroupReq",
+  "resType": "CSJoinGoliathAFKGroupRes",
+  "endpoint": "JoinGoliathAFKGroup"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent19ClaimAFKGroupAwardsEmm",
+  "cmd": 375,
+  "cmd_hex": "0x177",
+  "reqType": "CSClaimGoliathAFKGroupAwardsReq",
+  "resType": "CSClaimGoliathAFKGroupAwardsRes",
+  "endpoint": "ClaimGoliathAFKGroupAwards"
+ },
+ {
+  "caller": "_ZN3COW15UIModelBigEvent22RequestCaptainActivityEv",
+  "cmd": 376,
+  "cmd_hex": "0x178",
+  "reqType": "CSOpenGoliathAFKGroupActivityReq",
+  "resType": "CSOpenGoliathAFKGroupActivityRes",
+  "endpoint": "OpenGoliathAFKGroupActivity"
+ },
+ {
+  "caller": "_ZN3COW30UIHudMatchResultBaseController13ReturnToLobbyEv",
+  "cmd": 381,
+  "cmd_hex": "0x17d",
+  "reqType": "CSSendMatchLikeInfoReq",
+  "resType": "CSSendMatchLikeInfoReq",
+  "endpoint": "SendMatchLikeInfo"
+ },
+ {
+  "caller": "_ZN3COW36UIHUDWereWolvesMatchResultController8QuitGameEv",
+  "cmd": 381,
+  "cmd_hex": "0x17d",
+  "reqType": "CSSendMatchLikeInfoReq",
+  "resType": "CSSendMatchLikeInfoReq",
+  "endpoint": "SendMatchLikeInfo"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip18RequestAuthInspectEb",
+  "cmd": 382,
+  "cmd_hex": "0x17e",
+  "reqType": "CSUpdateAuthOfInspectReq",
+  "resType": "Empty",
+  "endpoint": "UpdateAuthInspect"
+ },
+ {
+  "caller": "_ZN3COW15UIModelSuperCar19RequestSuperCarDescEj",
+  "cmd": 383,
+  "cmd_hex": "0x17f",
+  "reqType": null,
+  "resType": "CSGetSupercarSettingRes",
+  "endpoint": "GetSupercarSetting"
+ },
+ {
+  "caller": "_ZN3COW15UIModelSuperCar19RequestSuperCarInfoEbmjN3COW31UIBigEventChatMsgItemControllerE",
+  "cmd": 384,
+  "cmd_hex": "0x180",
+  "reqType": null,
+  "resType": "CSGetSupercarInfoRes",
+  "endpoint": "GetSupercarInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelSuperCar24RequestSuperCarHelpOtherEmjN3COW31UIBigEventChatMsgItemControllerE",
+  "cmd": 385,
+  "cmd_hex": "0x181",
+  "reqType": "CSHelpToAccelerateSupercarReq",
+  "resType": "Empty",
+  "endpoint": "HelpToAccelerateSupercar"
+ },
+ {
+  "caller": "_ZN3COW15UIModelSuperCar23RequestSuperCarTokenAccEjj",
+  "cmd": 386,
+  "cmd_hex": "0x182",
+  "reqType": "CSTokenToAccelerateSupercarReq",
+  "resType": "CSTokenToAccelerateSupercarRes",
+  "endpoint": "TokenToAccelerateSupercar"
+ },
+ {
+  "caller": "_ZN3COW15UIModelSuperCar25RequestChangeSuperCarSkinEjj",
+  "cmd": 388,
+  "cmd_hex": "0x184",
+  "reqType": "CSSupercarChangeCarReq",
+  "resType": "CSSupercarChangeCarRes",
+  "endpoint": "SupercarChangeCar"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip31RequestAllRelationshipStateInfoEbb",
+  "cmd": 389,
+  "cmd_hex": "0x185",
+  "reqType": "CSGetSpecialFriendsStateReq",
+  "resType": "CSGetSpecialFriendsStateRes",
+  "endpoint": "GetSpecialFriendsState"
+ },
+ {
+  "caller": "_ZN3COW14UIModelProfile31RequestAllRelationshipStateInfoEmb",
+  "cmd": 390,
+  "cmd_hex": "0x186",
+  "reqType": "CSGetSpecialFriendListReq",
+  "resType": "CSGetSpecialFriendListRes",
+  "endpoint": "GetSpecialFriendList"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip28RequestCreateSpecialRelationEN5proto7EFriend12RelationTypeEm",
+  "cmd": 391,
+  "cmd_hex": "0x187",
+  "reqType": "CSCreateOrDismissSpecialRelationReq",
+  "resType": "Empty",
+  "endpoint": "CreateOrDismissSpecialRelation"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip29RequestDismissSpecialRelationEN5proto7EFriend12RelationTypeEm",
+  "cmd": 391,
+  "cmd_hex": "0x187",
+  "reqType": "CSCreateOrDismissSpecialRelationReq",
+  "resType": "Empty",
+  "endpoint": "CreateOrDismissSpecialRelation"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip34RequestRelationShipInvitationInfosEb",
+  "cmd": 392,
+  "cmd_hex": "0x188",
+  "reqType": null,
+  "resType": "CSGetAccountSpecialFriendAppsRes",
+  "endpoint": "GetAccountSpecialFriendApps"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip35RequestConfirmCreateSpecialRelationEN5proto7EFriend12RelationTypeEm",
+  "cmd": 393,
+  "cmd_hex": "0x189",
+  "reqType": "CSConfirmSpecialRelationReq",
+  "resType": "Empty",
+  "endpoint": "ConfirmSpecialRelationRequest"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip36RequestConfirmDismissSpecialRelationEN5proto7EFriend12RelationTypeEm",
+  "cmd": 393,
+  "cmd_hex": "0x189",
+  "reqType": "CSConfirmSpecialRelationReq",
+  "resType": "CSGetSpecialFriendsStateRes",
+  "endpoint": "ConfirmSpecialRelationRequest"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip29RequestIntimacyRankAwardsInfoEb",
+  "cmd": 394,
+  "cmd_hex": "0x18a",
+  "reqType": null,
+  "resType": "CSGetIntimacyRankAwardInfoRes",
+  "endpoint": "GetIntimacyRankAwardInfo"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip25RequestClaimIntimacyAwardEmjN5proto7EFriend12RelationTypeE",
+  "cmd": 395,
+  "cmd_hex": "0x18b",
+  "reqType": "CSClaimIntimacyAwardReq",
+  "resType": "CSClaimIntimacyAwardRes",
+  "endpoint": "ClaimIntimacyAward"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip33RequestDeclineCreateSpecialFriendEN5proto7EFriend12RelationTypeEm",
+  "cmd": 397,
+  "cmd_hex": "0x18d",
+  "reqType": "CSDeclineSpecialFriendReq",
+  "resType": "Empty",
+  "endpoint": "DeclineSpecialFriendRequest"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip35RequestDeclineDissmissSpecialFriendEN5proto7EFriend12RelationTypeEm",
+  "cmd": 397,
+  "cmd_hex": "0x18d",
+  "reqType": "CSDeclineSpecialFriendReq",
+  "resType": "Empty",
+  "endpoint": "DeclineSpecialFriendRequest"
+ },
+ {
+  "caller": "_ZN3COW19UIModelRelationShip35RequestCallbackDismissSpecialFriendEN5proto7EFriend12RelationTypeEm",
+  "cmd": 398,
+  "cmd_hex": "0x18e",
+  "reqType": "CSCallbackDismissReq",
+  "resType": "Empty",
+  "endpoint": "CallbackDismissSpecialFriendRequest"
+ },
+ {
+  "caller": "_ZN3COW14UIModelDressUp14UnLockCardInfoEv",
+  "cmd": 399,
+  "cmd_hex": "0x18f",
+  "reqType": "CSUnlockFittingSlotReq",
+  "resType": "Empty",
+  "endpoint": "UnlockFittingSlot"
+ },
+ {
+  "caller": "_ZN3COW14UIModelDressUp12SendCardInfoEjb",
+  "cmd": 400,
+  "cmd_hex": "0x190",
+  "reqType": "CSSaveFittingSlotReq",
+  "resType": "CSSaveFittingSlotRes",
+  "endpoint": "SaveFittingSlot"
+ },
+ {
+  "caller": "_ZN3COW14UIModelDressUp11GetCardInfoEv",
+  "cmd": 401,
+  "cmd_hex": "0x191",
+  "reqType": null,
+  "resType": "CSGetUnlockedFittingSlotsRes",
+  "endpoint": "GetUnlockedFittingSlots"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy17RequestChummyDescEv",
+  "cmd": 402,
+  "cmd_hex": "0x192",
+  "reqType": null,
+  "resType": "CSGetAllChummyDescRes",
+  "endpoint": "GetAllChummyDesc"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy21RequestGetChummyStateEb",
+  "cmd": 403,
+  "cmd_hex": "0x193",
+  "reqType": null,
+  "resType": "CSGetChummyStateRes",
+  "endpoint": "GetChummyState"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy20RequestApplyForTutorEv",
+  "cmd": 404,
+  "cmd_hex": "0x194",
+  "reqType": null,
+  "resType": "Empty",
+  "endpoint": "RegisterAsMentor"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy28RequestRecommendedMentorListEb",
+  "cmd": 405,
+  "cmd_hex": "0x195",
+  "reqType": null,
+  "resType": "CSGetRecommendedMentorListRes",
+  "endpoint": "GetRecommendedMentorList"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy29RequestRecommendedStudentListEb",
+  "cmd": 406,
+  "cmd_hex": "0x196",
+  "reqType": null,
+  "resType": "CSGetRecommendedStudentListRes",
+  "endpoint": "GetRecommendedStudentList"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy19RequestAddingChummyEmN5proto7EChummy17MultiRelationTypeEN5proto7EChummy11RequestTypeE",
+  "cmd": 407,
+  "cmd_hex": "0x197",
+  "reqType": "CSRequestAddingChummyReq",
+  "resType": "Empty",
+  "endpoint": "RequestAddingChummy"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy20RequestDismissChummyEmN5proto7EChummy17MultiRelationTypeEN5proto7EChummy11RequestTypeE",
+  "cmd": 408,
+  "cmd_hex": "0x198",
+  "reqType": "CSRequestDismissChummyReq",
+  "resType": "Empty",
+  "endpoint": "RequestDismissChummy"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy26RequestConfirmAddingChummyEmN5proto7EChummy17MultiRelationTypeEN5proto7EChummy11RequestTypeE",
+  "cmd": 409,
+  "cmd_hex": "0x199",
+  "reqType": "CSConfirmAddingChummyReq",
+  "resType": "Empty",
+  "endpoint": "ConfirmAddingChummy"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy26RequestDeclineAddingChummyEmN5proto7EChummy17MultiRelationTypeEN5proto7EChummy11RequestTypeE",
+  "cmd": 410,
+  "cmd_hex": "0x19a",
+  "reqType": "CSDeclineAddingChummyReq",
+  "resType": "Empty",
+  "endpoint": "DeclineAddingChummy"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy27RequestConfirmDismissChummyEmN5proto7EChummy17MultiRelationTypeEN5proto7EChummy11RequestTypeE",
+  "cmd": 411,
+  "cmd_hex": "0x19b",
+  "reqType": "CSConfirmDismissChummyReq",
+  "resType": "Empty",
+  "endpoint": "ConfirmDismissChummy"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy27RequestDeclineDismissChummyEmN5proto7EChummy17MultiRelationTypeEN5proto7EChummy11RequestTypeE",
+  "cmd": 412,
+  "cmd_hex": "0x19c",
+  "reqType": "CSDeclineDismissChummyReq",
+  "resType": "Empty",
+  "endpoint": "DeclineDismissChummy"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy28RequestCallbackDismissChummyEmN5proto7EChummy17MultiRelationTypeE",
+  "cmd": 413,
+  "cmd_hex": "0x19d",
+  "reqType": "CSRevokeDismissChummyRequestReq",
+  "resType": "Empty",
+  "endpoint": "RevokeDismissChummyRequest"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy25RequestChummyRequestsListEb",
+  "cmd": 414,
+  "cmd_hex": "0x19e",
+  "reqType": null,
+  "resType": "CSGetChummyRequestsRes",
+  "endpoint": "GetChummyRequests"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy30RequestChummyIntimacyAwardInfoEv",
+  "cmd": 415,
+  "cmd_hex": "0x19f",
+  "reqType": null,
+  "resType": "CSGetChummyIntimacyAwardInfoRes",
+  "endpoint": "GetChummyIntimacyAwardInfo"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy31RequestClaimChummyIntimacyAwardEj",
+  "cmd": 416,
+  "cmd_hex": "0x1a0",
+  "reqType": "CSClaimChummyIntimacyAwardReq",
+  "resType": "Empty",
+  "endpoint": "ClaimChummyIntimacyAward"
+ },
+ {
+  "caller": "_ZN3COW13UIModelChummy31RequestClaimChummyIntimacyAwardEjm",
+  "cmd": 416,
+  "cmd_hex": "0x1a0",
+  "reqType": "CSClaimChummyIntimacyAwardReq",
+  "resType": "Empty",
+  "endpoint": "ClaimChummyIntimacyAward"
+ },
+ {
+  "caller": "_ZN3COW13UIModelFFWS0318RequestMiscSettingEv",
+  "cmd": 428,
+  "cmd_hex": "0x1ac",
+  "reqType": null,
+  "resType": "CSGetFFWS03MiscSettingRes",
+  "endpoint": "GetFFWS03Setting"
+ },
+ {
+  "caller": "_ZN3COW13UIModelFFWS0319RequestGetGuessInfoEv",
+  "cmd": 429,
+  "cmd_hex": "0x1ad",
+  "reqType": null,
+  "resType": "CSGetFFWS03GuessingInfoRes",
+  "endpoint": "GetFFWS03GuessingInfo"
+ },
+ {
+  "caller": "_ZN3COW13UIModelFFWS0323RequestStartFFWS03GuessEjj",
+  "cmd": 430,
+  "cmd_hex": "0x1ae",
+  "reqType": "CSStartFFWS03GuessingReq",
+  "resType": "CSStartFFWS03GuessingRes",
+  "endpoint": "StartFFWS03Guessing"
+ },
+ {
+  "caller": "_ZN3COW13UIModelFFWS0320RequestGetGuessAwardEj",
+  "cmd": 431,
+  "cmd_hex": "0x1af",
+  "reqType": "CSClaimFFWS03GuessingAwardReq",
+  "resType": "CSClaimFFWS03GuessingAwardRes",
+  "endpoint": "ClaimFFWS03GuessingAward"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit21RequestUploadWorkshopEjN6System6StringEjjjjlmN3COW16UIModelSceneEdit19WorkshopSettingDataES2_",
+  "cmd": 446,
+  "cmd_hex": "0x1be",
+  "reqType": "CSUploadWorkshopReq",
+  "resType": "CSUploadWorkshopRes",
+  "endpoint": "UploadWorkshop"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit23RequestDownloadWorkshopEN5proto9EWorkshop8SlotTypeEj",
+  "cmd": 447,
+  "cmd_hex": "0x1bf",
+  "reqType": "CSDownloadWorkshopReq",
+  "resType": "CSDownloadWorkshopRes",
+  "endpoint": "DownloadWorkshop"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit19RequestShowSlotInfoEb",
+  "cmd": 448,
+  "cmd_hex": "0x1c0",
+  "reqType": "CSGetWorkshopBasicInfoReq",
+  "resType": "CSGetWorkshopBasicInfoRes",
+  "endpoint": "GetWorkshopBasicInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit15RequestSlotInfoEb",
+  "cmd": 448,
+  "cmd_hex": "0x1c0",
+  "reqType": "CSGetWorkshopBasicInfoReq",
+  "resType": "CSGetWorkshopBasicInfoRes",
+  "endpoint": "GetWorkshopBasicInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit27RequestSubscriptionSlotInfoEv",
+  "cmd": 448,
+  "cmd_hex": "0x1c0",
+  "reqType": "CSGetWorkshopBasicInfoReq",
+  "resType": "CSGetWorkshopBasicInfoRes",
+  "endpoint": "GetWorkshopBasicInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit13RequestUnlockEN5proto9EWorkshop18UnlockSlotCostTypeE",
+  "cmd": 449,
+  "cmd_hex": "0x1c1",
+  "reqType": "CSUnlockWorkshopSlotReq",
+  "resType": "CSUnlockWorkshopSlotRes",
+  "endpoint": "UnlockWorkshopSlot"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit12RequestShareEjb",
+  "cmd": 450,
+  "cmd_hex": "0x1c2",
+  "reqType": "CSShareWorkshopSlotReq",
+  "resType": "CSShareWorkshopSlotRes",
+  "endpoint": "ShareWorkshopSlot"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit10RequestDelEN5proto9EWorkshop8SlotTypeEj",
+  "cmd": 451,
+  "cmd_hex": "0x1c3",
+  "reqType": "CSDeleteWorkshopInfoReq",
+  "resType": "CSDeleteWorkshopInfoRes",
+  "endpoint": "DeleteWorkshopInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit14RequestPreviewEN6System6StringE",
+  "cmd": 452,
+  "cmd_hex": "0x1c4",
+  "reqType": "CSPreviewWorkshopCodeReq",
+  "resType": null,
+  "endpoint": "PreviewWorkshopCode"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit16RequestSubscribeEjN6System6StringEN3COW16ESceneEditSourceE",
+  "cmd": 453,
+  "cmd_hex": "0x1c5",
+  "reqType": "CSSubscribeWorkshopCodeReq",
+  "resType": "CSSubscribeWorkshopCodeRes",
+  "endpoint": "SubscribeWorkshopCode"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit21RequestCheckShareCodeEb",
+  "cmd": 454,
+  "cmd_hex": "0x1c6",
+  "reqType": "CSSearchWorkshopCodeReq",
+  "resType": "CSSearchWorkshopCodeRes",
+  "endpoint": "SearchWorkshopCode"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit13RequestSearchEN6System6StringEb",
+  "cmd": 454,
+  "cmd_hex": "0x1c6",
+  "reqType": "CSSearchWorkshopCodeReq",
+  "resType": "CSSearchWorkshopCodeRes",
+  "endpoint": "SearchWorkshopCode"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit13RequestReportEN6System6StringEjN3COW16ESceneEditSourceE",
+  "cmd": 455,
+  "cmd_hex": "0x1c7",
+  "reqType": "CSReportWorkshopCodeReq",
+  "resType": "CSReportWorkshopCodeReq",
+  "endpoint": "ReportWorkshopCode"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit21RequestUploadDescInfoEN3COW17SceneEditSlotInfoEN6System6StringES4_b",
+  "cmd": 456,
+  "cmd_hex": "0x1c8",
+  "reqType": "CSUpdateWorkshopBasicInfoReq",
+  "resType": "CSUpdateWorkshopBasicInfoRes",
+  "endpoint": "UpdateWorkshopBasicInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit25RequestRecommendationInfoEb",
+  "cmd": 457,
+  "cmd_hex": "0x1c9",
+  "reqType": null,
+  "resType": "CSGetWorkshopRecommendationInfoRes",
+  "endpoint": "GetWorkshopRecommendationInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit17RequestLatestInfoEv",
+  "cmd": 458,
+  "cmd_hex": "0x1ca",
+  "reqType": null,
+  "resType": "CSGetWorkshopLatestInfoRes",
+  "endpoint": "GetWorkshopLatestInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit18RequestHistoryInfoEv",
+  "cmd": 459,
+  "cmd_hex": "0x1cb",
+  "reqType": null,
+  "resType": "CSGetWorkshopHistoryInfoRes",
+  "endpoint": "GetWorkshopHistoryInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit27RequestWorkShopPersonalInfoEv",
+  "cmd": 460,
+  "cmd_hex": "0x1cc",
+  "reqType": null,
+  "resType": "CSGetWorkshopAccountInfoRes",
+  "endpoint": "GetWorkshopAccountInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit15RequestLikeCodeEN6System6StringEb",
+  "cmd": 461,
+  "cmd_hex": "0x1cd",
+  "reqType": "CSSendWorkshopLikeReq",
+  "resType": "Empty",
+  "endpoint": "SendWorkshopLike"
+ },
+ {
+  "caller": "_ZN3COW12UIModelMatch30CheckIfNeedRequestWorkshopInfoEjjN6System6ActionE",
+  "cmd": 462,
+  "cmd_hex": "0x1ce",
+  "reqType": "CSGetWorkshopMatchInfoReq",
+  "resType": "CSGetWorkshopMatchInfoRes",
+  "endpoint": "GetWorkshopMatchInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelSceneEdit18RequestSelfdomInfoEb",
+  "cmd": 463,
+  "cmd_hex": "0x1cf",
+  "reqType": null,
+  "resType": "CSGetWorkshopPersonalRecommendationInfoRes",
+  "endpoint": "GetWorkshopPersonalRecommendationInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch22RequestAllCupConfigReqEv",
+  "cmd": 464,
+  "cmd_hex": "0x1d0",
+  "reqType": "CSGetAllCupConfigReq",
+  "resType": "CSGetAllCupConfigRes",
+  "endpoint": "GetAllCupConfig"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch17RequestCreateTeamEjjN6System6StringES2_jj",
+  "cmd": 465,
+  "cmd_hex": "0x1d1",
+  "reqType": "CSCreateCupTeamReq",
+  "resType": "CSCreateCupTeamRes",
+  "endpoint": "CreateCupTeam"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch15RequestJoinTeamEimmb",
+  "cmd": 466,
+  "cmd_hex": "0x1d2",
+  "reqType": "CSJoinCupTeamReq",
+  "resType": "Empty",
+  "endpoint": "RequestJoinCupTeam"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch21RequestModifyTeamInfoEiN6System6StringES2_jj",
+  "cmd": 467,
+  "cmd_hex": "0x1d3",
+  "reqType": "CSModifyCupTeamInfoReq",
+  "resType": "Empty",
+  "endpoint": "ModifyCupTeamInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch23RequestTeamInfoByTeamIDEimb",
+  "cmd": 468,
+  "cmd_hex": "0x1d4",
+  "reqType": "CSGetCupTeamInfoByTeamIDReq",
+  "resType": "CupTeamInfo",
+  "endpoint": "GetCupTeamInfoByTeamID"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch27RequestTeamMemberByMemberIDEjj",
+  "cmd": 469,
+  "cmd_hex": "0x1d5",
+  "reqType": "CSGetCupTeamMemberByMemberIDReq",
+  "resType": "CSAccountCupInfoRes",
+  "endpoint": "GetCupTeamMemberByMemberID"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch18RequestTeamMembersEimbb",
+  "cmd": 470,
+  "cmd_hex": "0x1d6",
+  "reqType": "CSCupTeamIDReq",
+  "resType": "CSCupTeamMemberListWithAccountInfo",
+  "endpoint": "GetCupTeamMembers"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch15RequestQuitTeamEibbmm",
+  "cmd": 471,
+  "cmd_hex": "0x1d7",
+  "reqType": "CSQuitCupTeamReq",
+  "resType": "Empty",
+  "endpoint": "QuitCupTeam"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch18RequestDismissTeamEibbmm",
+  "cmd": 472,
+  "cmd_hex": "0x1d8",
+  "reqType": "CSDismissCupTeamReq",
+  "resType": "Empty",
+  "endpoint": "DismissCupTeam"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch24RequestTeamApplicantListEib",
+  "cmd": 473,
+  "cmd_hex": "0x1d9",
+  "reqType": "CSCupTeamIDReq",
+  "resType": "CSGetCupTeamApplicantListRes",
+  "endpoint": "GetCupTeamApplicantList"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch21RequestInvitationListEjjb",
+  "cmd": 474,
+  "cmd_hex": "0x1da",
+  "reqType": "CSGetCupTeamInvitationListReq",
+  "resType": "CSGetCupTeamInvitationListRes",
+  "endpoint": "GetCupTeamInvitationList"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch20RequestInvitedIdListEi",
+  "cmd": 475,
+  "cmd_hex": "0x1db",
+  "reqType": "CSCupTeamIDReq",
+  "resType": "CSCupTeamInvitationList",
+  "endpoint": "GetSentCupTeamInvitationList"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch25RequestApproveApplicationEiN3COW15UIModelCupMatch27AccountInfoBasicWithCupInfoE",
+  "cmd": 476,
+  "cmd_hex": "0x1dc",
+  "reqType": "CSApproveJoinCupTeamApplicationReq",
+  "resType": "Empty",
+  "endpoint": "ApproveJoinCupTeamApplication"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch25RequestDeclineApplicationEiA_N6System6UInt64E",
+  "cmd": 477,
+  "cmd_hex": "0x1dd",
+  "reqType": "CSDeclineJoinCupTeamApplicationReq",
+  "resType": "Empty",
+  "endpoint": "DeclineJoinCupTeamApplication"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch13RequestInviteEim",
+  "cmd": 478,
+  "cmd_hex": "0x1de",
+  "reqType": "CSInviteToCupTeamReq",
+  "resType": "Empty",
+  "endpoint": "InviteToCupTeam"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch32RequestApproveJoinTeamInvitationEimm",
+  "cmd": 479,
+  "cmd_hex": "0x1df",
+  "reqType": "CSApproveInviteToCupTeamReq",
+  "resType": "Empty",
+  "endpoint": "ApproveJoinCupTeamInvitation"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch32RequestDeclineJoinTeamInvitationEiA_N6System6UInt64E",
+  "cmd": 480,
+  "cmd_hex": "0x1e0",
+  "reqType": "CSDeclineInviteToCupTeamReq",
+  "resType": "Empty",
+  "endpoint": "DeclineJoinCupTeamInvitation"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch23RequestRemoveTeamMemberEim",
+  "cmd": 481,
+  "cmd_hex": "0x1e1",
+  "reqType": "CSRemoveCupTeamMemberReq",
+  "resType": "Empty",
+  "endpoint": "RemoveCupTeamMember"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch27RequestVerifyAndLockCupTeamEjj",
+  "cmd": 482,
+  "cmd_hex": "0x1e2",
+  "reqType": "CSVerifyAndLockCupTeamReq",
+  "resType": "Empty",
+  "endpoint": "VerifyAndLockCupTeam"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch18InitAccountCupInfoEv",
+  "cmd": 483,
+  "cmd_hex": "0x1e3",
+  "reqType": null,
+  "resType": null,
+  "endpoint": "InitAccountCupInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch17GetAccountCupInfoEjj",
+  "cmd": 484,
+  "cmd_hex": "0x1e4",
+  "reqType": "CSGetAccountCupInfoReq",
+  "resType": "CSAccountCupInfoRes",
+  "endpoint": "GetAccountCupInfo"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch16RequestUseTicketEjj",
+  "cmd": 485,
+  "cmd_hex": "0x1e5",
+  "reqType": "CSToggleCupTicketReq",
+  "resType": "Empty",
+  "endpoint": "ToggleCupTicket"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch21RequestClaimCupRewardEjj",
+  "cmd": 486,
+  "cmd_hex": "0x1e6",
+  "reqType": "CSClaimCupRewardReq",
+  "resType": "CSClaimCupRewardRes",
+  "endpoint": "ClaimCupReward"
+ },
+ {
+  "caller": "_ZN3COW15UIModelCupMatch46RequestAccountCupInfoBundleByAccountIDsOrderlyEjjA_N6System6UInt64Ebb",
+  "cmd": 487,
+  "cmd_hex": "0x1e7",
+  "reqType": "CSGetAccountCupInfoBundleByAccountIDsOrderlyReq",
+  "resType": "CSAccountCupInfoBundleRes",
+  "endpoint": "GetAccountCupInfoBundleByAccountIDsOrderly"
+ },
+ {
+  "caller": "_ZN3COW17UIModelLuckyWheel21RequestLuckyWheelDescEv",
+  "cmd": 488,
+  "cmd_hex": "0x1e8",
+  "reqType": null,
+  "resType": "CSGetLuckyWheelDescRes",
+  "endpoint": "GetLuckyWheelDesc"
+ },
+ {
+  "caller": "_ZN3COW17UIModelLuckyWheel21RequestLuckyWheelInfoEj",
+  "cmd": 489,
+  "cmd_hex": "0x1e9",
+  "reqType": "CSGetLuckyWheelInfoReq",
+  "resType": "CSGetLuckyWheelInfoRes",
+  "endpoint": "GetLuckyWheelInfo"
+ },
+ {
+  "caller": "_ZN3COW17UIModelLuckyWheel29RequestLuckyWheelDrawDiscountEv",
+  "cmd": 490,
+  "cmd_hex": "0x1ea",
+  "reqType": "CSSpinLuckyWheelReq",
+  "resType": "CSSpinLuckyWheelRes",
+  "endpoint": "SpinLuckyWheel"
+ },
+ {
+  "caller": "_ZN3COW17UIModelLuckyWheel24RequestLuckyWheelBuyItemEj",
+  "cmd": 491,
+  "cmd_hex": "0x1eb",
+  "reqType": "CSBuyLuckyWheelShopItemReq",
+  "resType": "CSBuyLuckyWheelShopItemRes",
+  "endpoint": "BuyLuckyWheelShopItem"
+ },
+ {
+  "caller": "_ZN3COW17UIModelLuckyWheel24RequestRefreshRewardPoolEv",
+  "cmd": 492,
+  "cmd_hex": "0x1ec",
+  "reqType": "CSLuckyWheelRefreshShopReq",
+  "resType": "CSLuckyWheelRefreshShopRes",
+  "endpoint": "RefreshLuckyWheelShop"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest20RequestMusicFestDescEj",
+  "cmd": 497,
+  "cmd_hex": "0x1f1",
+  "reqType": null,
+  "resType": "CSGetMusicFestSettingRes",
+  "endpoint": "GetMusicFestSetting"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest11RequestInfoEb",
+  "cmd": 498,
+  "cmd_hex": "0x1f2",
+  "reqType": null,
+  "resType": "CSGetMusicFestInfoRes",
+  "endpoint": "GetMusicFestInfo"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest19RequestPuzzleUnlockEjb",
+  "cmd": 499,
+  "cmd_hex": "0x1f3",
+  "reqType": "CSMusicFestUsePuzzleTokenReq",
+  "resType": "Empty",
+  "endpoint": "MusicFestUsePuzzleToken"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest15RequestSendChipEjmbm",
+  "cmd": 500,
+  "cmd_hex": "0x1f4",
+  "reqType": "CSMusicFestSendPuzzleTokenReq",
+  "resType": "CSMusicFestUsePuzzleTokenRes",
+  "endpoint": "MusicFestSendPuzzleToken"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest17RequestClaimChipsEA_N6System6UInt64E",
+  "cmd": 501,
+  "cmd_hex": "0x1f5",
+  "reqType": "CSMusicFestReceivePuzzleTokenReq",
+  "resType": "Empty",
+  "endpoint": "MusicFestReceivePuzzleToken"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest32RequestClaimPuzzleProgressRewardEj",
+  "cmd": 502,
+  "cmd_hex": "0x1f6",
+  "reqType": "CSClaimMusicFestPuzzleProgressRewardsReq",
+  "resType": "CSClaimMusicFestPuzzleProgressRewardsRes",
+  "endpoint": "ClaimMusicFestPuzzleProgressRewards"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest30RequestClaimPuzzleRegionRewardEj",
+  "cmd": 503,
+  "cmd_hex": "0x1f7",
+  "reqType": "CSClaimMusicFestPuzzleBlockRewardsReq",
+  "resType": "CSClaimMusicFestPuzzleBlockRewardsRes",
+  "endpoint": "ClaimMusicFestPuzzleBlockRewards"
+ },
+ {
+  "caller": "_ZN3COW16UIModelMusicFest23RequestClaimCardsRewardEj",
+  "cmd": 504,
+  "cmd_hex": "0x1f8",
+  "reqType": "CSClaimMusicFestCardRewardReq",
+  "resType": "CSClaimMusicFestCardRewardRes",
+  "endpoint": "ClaimMusicFestCardReward"
+ },
+ {
+  "caller": "_ZN3COW17UIModelMemberShip21RequestMemberShipDescEv",
+  "cmd": 509,
+  "cmd_hex": "0x1fd",
+  "reqType": null,
+  "resType": "CSGetVipCardDescRes",
+  "endpoint": "GetVipCardDescs"
+ },
+ {
+  "caller": "_ZN3COW17UIModelMemberShip21RequestMemberShipInfoEjbb",
+  "cmd": 510,
+  "cmd_hex": "0x1fe",
+  "reqType": null,
+  "resType": "CSGetAccountVipCardInfosRes",
+  "endpoint": "GetVipCardInfo"
+ },
+ {
+  "caller": "_ZN3COW17UIModelMemberShip28RequestMemberShipCardCheckInEN5proto8EVipCard11VipCardTypeEb",
+  "cmd": 511,
+  "cmd_hex": "0x1ff",
+  "reqType": "CSClaimVipCardAwardReq",
+  "resType": "CSClaimVipCardAwardRes",
+  "endpoint": "ClaimVipCardAward"
+ },
+ {
+  "caller": "_ZN3COW17UIModelMemberShip26RequestMemberShipStoreInfoEv",
+  "cmd": 512,
+  "cmd_hex": "0x200",
+  "reqType": null,
+  "resType": "CSGetVipCardStoreInfoRes",
+  "endpoint": "GetVipCardStoreInfo"
+ },
+ {
+  "caller": "_ZN3COW17UIModelMemberShip24RequestMemberShipReissueEN3COW21ClientReissueItemDataE",
+  "cmd": 513,
+  "cmd_hex": "0x201",
+  "reqType": "CSClaimExpiredVipCardAwardReq",
+  "resType": "CSClaimExpiredVipCardAwardRes",
+  "endpoint": "ClaimExpiredVipCardAward"
+ },
+ {
+  "caller": "_ZN3COW17UIModelMemberShip34RequestMemberShipStorePurchaseItemEN5proto16VipCardStoreInfoE",
+  "cmd": 514,
+  "cmd_hex": "0x202",
+  "reqType": "CSVipCardStorePurchaseReq",
+  "resType": "CSClaimExpiredVipCardAwardRes",
+  "endpoint": "VipCardStorePurchase"
+ },
+ {
+  "caller": "_ZN3COW23UIModelBigEventTemplate15RequestOpenInfoEv",
+  "cmd": 515,
+  "cmd_hex": "0x203",
+  "reqType": null,
+  "resType": "CSGetCustomEventOpenInfoRes",
+  "endpoint": "GetCustomEventOpenInfo"
+ },
+ {
+  "caller": "_ZN3COW30UIModelBigEvent_GlobalProgress28RequestGlobalProgressSettingEb",
+  "cmd": 516,
+  "cmd_hex": "0x204",
+  "reqType": "CSGetCustomEventProcessSettingReq",
+  "resType": "CSGetCustomEventProcessSettingRes",
+  "endpoint": "GetCustomEventProcessSetting"
+ },
+ {
+  "caller": "_ZN3COW30UIModelBigEvent_GlobalProgress21RequestGetRewardStateEv",
+  "cmd": 517,
+  "cmd_hex": "0x205",
+  "reqType": "CSGetCustomEventProcessInfoReq",
+  "resType": "CSGetCustomEventProcessInfoRes",
+  "endpoint": "GetCustomEventProcessInfo"
+ },
+ {
+  "caller": "_ZN3COW30UIModelBigEvent_GlobalProgress36RequestGetCurrentGlobalProgressValueEv",
+  "cmd": 518,
+  "cmd_hex": "0x206",
+  "reqType": "CSGetCustomEventCurrentProcessReq",
+  "resType": "CSGetCustomEventCurrentProcessRes",
+  "endpoint": "GetCustomEventCurrentProcess"
+ },
+ {
+  "caller": "_ZN3COW30UIModelBigEvent_GlobalProgress26RequestClaimProcessRewardsEj",
+  "cmd": 519,
+  "cmd_hex": "0x207",
+  "reqType": "CSClaimCustomEventProcessRewardsReq",
+  "resType": "CSClaimCustomEventProcessRewardsRes",
+  "endpoint": "ClaimCustomEventProcessRewards"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha22ReqeustHackerStoreInfoEv",
+  "cmd": 529,
+  "cmd_hex": "0x211",
+  "reqType": null,
+  "resType": "CSGetLimitedChestInfoRes",
+  "endpoint": "GetLimitedChestInfo"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha34SelectHackerStoreLimitedChestPrizeEjjj",
+  "cmd": 531,
+  "cmd_hex": "0x213",
+  "reqType": "CSSelectLimitedChestPrizeReq",
+  "resType": "CSSelectLimitedChestPrizeRes",
+  "endpoint": "SelectLimitedChestPrize"
+ },
+ {
+  "caller": "_ZN3COW12UIModelGacha30RequestLimitedChestProbabilityEj",
+  "cmd": 532,
+  "cmd_hex": "0x214",
+  "reqType": "CSGetLimitedChestProbabilityReq",
+  "resType": "CSGetLimitedChestProbabilityRes",
+  "endpoint": "GetLimitedChestProbability"
+ },
+ {
+  "caller": "_ZN3COW15UIModelNewVault18RequestAllNewVaultEv",
+  "cmd": 533,
+  "cmd_hex": "0x215",
+  "reqType": null,
+  "resType": "CSGetNewVaultItemDescRes",
+  "endpoint": "GetNewVaultItemDesc"
+ },
+ {
+  "caller": "_ZN3COW20UIModelHoodedkillerB13RequestAttackEb",
+  "cmd": 534,
+  "cmd_hex": "0x216",
+  "reqType": "CSHoodedkillerBAssassinateReq",
+  "resType": "CSHoodedkillerBAssassinateRes",
+  "endpoint": "HoodedkillerBAssassinate"
+ },
+ {
+  "caller": "_ZN3COW20UIModelHoodedkillerB11RequestDescEv",
+  "cmd": 535,
+  "cmd_hex": "0x217",
+  "reqType": null,
+  "resType": "CSGetHoodedkillerBSettingRes",
+  "endpoint": "GetHoodedkillerBSetting"
+ },
+ {
+  "caller": "_ZN3COW20UIModelHoodedkillerB11RequestInfoEb",
+  "cmd": 536,
+  "cmd_hex": "0x218",
+  "reqType": null,
+  "resType": "CSGetHoodedkillerBInfoRes",
+  "endpoint": "GetHoodedkillerBInfo"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB24RequestHurricaneBSettingEv",
+  "cmd": 537,
+  "cmd_hex": "0x219",
+  "reqType": null,
+  "resType": "CSHurricaneBSettingRes",
+  "endpoint": "GetHurricaneBSetting"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB28RequestHurricaneBAccoutnInfoEv",
+  "cmd": 538,
+  "cmd_hex": "0x21a",
+  "reqType": null,
+  "resType": "CSHurricaneBAccountInfoRes",
+  "endpoint": "GetHurricaneBAccountInfo"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB24RequestCheckPointSettingEj",
+  "cmd": 539,
+  "cmd_hex": "0x21b",
+  "reqType": "CSGetHurricaneBCheckPointSettingReq",
+  "resType": "CSGetHurricaneBCheckPointSettingRes",
+  "endpoint": "GetHurricaneBCheckPointSetting"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB24RequestSkipMiniGameLevelEj",
+  "cmd": 540,
+  "cmd_hex": "0x21c",
+  "reqType": "CSSkipOffHurricaneBSelectedLevelReq",
+  "resType": "Empty",
+  "endpoint": "SkipOffHurricaneBSelectedLevel"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB25RequestStartMiniGameLevelEjj",
+  "cmd": 541,
+  "cmd_hex": "0x21d",
+  "reqType": "CSStartHurricaneBSelectedLevelReq",
+  "resType": "Empty",
+  "endpoint": "StartHurricaneBSelectedLevel"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB26RequestFinishMiniGameLevelEjii",
+  "cmd": 542,
+  "cmd_hex": "0x21e",
+  "reqType": "CSProcessHurricaneBLevelSettlementReq",
+  "resType": "CSProcessHurricaneBLevelSettlementRes",
+  "endpoint": "ProcessHurricaneBLevelSettlement"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB28RequestHurricaneBTeamSettingEv",
+  "cmd": 543,
+  "cmd_hex": "0x21f",
+  "reqType": null,
+  "resType": "CSGetHurricaneBTeamSettingRes",
+  "endpoint": "GetHurricaneBTeamSetting"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB28RequestGetHurricaneBTeamInfoEv",
+  "cmd": 545,
+  "cmd_hex": "0x221",
+  "reqType": null,
+  "resType": "CSGetHurricaneBTeamInfoRes",
+  "endpoint": "GetHurricaneBTeamInfo"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB28RequestHurricaneBTeamRewardsEv",
+  "cmd": 546,
+  "cmd_hex": "0x222",
+  "reqType": null,
+  "resType": "CSGetHurricaneBTeamRewardRes",
+  "endpoint": "GetHurricaneBTeamReward"
+ },
+ {
+  "caller": "_ZN3COW17UIModelHurricaneB32RequestFriendsHurricaneBTeamInfoEA_N6System6UInt64Eb",
+  "cmd": 547,
+  "cmd_hex": "0x223",
+  "reqType": "CSGetFriendsHurricaneBTeamInfoReq",
+  "resType": "CSGetFriendsHurricaneBTeamInfoRes",
+  "endpoint": "GetFriendsHurricaneBTeamInfo"
+ }
+]

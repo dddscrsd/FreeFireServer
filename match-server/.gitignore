@@ -1,0 +1,6 @@
+# Compiled server binary
+*.exe
+/match-server
+
+# Logs / scratch
+*.log

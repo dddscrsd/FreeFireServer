@@ -1,0 +1,2684 @@
+syntax = "proto3";
+
+package tcp;
+import "COW.proto";
+import "SimpleJSON.proto";
+
+message AccountAntiAddictionInfo {
+  uint32 ban_mode = 1;
+  uint32 unban_time = 2;
+}
+
+message AccountEmoteRandomID {
+  uint64 account_id = 1;
+  uint32 random_id = 2;
+}
+
+message AccountEPLevelUpInfo {
+  uint64 account_id = 1;
+  uint32 level_before = 2;
+  uint32 level_after = 3;
+  repeated uint32 unlock_ids = 4;
+}
+
+message AccountHackerTagInfo {
+  uint32 hacker_tag = 1;
+  int64 hackerpool_time = 2;
+}
+
+message AccountIDCPingInfo {
+  string idc = 1;  // has default
+  int32 ping = 2;
+}
+
+message AccountLevelUpInfo {
+  uint64 account_id = 1;
+  uint32 level_before = 2;
+  uint32 level_after = 3;
+  uint32 new_exp = 4;
+  AwardDataTCP awards = 5;
+}
+
+message AccountMatchInfo {
+  uint64 account_id = 1;
+  string nickname = 2;  // has default
+  string lock_region = 3;  // has default
+  uint32 level = 4;
+  uint32 avatar_id = 5;
+  uint32 skin_color = 6;
+  repeated uint32 clothes = 7;
+  repeated LoadoutInfo loadouts = 8;
+  uint32 banner_id = 9;
+  uint32 head_pic = 10;
+  repeated uint32 slots = 11;
+  repeated uint32 skills = 12;
+  string clan_name = 13;  // has default
+  repeated MMRInfo mmr_info = 14;
+  uint32 rank = 15;
+  uint32 ranking_points = 16;
+  uint32 role = 17;
+  bool has_elite_pass = 18;
+  uint32 badge_cnt = 19;
+  uint32 badge_id = 20;
+  uint32 ep_goldlimit_bonus = 21;
+  repeated RoomCardInfo room_cards = 22;
+  bool show_rank = 23;
+  repeated EmoteInfo emotes = 24;
+  repeated RedEnvelopeInfo red_envelopes = 25;
+  repeated uint32 shows = 26;
+  PetInfo pet_info = 27;
+  uint32 pve_primary_weapon_skin = 28;
+  repeated ReviveTokenInfo revive_tokens = 29;
+  WalletInfo wallet = 30;
+  uint32 platform_type = 31;
+  uint32 wta_free_match_num_today = 32;
+  ChipInfo chips = 33;
+  WinnerTakesAllDesc wtaDesc = 34;
+  WarmGameInfo warm_game = 35;
+  AccountAntiAddictionInfo anti_addiction_info = 36;
+  ChampionshipInfo championship_info = 37;
+  LinkageInfo linkage_info = 38;
+  uint32 cs_rank = 39;
+  uint32 cs_ranking_points = 40;
+  uint32 pin_id = 41;
+  bool is_cs_ranking_ban = 42;
+  bool is_trial_avatar = 43;
+  AccountHackerTagInfo hacker_tag = 44;
+  int64 create_at = 45;
+  TrainingTokenInfo training_token_info = 46;
+  uint32 ranking_bot_points = 47;
+  repeated IntimacyRelation intimacy_relation_info = 48;
+  string mem_value = 49;  // has default
+  WorkshopInfo workshop = 50;
+  CupMatchInfo cup_match_info = 51;
+  uint32 game_bag_show = 52;
+  repeated IngameItem ingame_items = 53;
+  ClanWarMatchInfo clan_war_match_info = 54;
+  uint32 peak_rank_pos = 55;
+  uint32 cs_peak_rank_pos = 56;
+  uint32 clan_badge = 57;
+  StatsInfo cs_ranking_stats = 58;
+  repeated uint32 cs_heroic_seasons = 59;
+  repeated BattleTagInfo battle_tags = 60;
+  AccountPrefersInfo prefers_info = 61;
+  uint64 clan_id = 62;
+  uint32 periodic_rank = 63;
+  uint32 periodic_ranking_points = 64;
+  MaxLobbyDisplayInfo max_lobby_display_info = 65;
+  uint32 cs_ranking_bot_points = 66;
+}
+
+message AccountPrefersInfo {
+  repeated uint32 pregame_show_choices = 3;
+  bool hide_captain_lobby = 4;
+}
+
+message AccountRoleInfo {
+  uint64 account_id = 1;
+  uint32 role = 2;
+}
+
+message ActivityUpdateInfo {
+  uint32 id = 1;
+  uint32 data = 2;
+  uint32 state = 3;
+  string context = 4;  // has default
+}
+
+message ActivityUpdateNtf {
+  repeated ActivityUpdateInfo activitys = 1;
+}
+
+message AddMoneyHeistHelpNtf {
+  uint64 helper_id = 1;
+  string helper_name = 2;  // has default
+  uint32 deposit = 3;
+  uint32 current_speed_from_friend = 4;
+  uint32 speed_change_time = 5;
+}
+
+message AIInfo {
+  string ai_index = 1;  // has default
+  uint32 ai_num = 2;
+}
+
+message AntiAddictionHint {
+  uint64 account_id = 1;
+  string title_string = 2;  // has default
+  string hint_string = 3;  // has default
+  uint32 play_time = 4;
+  uint32 ban_mode = 5;
+  uint32 unban_time = 6;
+  uint32 age_state = 7;
+}
+
+message AntiAddictionPlayerInfoNtf {
+  string nick_name = 1;  // has default
+  uint32 ban_mode = 2;
+}
+
+message ApplyForDeputyReq {
+  uint64 clan_id = 1;
+}
+
+message AppointClanWarNewCaptainReq {
+  uint64 old_captain_id = 1;
+  uint64 new_captain_id = 2;
+}
+
+message ApproveChampionshipTeamInvitationReq {
+  uint64 invitee_id = 1;
+  uint64 team_id = 2;
+}
+
+message ApproveCupTeamInvitationReq {
+  uint64 invitee_id = 1;
+  uint64 cup_team_id = 2;
+  uint32 cup_type = 3;
+  uint32 cup_id = 4;
+}
+
+message ApproveInvitationReq {
+  uint64 invitee_id = 1;
+  uint64 clan_id = 2;
+}
+
+message AutoJoinReq {
+  uint64 clan_id = 1;
+  string clan_channel_secret = 2;  // has default
+}
+
+message AwakenTaskChangeInfo {
+  uint32 avatar_id = 1;
+  uint32 task_type = 2;
+  uint32 data = 3;
+  uint32 state = 4;
+}
+
+message AwakenTaskChangeNtf {
+  repeated AwakenTaskChangeInfo awaken_tasks = 1;
+}
+
+message AwardDataTCP {
+  repeated ItemTCP items = 1;
+}
+
+message BattleTagInfo {
+  uint32 tag_id = 1;
+  uint32 count = 2;
+}
+
+message BriefProfile {
+  string nickname = 1;  // has default
+  uint32 head_pic = 2;
+  uint32 banner_id = 3;
+  uint32 rank = 4;
+  uint32 pin_id = 5;
+  uint32 role = 6;
+}
+
+message ChampionshipInfo {
+  uint64 team_id = 1;
+  string country_or_area = 2;  // has default
+  repeated uint64 member_ids = 3;
+  uint32 limited_level = 4;
+  uint32 limited_ranking_point = 5;
+  bool is_qualified = 6;
+  uint32 upper_limited_level = 7;
+  uint32 upper_limited_ranking_point = 8;
+  uint32 player_num_min = 9;
+}
+
+message ChangeMapNtf {
+  repeated uint32 map_ids = 1;
+  uint32 game_mode = 2;
+}
+
+message ChangePubPvtNtf {
+  bool is_public = 1;
+}
+
+message ChangePubPvtReq {
+  bool is_public = 1;
+}
+
+message ChannelIDReq {
+  uint64 channel_id = 1;
+  uint32 channel_type = 2;
+  string channel_lang = 3;  // has default
+  string channel_secret = 4;  // has default
+}
+
+message ChatMutedTTLNtf {
+  int64 ttl = 1;
+}
+
+message ChipInfo {
+  uint32 id = 1;
+  uint32 cnt = 2;
+  uint32 expire_time = 3;
+}
+
+message ChummyDismissedNtf {
+  uint64 chummy_id = 1;
+  uint32 multi_relation_type = 2;
+}
+
+message ChummyIntimacyChangeNtf {
+  uint64 chummy_id = 1;
+  uint32 multi_relation_type = 2;
+  uint32 total_intimacy = 3;
+}
+
+message ChummyRequestNtf {
+  uint64 applicant_id = 1;
+}
+
+message ChummyStateChangeNtf {
+  uint64 chummy_id = 1;
+  uint32 multi_relation_type = 2;
+  uint32 relation_state = 3;
+  int64 state_update_at = 4;
+}
+
+message ClanWarMatchInfo {
+  uint64 team_id = 1;
+  uint64 captain_id = 2;
+  repeated uint64 member_ids = 3;
+  uint32 min_player = 4;
+  repeated ClanWarMemberMatchInfo members_match_info = 5;
+  uint32 clan_war_mmr = 6;
+}
+
+message ClanWarMemberMatchInfo {
+  uint64 member_id = 1;
+  string signature_md5 = 2;  // has default
+  uint32 using_version = 3;
+  uint32 system_platform = 4;
+  MatchClientInfo client_info = 5;
+}
+
+message ConfirmAddChampionshipTeamReq {
+  uint64 team_id = 1;
+  uint64 confirmer_id = 2;
+}
+
+message ConfirmAddCupTeamReq {
+  uint64 cup_team_id = 1;
+  uint64 confirmer_id = 2;
+  uint32 cup_type = 3;
+  uint32 cup_id = 4;
+}
+
+message ConfirmAddingChummyNtf {
+  uint64 applicant_id = 1;
+}
+
+message ConfirmAddReq {
+  uint64 clan_id = 1;
+  uint64 confirmer_id = 2;
+  string clan_channel_secret = 3;  // has default
+}
+
+message CSRankingBanNtf {
+  string nickname = 1;  // has default
+}
+
+message CupMatchInfo {
+  repeated TypedCupMatchInfo infos = 1;
+  uint32 limited_level = 2;
+  uint32 limited_rank = 3;
+  uint32 upper_limited_level = 4;
+  uint32 upper_limited_rank = 5;
+  uint32 player_count_limit = 6;
+}
+
+message CustomRoomSinglePlayerMatchStats {
+  uint32 group_score = 1;
+  uint32 group_rank = 2;
+  uint32 player_kills = 3;
+  uint32 player_headshot = 4;
+  uint32 player_damage = 5;
+  uint32 player_grenade_use_count = 6;
+  uint32 player_ice_wall_use_count = 7;
+  uint32 player_survival_time = 8;
+  uint32 player_help_teammates_count = 9;
+  uint32 player_match_count = 11;
+}
+
+message DeclineChampionshipTeamInvitationReq {
+  uint64 invitee_id = 1;
+}
+
+message DeputyCaptainReq {
+  uint64 clan_id = 1;
+  uint64 deputy_id = 2;
+}
+
+message DismissChampionshipTeamReq {
+  uint64 team_id = 1;
+  uint64 dismisser_id = 2;
+  string team_name = 3;  // has default
+}
+
+message DismissCupTeamReq {
+  uint64 cup_team_id = 1;
+  uint64 dismisser_id = 2;
+  string cup_team_name = 3;  // has default
+  uint32 cup_type = 4;
+  uint32 cup_id = 5;
+}
+
+message DismissReq {
+  uint64 clan_id = 1;
+  uint64 dismisser_id = 2;
+  string clan_name = 3;  // has default
+}
+
+message EAccount {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_MULTILOGIN_NTF = 1;
+    Proto_Proto_INVALID_CLIENT_VERSION_NTF = 2;
+    Proto_Proto_ACCOUNT_IN_BLACKLIST_NTF = 3;
+    Proto_Proto_ACCOUNT_LEVEL_UP_NTF = 4;
+    Proto_Proto_ACCOUNT_ROLE_CHANGED_NTF = 5;
+    Proto_Proto_ACCOUNT_DELETED_NTF = 6;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EActivity {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_UPDATE_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EAntiAddiction {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_HINT_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+  enum TotalTimeBanMode {
+    TotalTimeBanMode_TotalTimeBanMode_NONE = 0;
+    TotalTimeBanMode_TotalTimeBanMode_RANKING = 1;
+    TotalTimeBanMode_TotalTimeBanMode_ALL = 2;
+  }
+  enum AgeState {
+    AgeState_AgeState_NONE = 0;
+    AgeState_AgeState_UNDER_AGE = 1;
+    AgeState_AgeState_ADULT = 2;
+  }
+}
+
+message EChampionship {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_REQUEST_JOIN_NTF = 1;
+    Proto_Proto_CONFIRM_ADD_NTF = 2;
+    Proto_Proto_REMOVE_MEMBER_NTF = 3;
+    Proto_Proto_INVITE_NTF = 4;
+    Proto_Proto_APPROVE_INVITATION_NTF = 5;
+    Proto_Proto_DISMISS_NTF = 6;
+    Proto_Proto_MATCH_END_NTF = 7;
+    Proto_Proto_FAKE_SUBMIT_NTF = 8;
+    Proto_Proto_DECLINE_INVITATION_NTF = 9;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EChannel {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_TEXT_MSG = 1;
+    Proto_Proto_TEXT_MSG_NTF = 2;
+    Proto_Proto_JOIN_CHANNEL = 3;
+    Proto_Proto_LEAVE_CHANNEL = 4;
+    Proto_Proto_JOIN_WORLD_CHAN_NTF = 5;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+    ErrCode_ErrCode_INVALIDCHANNELTYPE = 1;
+    ErrCode_ErrCode_ALREADYINCHANNEL = 2;
+    ErrCode_ErrCode_CREATEPLAYERFAIL = 3;
+    ErrCode_ErrCode_CREATECHANNELFAIL = 4;
+    ErrCode_ErrCode_MAXMEMBERLIMIT = 5;
+    ErrCode_ErrCode_NOCHANNEL = 6;
+    ErrCode_ErrCode_NOTINCHANNEL = 7;
+    ErrCode_ErrCode_REACHMSGLIMIT = 8;
+    ErrCode_ErrCode_WORLDCHANNELDISABLED = 9;
+    ErrCode_ErrCode_CUSTOMMSGDISABLED = 10;
+    ErrCode_ErrCode_RESERVATIONREACHLIMIT = 11;
+    ErrCode_ErrCode_INVALIDCHANNELSECRET = 12;
+  }
+  enum ChannelType {
+    ChannelType_ChannelType_GROUP = 0;
+    ChannelType_ChannelType_CLAN = 1;
+    ChannelType_ChannelType_WHISPER = 2;
+    ChannelType_ChannelType_ROOM = 3;
+    ChannelType_ChannelType_CHAMPIONSHIPTEAM = 4;
+    ChannelType_ChannelType_WORLD = 5;
+    ChannelType_ChannelType_GROUP_FAST = 6;
+    ChannelType_ChannelType_CUP = 7;
+    ChannelType_ChannelType_SERIES_TEAM = 8;
+  }
+  enum MsgType {
+    MsgType_MsgType_DEFAULT = 0;
+    MsgType_MsgType_FAST = 1;
+    MsgType_MsgType_STICKY_SPEAKER = 2;
+    MsgType_MsgType_RESERVATION = 3;
+    MsgType_MsgType_INTERACTION = 4;
+  }
+  enum MsgLimitType {
+    MsgLimitType_MsgLimitType_DEFAULT = 0;
+    MsgLimitType_MsgLimitType_FAST = 1;
+  }
+}
+
+message EChat {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_REPORT_CHAT = 1;
+    Proto_Proto_LIKE_MSG = 2;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_NONE = 0;
+    ErrCode_ErrCode_ALREADY_MUTED = 1;
+    ErrCode_ErrCode_LIKEMSGLIMIT = 2;
+  }
+}
+
+message EChummy {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_REQUEST_NTF = 1;
+    Proto_Proto_CONFIRM_ADDING_CHUMMY_NTF = 2;
+    Proto_Proto_CHUMMY_STATE_CHANGE = 3;
+    Proto_Proto_CHUMMY_DISMISSED = 4;
+    Proto_Proto_INTIMACY_CHANGE_NTF = 5;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EClan {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_REQUEST_JOIN_NTF = 1;
+    Proto_Proto_CONFIRM_ADD_NTF = 2;
+    Proto_Proto_REMOVE_MEMBER_NTF = 3;
+    Proto_Proto_INVITE_NTF = 4;
+    Proto_Proto_APPROVE_INVITATION_NTF = 5;
+    Proto_Proto_DISMISS_NTF = 6;
+    Proto_Proto_AUTO_JOIN_NTF = 7;
+    Proto_Proto_NEW_LUCKY_BAG_NTF = 8;
+    Proto_Proto_APPLY_FOR_DEPUTY_NTF = 9;
+    Proto_Proto_DEPUTY_CAPTAIN_NTF = 10;
+    Proto_Proto_JOIN_CLAN_WAR_NTF = 11;
+    Proto_Proto_QUIT_CLAN_WAR_NTF = 12;
+    Proto_Proto_REMOVE_CLAN_WAR_MEMBER_NTF = 13;
+    Proto_Proto_APPOINT_CLAN_WAR_NEW_CAPTAIN_NTF = 14;
+    Proto_Proto_PREPARE_CLAN_WAR_NTF = 15;
+    Proto_Proto_INVITE_CLAN_WAR_NTF = 16;
+    Proto_Proto_CLAN_WAR_MEMBER_PREPARE_NTF = 17;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message ECreatePlayer {
+  enum ErrCode {
+    ErrCode_ErrCode_NORMAL = 0;
+    ErrCode_ErrCode_NEGATIVE_GEMS = 1;
+    ErrCode_ErrCode_CSRANKING_BANNED = 2;
+  }
+}
+
+message ECup {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_REQUEST_JOIN_NTF = 1;
+    Proto_Proto_CONFIRM_ADD_NTF = 2;
+    Proto_Proto_REMOVE_MEMBER_NTF = 3;
+    Proto_Proto_INVITE_NTF = 4;
+    Proto_Proto_APPROVE_INVITATION_NTF = 5;
+    Proto_Proto_DISMISS_NTF = 6;
+    Proto_Proto_TEAM_MATCH_END_NTF = 7;
+    Proto_Proto_LOCK_TEAM = 8;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EElitePass {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_CHALLENGE_COMPLETE_NTF = 1;
+    Proto_Proto_ACCOUNT_EP_LEVEL_UP = 2;
+    Proto_Proto_QUEST_COMPLETE_NTF = 3;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EFresh {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_UPDATE_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EFriend {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_REQUEST_NTF = 1;
+    Proto_Proto_CONFIRM_NTF = 2;
+    Proto_Proto_REMOVE_NTF = 3;
+    Proto_Proto_RELATED_FRIEND_ONLINE = 4;
+    Proto_Proto_RELATED_FRIEND_REQUEST_NTF = 5;
+    Proto_Proto_RELATED_FRIEND_CONFIRM_NTF = 6;
+    Proto_Proto_RELATED_FRIEND_DECLINE_NTF = 7;
+    Proto_Proto_RELATED_FRIEND_REQUEST_EXPIRE_NTF = 8;
+    Proto_Proto_INTIMACY_CHANGE_NTF = 9;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EGeoip {
+  enum ChatServer {
+    ChatServer_ChatServer_None = 0;
+    ChatServer_ChatServer_CloseTextChat = 9999;
+  }
+}
+
+message EGroup {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_CREATE = 1;
+    Proto_Proto_INVITE = 2;
+    Proto_Proto_INVITE_NTF = 3;
+    Proto_Proto_ACCEPT = 4;
+    Proto_Proto_REFUSE = 5;
+    Proto_Proto_JOIN_NTF = 6;
+    Proto_Proto_LEAVE = 7;
+    Proto_Proto_LEAVE_NTF = 8;
+    Proto_Proto_START = 9;
+    Proto_Proto_START_NTF = 10;
+    Proto_Proto_STOP = 11;
+    Proto_Proto_STOP_NTF = 12;
+    Proto_Proto_DISMISS_NTF = 13;
+    Proto_Proto_GROUPINFO = 14;
+    Proto_Proto_READY = 15;
+    Proto_Proto_READY_NTF = 16;
+    Proto_Proto_CHANGE = 17;
+    Proto_Proto_CHANGE_NTF = 18;
+    Proto_Proto_JOINROOM = 19;
+    Proto_Proto_SPECTATEROOM = 20;
+    Proto_Proto_SHOWEMOTE = 21;
+    Proto_Proto_SHOWEMOTE_NTF = 22;
+    Proto_Proto_SHOWPETACTION = 23;
+    Proto_Proto_SHOWPETACTION_NTF = 24;
+    Proto_Proto_CHECKPLAYER = 25;
+    Proto_Proto_ANTIADDICTION_NFT = 26;
+    Proto_proto_TEAMMATEHEATING_NFT = 27;
+    Proto_Proto_CHANGEMAP_NTF = 28;
+    Proto_Proto_CHANGEAVAILABLEMAPS = 29;
+    Proto_Proto_CHANGEAVAILABLEMAPS_NTF = 30;
+    Proto_Proto_GETGROUPCODE = 31;
+    Proto_Proto_GETGROUPCODE_NTF = 32;
+    Proto_Proto_JOIN = 33;
+    Proto_Proto_JOINREQUEST_NTF = 34;
+    Proto_Proto_KICKOUT = 35;
+    Proto_Proto_CHANGEPUBPVT = 36;
+    Proto_Proto_CHANGEPUBPVT_NTF = 37;
+    Proto_Proto_ACCEPTJOIN = 38;
+    Proto_Proto_CSRANKINGBAN_NTF = 39;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+    ErrCode_ErrCode_GROUPEXISTED = 1;
+    ErrCode_ErrCode_NOGROUP = 2;
+    ErrCode_ErrCode_ALREADYINVITED = 3;
+    ErrCode_ErrCode_NOTINVITED = 4;
+    ErrCode_ErrCode_REACHMAXINVITEE = 5;
+    ErrCode_ErrCode_ALREADYINGROUP = 6;
+    ErrCode_ErrCode_NOTINGROUP = 7;
+    ErrCode_ErrCode_REACHMAXMEMBER = 8;
+    ErrCode_ErrCode_GROUPINGAME = 9;
+    ErrCode_ErrCode_GROUPNOTINGAME = 10;
+    ErrCode_ErrCode_CANNOTINVITESELF = 11;
+    ErrCode_ErrCode_CANNOTINVITEOTHERREGION = 12;
+    ErrCode_ErrCode_GROUPNOTREADY = 13;
+    ErrCode_ErrCode_INVALIDGROUPMODE = 14;
+    ErrCode_ErrCode_AUTOGROUPTIMEOUT = 15;
+    ErrCode_ErrCode_NOSUCHPOOL = 16;
+    ErrCode_ErrCode_CREATEGROUPFAIL = 17;
+    ErrCode_ErrCode_INVALIDRANDOMMAPCONFIG = 18;
+    ErrCode_ErrCode_INVITEEALREADYINGROUP = 19;
+    ErrCode_ErrCode_INVITEEALREADYINROOM = 20;
+    ErrCode_ErrCode_INVITEEALREADYINGAME = 21;
+    ErrCode_ErrCode_INVITEEALREADYOFFLINE = 22;
+    ErrCode_ErrCode_INVALIDEMOTE = 23;
+    ErrCode_ErrCode_RANKINGMATCHLEVELLIMIT = 24;
+    ErrCode_ErrCode_NEGATIVEGEMS = 25;
+    ErrCode_ErrCode_ANTIADDICTIONBAN = 26;
+    ErrCode_ErrCode_NOTCHAMPIONTEAMMEMBER = 27;
+    ErrCode_ErrCode_INVITERNOTINGROUP = 28;
+    ErrCode_ErrCode_INVALIDCHAMPIONTEAM = 29;
+    ErrCode_ErrCode_NOTQUALIFIEDFORCHAMP = 30;
+    ErrCode_ErrCode_INVITEEALREADYINTRAINING = 31;
+    ErrCode_ErrCode_NOTQUALIFIEDFORTRAIN = 32;
+    ErrCode_ErrCode_MAPINVALIDFORSOMEMEMBERS = 33;
+    ErrCode_ErrCode_NOTQUALIFIEDFORGENGROUPCODE = 34;
+    ErrCode_ErrCode_NOTQUALIFIEDFORUSEGROUPCODE = 35;
+    ErrCode_ErrCode_NOAVAILABLEGROUPCODE = 36;
+    ErrCode_ErrCode_NOTGROUPCAPTAIN = 37;
+    ErrCode_ErrCode_DIFFERENTGROUPS = 38;
+    ErrCode_ErrCode_ALREADYINMATCHMAKING = 39;
+    ErrCode_ErrCode_CANNOTJOINSELF = 40;
+    ErrCode_ErrCode_CANNOTJOINOTHERREGION = 41;
+    ErrCode_ErrCode_JOINNONEXISTENTGROUP = 42;
+    ErrCode_ErrCode_PRIVATEGROUP = 43;
+    ErrCode_ErrCode_CANNOTKICKSELF = 44;
+    ErrCode_ErrCode_CREATEPLAYERFAIL = 45;
+    ErrCode_ErrCode_SELFNOTREADY = 46;
+    ErrCode_ErrCode_JOINERALREADYINGROUP = 47;
+    ErrCode_ErrCode_CSRANKINGBANNED = 48;
+    ErrCode_ErrCode_RANKINGMATCHREGISTERTIMELIMIT = 49;
+    ErrCode_ErrCode_GROUPSECRETCODENOTMATCH = 50;
+    ErrCode_ErrCode_GROUPNOTIDLEFORBIDCHANGEMODE = 51;
+    ErrCode_ErrCode_NOTQUALIFIEDFORCUP = 52;
+    ErrCode_ErrCode_INVALIDCUPTEAM = 53;
+    ErrCode_ErrCode_NOTCUPTEAMMEMBER = 54;
+    ErrCode_ErrCode_INVALIDWORKSHOPCODE = 56;
+  }
+  enum LeaveReason {
+    LeaveReason_LeaveReason_NORMAL = 0;
+    LeaveReason_LeaveReason_OFFLINE = 1;
+    LeaveReason_LeaveReason_DROPMATCH = 2;
+    LeaveReason_LeaveReason_ALLJOINROOM = 3;
+    LeaveReason_LeaveReason_SOLOJOINROOM = 4;
+    LeaveReason_LeaveReason_KICKOUT = 5;
+  }
+  enum PlayerState {
+    PlayerState_PlayerState_IDLE = 0;
+    PlayerState_PlayerState_MATCHMAKING = 1;
+    PlayerState_PlayerState_INGAME = 2;
+    PlayerState_PlayerState_AUTOGROUP = 3;
+  }
+  enum State {
+    State_State_IDLE = 0;
+    State_State_MATCHMAKING = 1;
+    State_State_INGAME = 2;
+    State_State_AUTOGROUP = 3;
+  }
+  enum CreateFromType {
+    CreateFromType_CreateFromType_NONE = 0;
+    CreateFromType_CreateFromType_OWNSELF = 1;
+    CreateFromType_CreateFromType_GROUP = 2;
+    CreateFromType_CreateFromType_RESERVATION = 3;
+  }
+  enum JoinFromType {
+    JoinFromType_JoinFromType_NONE = 0;
+    JoinFromType_JoinFromType_GROUP = 1;
+  }
+  enum InviteChannelType {
+    InviteChannelType_InviteChannelType_PLAYER = 0;
+    InviteChannelType_InviteChannelType_WORLD = 1;
+    InviteChannelType_InviteChannelType_GUILD = 2;
+  }
+  enum InviteeType {
+    InviteeType_InviteeType_NONE = 0;
+    InviteeType_InviteeType_FRIEND = 1;
+    InviteeType_InviteeType_GUILD = 2;
+    InviteeType_InviteeType_MATCHGROUP = 3;
+    InviteeType_InviteeType_MATCHKILLER = 4;
+    InviteeType_InviteeType_MATCHCHICKEN = 5;
+    InviteeType_InviteeType_CHAMPIONSHIP = 6;
+    InviteeType_InviteeType_REVENGER = 7;
+    InviteeType_InviteeType_CUP = 8;
+    InviteeType_InviteeType_RESERVATION = 9;
+  }
+  enum PubPvtStatus {
+    PubPvtStatus_PubPvtStatus_NONE = 0;
+    PubPvtStatus_PubPvtStatus_PUBLIC = 1;
+    PubPvtStatus_PubPvtStatus_PRIVATE = 2;
+  }
+  enum RoomType {
+    RoomType_Type_NONE = 0;
+    RoomType_Type_CASUAL = 1;
+    RoomType_Type_LEAGUE_NORMAL = 2;
+    RoomType_Type_LEAGUE_OFFICIAL = 3;
+    RoomType_Type_CHAMPIONSHIP = 4;
+    RoomType_Type_LEAGUE_ULTIMATE = 5;
+    RoomType_Type_LEAGUE_BATCH = 6;
+  }
+}
+
+message EInventory {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_TOPUP_NTF = 1;
+    Proto_Proto_MONEY_UPDATE_NTF = 2;
+    Proto_Proto_NEW_ITEMS_NTF = 3;
+    Proto_proto_REBATECARD_NTF = 4;
+    Proto_proto_REBATECARD_REDEEM_NTF = 5;
+    Proto_proto_ITEM_CHANGE = 6;
+    Proto_proto_SELECTED_ITEMS_CHANGE = 7;
+    Proto_proto_EP_CARD_NTF = 8;
+    Proto_Proto_INSTALLMENT_ITEMS_NEW_NTF = 9;
+    Proto_Proto_INSTALLMENT_ITEMS_CHANGE_NTF = 10;
+    Proto_Proto_INSTALLMENT_ITEMS_DELETE_NTF = 11;
+    Proto_Proto_INSTALLMENT_PAY_NTF = 12;
+    Proto_Proto_LIMITED_AVATAR_OUT_EXPIRE_NTF = 13;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message ELimitedEvent {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_RAMPAGE_POINTS_UPDATE_NTF = 1;
+    Proto_Proto_ADD_MONEY_HEIST_HELP_NTF = 2;
+    Proto_Proto_SPEED_FROM_TASK_CHANGE_NTF = 3;
+    Proto_Proto_GOLIATH_AFK_GROUP_UPDATE_NTF = 4;
+    Proto_Proto_SUPERCAR_RECEIVE_HELP_NTF = 7;
+    Proto_Proto_JUMPSUIT_RECEIVE_HELP_NTF = 8;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message ELinkage {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_UPDATE_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EMail {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_PUSH_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EManual {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_WEAPON_REWARD_UPDATE_NTF = 1;
+    Proto_Proto_MAP_REWARD_UPDATE_NTF = 2;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EMatch {
+  enum MatchMode {
+    MatchMode_MatchMode_NONE = 0;
+    MatchMode_MatchMode_CASUAL = 1;
+    MatchMode_MatchMode_RANKING = 2;
+    MatchMode_MatchMode_ROOM = 3;
+    MatchMode_MatchMode_CHAMPIONSHIP = 4;
+    MatchMode_MatchMode_TRAINING = 5;
+    MatchMode_MatchMode_CSRANKING = 6;
+    MatchMode_MatchMode_CUP = 7;
+    MatchMode_MatchMode_UGC = 8;
+    MatchMode_MatchMode_PERIODIC = 9;
+    MatchMode_MatchMode_UGC_PLUS = 10;
+    MatchMode_MatchMode_COMMON = 999;
+  }
+  enum GameMode {
+    GameMode_GameMode_NONE = 0;
+    GameMode_GameMode_BattleRoyale = 1;
+    GameMode_GameMode_SpeedRoyale = 2;
+    GameMode_GameMode_FateRoyale = 3;
+    GameMode_GameMode_ZombieSpeedRoyale = 4;
+    GameMode_GameMode_ZombieGround = 7;
+    GameMode_GameMode_Jankenpon = 9;
+    GameMode_GameMode_WinnerTakesAll = 11;
+    GameMode_GameMode_Purge = 12;
+    GameMode_GameMode_Reborn = 13;
+    GameMode_GameMode_HookBrick = 14;
+    GameMode_GameMode_CS = 15;
+    GameMode_GameMode_BigHead = 16;
+    GameMode_GameMode_PumpkinSnatch = 21;
+    GameMode_GameMode_ThrowingKnife = 22;
+    GameMode_GameMode_Training = 23;
+    GameMode_GameMode_TDM = 24;
+    GameMode_GameMode_Snowman = 25;
+    GameMode_GameMode_ArmsRace = 26;
+    GameMode_GameMode_BombMatch = 27;
+    GameMode_GameMode_Token = 28;
+    GameMode_GameMode_Escort = 29;
+    GameMode_GameMode_Reaper = 30;
+    GameMode_GameMode_AttackOnHead = 31;
+    GameMode_GameMode_Control = 32;
+    GameMode_GameMode_BankNote = 33;
+    GameMode_GameMode_TeamArmsRace = 34;
+    GameMode_GameMode_ADSpace = 35;
+    GameMode_GameMode_StrikeOut = 36;
+    GameMode_GameMode_Werewolves = 37;
+    GameMode_GameMode_Party = 38;
+    GameMode_GameMode_FourSymbols = 39;
+    GameMode_GameMode_TutorialBR = 40;
+    GameMode_GameMode_TutorialCS = 41;
+    GameMode_GameMode_ClanWar = 42;
+    GameMode_GameMode_FightClub = 43;
+    GameMode_GameMode_RushingPets = 44;
+    GameMode_GameMode_UGCParty = 45;
+    GameMode_GameMode_UGC = 46;
+    GameMode_GameMode_CombineWeapon = 48;
+    GameMode_GameMode_LoneWolfStrikeOut = 49;
+    GameMode_GameMode_Ludo = 50;
+    GameMode_GameMode_HappyFriday = 51;
+    GameMode_GameMode_CSHardCore = 52;
+    GameMode_GameMode_UGCCommon = 53;
+    GameMode_GameMode_PVP_MaxMode = 54;
+    GameMode_GameMode_PVP = 99;
+    GameMode_GameMode_PVE_MinMode = 100;
+    GameMode_GameMode_PVE_HYAKKI = 101;
+    GameMode_GameMode_PVE_SVZombie = 102;
+    GameMode_GameMode_PVE_MaxMode = 103;
+  }
+  enum GroupMode {
+    GroupMode_GroupMode_SOLO = 0;
+    GroupMode_GroupMode_DUAL = 1;
+    GroupMode_GroupMode_TRIPLE = 2;
+    GroupMode_GroupMode_QUAD = 3;
+    GroupMode_GroupMode_PENTA = 4;
+    GroupMode_GroupMode_HEXA = 5;
+    GroupMode_GroupMode_OCTA = 7;
+    GroupMode_GroupMode_DOZEN = 11;
+  }
+  enum UGCDifficulty {
+    UGCDifficulty_UGCDifficulty_NONE = 0;
+    UGCDifficulty_UGCDifficulty_TEAM_CONTEST = 1;
+    UGCDifficulty_UGCDifficulty_BATTLE_GROUNDS = 2;
+  }
+}
+
+message EMatchmaking {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_START = 1;
+    Proto_Proto_CANCEL = 2;
+    Proto_Proto_GROUPSTART = 3;
+    Proto_Proto_GROUPCANCEL = 4;
+    Proto_Proto_MATCHMAKINGSUSS_NTF = 5;
+    Proto_Proto_DROPMATCH = 6;
+    Proto_Proto_GAMEOPENINGINFO = 7;
+    Proto_Proto_CHECKINGAMEPLAYER = 8;
+    Proto_Proto_CLEARINGAMEPLAYER = 9;
+    Proto_Proto_ANTIADDICTION_NFT = 10;
+    Proto_Proto_START_NTF = 11;
+    Proto_Proto_MASSGROUPSTART = 12;
+    Proto_Proto_MASSGROUPCANCEL = 13;
+    Proto_Proto_STOP_NTF = 14;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+    ErrCode_ErrCode_ALREADYINMATCHMAKING = 1;
+    ErrCode_ErrCode_CREATEPLAYERFAIL = 2;
+    ErrCode_ErrCode_JOINSINGLEPOOLFAIL = 3;
+    ErrCode_ErrCode_JOINMULTIPOOLFAIL = 4;
+    ErrCode_ErrCode_NOGAMESERVERAVAILABLE = 5;
+    ErrCode_ErrCode_INITMATCHFAIL = 6;
+    ErrCode_ErrCode_LOGINGAMESERVERTIMEOUT = 7;
+    ErrCode_ErrCode_MMTIMEOUT = 8;
+    ErrCode_ErrCode_NOSUCHPOOL = 9;
+    ErrCode_ErrCode_MAPNOTOPEN = 10;
+    ErrCode_ErrCode_INVALIDRANDOMMAPCONFIG = 11;
+    ErrCode_ErrCode_RANKINGMATCHLEVELLIMIT = 12;
+    ErrCode_ErrCode_NOTQUALIFIEDFORFREEWTA = 13;
+    ErrCode_ErrCode_INVALIDWTACURRENCYTYPE = 14;
+    ErrCode_ErrCode_NOTENOUGHMONEYFORWTA = 15;
+    ErrCode_ErrCode_NEGATIVEGEMS = 16;
+    ErrCode_ErrCode_ANTIADDICTIONBAN = 17;
+    ErrCode_ErrCode_NOTQUALIFIEDFORCHAMP = 18;
+    ErrCode_ErrCode_MAPINVALIDFORSOMEMEMBERS = 20;
+    ErrCode_ErrCode_EMULATORNOTQUALIFIED = 21;
+    ErrCode_ErrCode_EMULATORRECONNNOTQUALIFIED = 22;
+    ErrCode_ErrCode_CSRANKINGBANNED = 23;
+    ErrCode_ErrCode_RANKINGMATCHREGISTERTIMELIMIT = 24;
+    ErrCode_ErrCode_INVALIDMATCHMODE = 25;
+    ErrCode_ErrCode_NOTQUALIFIEDFORCUP = 26;
+    ErrCode_ErrCode_EXISTNOTMAXCLIENT = 28;
+    ErrCode_ErrCode_INVALIDGAMEMODE = 29;
+    ErrCode_ErrCode_PLAYERISNOTCAPTAIN = 30;
+    ErrCode_ErrCode_NOTENOUGHPLAYERFORCLANWAR = 31;
+    ErrCode_ErrCode_MEMBERISALREADYINMATCHMAKING = 32;
+    ErrCode_ErrCode_CREATEMEMBERFAIL = 33;
+    ErrCode_ErrCode_MASSGROUPALREADYINMATCHMAKING = 34;
+    ErrCode_ErrCode_EMULATORMMTIMEOUT = 35;
+    ErrCode_ErrCode_INVALIDWORKSHOPCODE = 36;
+    ErrCode_ErrCode_HACKERRECONNECTNOTQUALIFIED = 37;
+    ErrCode_ErrCode_NOTQUALIFIEDMODELIMITLEVEL = 38;
+    ErrCode_ErrCode_WORKSHOPCODEUPDATED = 39;
+  }
+  enum PlayerState {
+    PlayerState_PlayerState_MATCHMAKING = 0;
+    PlayerState_PlayerState_LOADING = 1;
+    PlayerState_PlayerState_INGAME = 2;
+    PlayerState_PlayerState_INGAME_CAN_RECONNECT = 3;
+  }
+  enum LevelVisualStyle {
+    LevelVisualStyle_LevelVisualStyle_NORMAL = 0;
+    LevelVisualStyle_LevelVisualStyle_NIGHT = 1;
+    LevelVisualStyle_LevelVisualStyle_SNOW = 2;
+  }
+}
+
+message EmoteInfo {
+  uint32 slot_id = 1;
+  uint32 emote_id = 2;
+}
+
+message Empty {
+}
+
+message EMtp {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_RECV_ANTI_DATA = 1;
+    Proto_Proto_SEND_DATA_TO_CLIENT_NTF = 2;
+    Proto_Proto_LIGHT_FEATURE_NTF = 3;
+    Proto_Proto_TICK_USER = 4;
+    Proto_Proto_SEC_REPORT_FLOW = 5;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EmulatorCheckPlayersNtf {
+  repeated uint64 account_ids = 1;
+}
+
+message EmulatorPlayerNtf {
+  uint64 emulator_account_id = 1;
+}
+
+message EPet {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_LEVEL_UP_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EPresence {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_PRESENCELIST = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+  enum PresenceListType {
+    PresenceListType_PresenceListType_NONE = 0;
+    PresenceListType_PresenceListType_FRIEND = 1;
+    PresenceListType_PresenceListType_CLAN = 2;
+  }
+}
+
+message EProfile {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_NEW_PROFILE_NTF = 1;
+    Proto_Proto_NEW_SKILL_NTF = 2;
+    Proto_Proto_PROFILE_CHANGE_NTF = 3;
+    Proto_Proto_AWAKEN_TASK_CHANGE_NTF = 4;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EProtocol {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_INIT = 1;
+    Proto_HEARTBEAT = 2;
+    Proto_MATCHMAKING = 3;
+    Proto_STATS = 4;
+    Proto_GROUP = 5;
+    Proto_FRIEND = 6;
+    Proto_MAIL = 7;
+    Proto_INVENTORY = 8;
+    Proto_BACKPACK = 9;
+    Proto_ACTIVITY = 10;
+    Proto_ACCOUNT = 11;
+    Proto_CLAN = 12;
+    Proto_PROFILE = 13;
+    Proto_ROOM = 14;
+    Proto_PRESENCE = 15;
+    Proto_ELITEPASS = 16;
+    Proto_RECONNECTION = 17;
+    Proto_CHANNEL = 18;
+    Proto_STORE = 19;
+    Proto_PET = 21;
+    Proto_MANUAL = 22;
+    Proto_CHAMPIONSHIP = 23;
+    Proto_ANTIADDICTION = 24;
+    Proto_FRESH = 25;
+    Proto_LINKAGE = 26;
+    Proto_ATTENDANCE = 27;
+    Proto_LIMITEDEVENT = 28;
+    Proto_MTP = 29;
+    Proto_CHAT = 30;
+    Proto_CUP = 31;
+    Proto_VIPCARD = 32;
+    Proto_CHUMMY = 33;
+  }
+  enum ProtoSize {
+    ProtoSize_ProtoSize_NONE = 0;
+    ProtoSize_MAXPACKETSIZE = 20480;
+    ProtoSize_MAXMTPPACKETSIZE = 10240;
+  }
+}
+
+message EReconnection {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_CHECK = 1;
+    Proto_Proto_CLEAR = 2;
+    Proto_Proto_GAMEINFO = 3;
+    Proto_Proto_ROOMINFO = 4;
+  }
+}
+
+message ERoom {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_ROOMLIST = 1;
+    Proto_Proto_CREATE = 2;
+    Proto_Proto_JOIN = 3;
+    Proto_Proto_SPECTATE = 4;
+    Proto_Proto_JOIN_NTF = 5;
+    Proto_Proto_LEAVE = 6;
+    Proto_Proto_LEAVE_NTF = 7;
+    Proto_Proto_DISMISS_NTF = 8;
+    Proto_Proto_KICK = 9;
+    Proto_Proto_KICK_NTF = 10;
+    Proto_Proto_START = 11;
+    Proto_Proto_ROOMINFO = 12;
+    Proto_Proto_CHANGE = 13;
+    Proto_Proto_CHANGE_NTF = 14;
+    Proto_Proto_DROPOMATCH = 15;
+    Proto_Proto_MATCHMAKINGSUSS_NTF = 16;
+    Proto_Proto_ROOMSTATE_NTF = 17;
+    Proto_Proto_CHECKINGAMEPLAYER = 18;
+    Proto_Proto_CLEARINGAMEPLAYER = 19;
+    Proto_Proto_SWITCHSEAT = 20;
+    Proto_Proto_SWITCHSEAT_NTF = 21;
+    Proto_Proto_INVITE = 22;
+    Proto_Proto_INVITE_NTF = 23;
+    Proto_Proto_SETREADY = 24;
+    Proto_Proto_SETREADY_NTF = 25;
+    Proto_Proto_REAL_CREATE = 26;
+    Proto_Proto_ADMIN_SET_ICON = 27;
+    Proto_Proto_ADMIN_DISMISS_ROOM = 28;
+    Proto_Proto_ANTIADDICTION_NFT = 29;
+    Proto_proto_TEAMMATEHEATING_NFT = 30;
+    Proto_Proto_ADMIN_GET_CUSTOMROOM_MATCHSTATS = 31;
+    Proto_Proto_ROOM_CREATE_RULE = 32;
+    Proto_Proto_CHANGEAVAILABLEMAPS = 33;
+    Proto_Proto_CHANGEAVAILABLEMAPS_NTF = 34;
+    Proto_Proto_EMULATORCHECK_NTF = 35;
+    Proto_proto_OWNERSWITCHGROUP = 36;
+    Proto_proto_OWNERSWITCHGROUP_NTF = 37;
+    Proto_Proto_ROLECHECK_NTF = 38;
+    Proto_Proto_COUNTDOWN = 39;
+    Proto_Proto_COUNTDOWN_NTF = 40;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+    ErrCode_ErrCode_NOROOM = 1;
+    ErrCode_ErrCode_REACHMAXMEMBERS = 2;
+    ErrCode_ErrCode_REACHMAXSPECTATORS = 3;
+    ErrCode_ErrCode_ALREADYINROOM = 4;
+    ErrCode_ErrCode_NOTINROOM = 5;
+    ErrCode_ErrCode_ROOMINGAME = 6;
+    ErrCode_ErrCode_ROOMNOTINGAME = 7;
+    ErrCode_ErrCode_CANNOTCREATEROOM = 8;
+    ErrCode_ErrCode_NOGAMESERVERAVAILABLE = 9;
+    ErrCode_ErrCode_INVALIDCODE = 10;
+    ErrCode_ErrCode_CANNOTKICK = 11;
+    ErrCode_ErrCode_NOTOWNER = 12;
+    ErrCode_ErrCode_GENMATCHIDFAIL = 13;
+    ErrCode_ErrCode_LOGINGAMESERVERTIMEOUT = 14;
+    ErrCode_ErrCode_CREATEROOMFAIL = 15;
+    ErrCode_ErrCode_JOININVALIDPLAYERCNT = 16;
+    ErrCode_ErrCode_DIRTYWORD = 17;
+    ErrCode_ErrCode_SEATOCCUPIED = 18;
+    ErrCode_ErrCode_CANNOTSWITCHSEAT = 19;
+    ErrCode_ErrCode_INVALIDMEMBERNUM = 20;
+    ErrCode_ErrCode_NOTENOUGHROOMCARD = 21;
+    ErrCode_ErrCode_INVALIDOPTIONS = 22;
+    ErrCode_ErrCode_CANNOTINVITESELF = 23;
+    ErrCode_ErrCode_INVALIDROOMTYPE = 24;
+    ErrCode_ErrCode_INVITEEALREADYINGROUP = 25;
+    ErrCode_ErrCode_INVITEEALREADYINROOM = 26;
+    ErrCode_ErrCode_INVITEEALREADYINGAME = 27;
+    ErrCode_ErrCode_INVITEEALREADYOFFLINE = 28;
+    ErrCode_ErrCode_NOTENOUGHMEMEBERS = 29;
+    ErrCode_ErrCode_REACHMAXINGAMEROOMNUMLIMIT = 30;
+    ErrCode_ErrCode_NEGATIVEGEMS = 31;
+    ErrCode_ErrCode_ANTIADDICTIONBAN = 32;
+    ErrCode_ErrCode_ROOMCENTERNOTREADY = 33;
+    ErrCode_ErrCode_INVITEEALREADYINTRAINING = 34;
+    ErrCode_ErrCode_MAPINVALIDFORSOMEMEMBERS = 35;
+    ErrCode_ErrCode_REOPENIDNOTEXISTS = 36;
+    ErrCode_ErrCode_EMULATORCHECKFAILED = 37;
+    ErrCode_ErrCode_GROUPOCCUPIED = 38;
+    ErrCode_ErrCode_REACHMAXBATCHROOMNUMLIMIT = 39;
+    ErrCode_ErrCode_NOCREATEROLE = 40;
+    ErrCode_ErrCode_NOJOINROLE = 41;
+    ErrCode_ErrCode_WORKSHOP_UPDATED = 42;
+  }
+  enum Type {
+    Type_Type_NONE = 0;
+    Type_Type_CASUAL = 1;
+    Type_Type_LEAGUE_NORMAL = 2;
+    Type_Type_LEAGUE_BATCH = 6;
+    Type_Type_WEREWOLVES = 7;
+    Type_Type_WORKSHOP = 8;
+    Type_Type_RUSHING_PETS = 9;
+  }
+  enum TabType {
+    TabType_TabType_NONE = 0;
+    TabType_TabType_NORMAL = 1;
+    TabType_TabType_LEAGUE = 2;
+    TabType_TabType_WEREWOLVES = 3;
+    TabType_TabType_WORKSHOP = 4;
+    TabType_TabType_RUSHING_PETS = 5;
+  }
+  enum PlayerRole {
+    PlayerRole_PlayerRole_NONE = 0;
+    PlayerRole_PlayerRole_MEMBER = 1;
+    PlayerRole_PlayerRole_SPECTATOR = 2;
+  }
+  enum PlayerState {
+    PlayerState_PlayerState_IDLE = 0;
+    PlayerState_PlayerState_LOADING = 1;
+    PlayerState_PlayerState_INGAME = 2;
+    PlayerState_PlayerState_INGAME_CAN_RECONNECT = 3;
+  }
+  enum State {
+    State_State_IDLE = 0;
+    State_State_INGAME = 1;
+  }
+  enum DismissReason {
+    DismissReason_DismissReason_NONE = 0;
+    DismissReason_DismissReason_NORMAL = 1;
+    DismissReason_DismissReason_OFFLINE = 2;
+    DismissReason_DismissReason_TIMEOUT = 3;
+    DismissReason_DismissReason_ADMIN = 4;
+  }
+  enum UpdateRoomEvent {
+    UpdateRoomEvent_UpdateRoomEvent_NONE = 0;
+    UpdateRoomEvent_UpdateRoomEvent_INIT = 1;
+    UpdateRoomEvent_UpdateRoomEvent_SEND_ALL_ROOMS = 2;
+    UpdateRoomEvent_UpdateRoomEvent_STATE = 3;
+    UpdateRoomEvent_UpdateRoomEvent_OPTIONS = 4;
+    UpdateRoomEvent_UpdateRoomEvent_MEMBER_NUM = 5;
+    UpdateRoomEvent_UpdateRoomEvent_DISMISS_ROOM = 6;
+    UpdateRoomEvent_UpdateRoomEvent_CREATE_ROOM = 7;
+    UpdateRoomEvent_UpdateRoomEvent_EMPTY = 8;
+    UpdateRoomEvent_UpdateRoomEvent_ENOUGH_ROOM_CARD = 9;
+    UpdateRoomEvent_UpdateRoomEvent_OWNER_ONLINE = 10;
+  }
+}
+
+message EStats {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_MATCHSTATS_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EStore {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_IAP_PURCHASE_DONE = 1;
+    Proto_Proto_PBW_PURCHASE_DONE = 2;
+    Proto_Proto_IAP_INFO_CHANGE = 3;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EVeteranTask {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_UPDATE_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+}
+
+message EVipCard {
+  enum Proto {
+    Proto_Proto_NONE = 0;
+    Proto_Proto_PURCHASE_CARD_NTF = 1;
+  }
+  enum ErrCode {
+    ErrCode_ErrCode_SUSS = 0;
+  }
+  enum VipCardType {
+    VipCardType_VipCardType_NONE = 0;
+    VipCardType_VipCardType_WEEKLY = 1;
+    VipCardType_VipCardType_MONTHLY = 2;
+    VipCardType_VipCardType_SVIP = 3;
+  }
+}
+
+message FreshActivityUpdateInfo {
+  uint32 id = 1;
+  uint32 data = 2;
+  uint32 state = 3;
+}
+
+message FreshActivityUpdateNtf {
+  repeated FreshActivityUpdateInfo activitys = 1;
+}
+
+message FriendReq {
+  uint64 adder = 1;
+  uint64 addee = 3;
+  string lock_region = 4;  // has default
+  string noti_region = 5;  // has default
+}
+
+message GameOpeningInfoReq {
+  string region = 1;  // has default
+  string language = 2;  // has default
+}
+
+message GetGroupCodeNtf {
+  string group_code = 1;  // has default
+}
+
+message GetGroupCodeReq {
+  uint64 group_id = 1;
+}
+
+message GoliathAFKGroupUpdateNtf {
+  uint64 group_id = 1;
+}
+
+message GroupAcceptJoinReq {
+  uint64 group_id = 1;
+  uint64 joiner_account_id = 2;
+  repeated uint32 joiner_available_maps = 3;
+  uint32 joiner_emulator_score = 4;
+  string joiner_country_code = 5;  // has default
+  string joiner_signature_md5 = 6;  // has default
+  uint32 joiner_using_version = 7;
+  COW.InviteeType invitee_type = 8;
+  uint32 joiner_system_platform = 11;
+  MatchClientInfo joiner_client_info = 12;
+  repeated AccountIDCPingInfo joiner_ping_list = 13;
+}
+
+message GroupAcceptReq {
+  uint64 group_id = 1;
+  uint64 inviter_account_id = 3;
+  repeated uint32 available_maps = 4;
+  string group_code = 5;  // has default
+  InviteChannelType invite_channel_type = 6;
+  uint32 system_platform = 8;
+  MatchClientInfo client_info = 9;
+  string secret_code = 10;  // has default
+  repeated AccountIDCPingInfo ping_list = 11;
+}
+
+message GroupChangeAvailableMapsNtf {
+  uint64 account_id = 1;
+  repeated uint32 available_maps = 2;
+}
+
+message GroupChangeAvailableMapsReq {
+  uint64 group_id = 1;
+  repeated uint32 available_maps = 2;
+}
+
+message GroupChangeReq {
+  uint64 group_id = 1;
+  bool auto_group = 2;
+  uint32 group_mode = 3;
+  uint32 game_mode = 4;
+  repeated uint32 map_ids = 5;
+  uint32 difficulty = 7;
+  uint32 match_mode = 8;
+  uint32 required_rank = 9;
+  string group_tag = 10;  // has default
+  string workshop_code = 11;  // has default
+  string workshop_name = 12;  // has default
+}
+
+message GroupCreateReq {
+  repeated uint32 map_ids = 2;
+  uint32 game_mode = 3;
+  uint32 group_mode = 4;
+  string language = 5;  // has default
+  uint32 difficulty = 6;
+  repeated AccountIDCPingInfo ping_list = 8;
+  uint32 match_mode = 9;
+  repeated uint32 available_maps = 10;
+  CreateFromType from_type = 11;
+  uint32 system_platform = 13;
+  MatchClientInfo client_info = 14;
+  uint32 required_rank = 15;
+  string group_tag = 16;  // has default
+  string workshop_code = 17;  // has default
+  string workshop_name = 18;  // has default
+}
+
+message GroupDismissNtf {
+  uint64 leaver_id = 1;
+  uint64 group_id = 2;
+  LeaveReason reason = 3;
+}
+
+message GroupInfo {
+  uint64 group_id = 1;
+  string region = 2;  // has default
+  bool auto_group = 3;
+  uint32 group_mode = 4;
+  repeated GroupMemberInfo members = 6;
+  repeated uint32 map_ids = 7;
+  uint32 game_mode = 8;
+  uint32 difficulty = 9;
+  uint32 match_mode = 10;
+  string group_code = 11;  // has default
+  uint32 ranking_match_type = 12;
+  bool is_public = 13;
+  string secret_code = 14;  // has default
+  uint32 required_rank = 15;
+  string group_tag = 16;  // has default
+  uint64 voice_id = 17;
+  string workshop_code = 18;  // has default
+  string workshop_name = 19;  // has default
+  MaxLobbyDisplayInfo max_lobby_display_info = 20;
+  bool hide_captain_lobby = 21;
+}
+
+message GroupInfoReq {
+  uint64 group_id = 1;
+}
+
+message GroupInviteNtf {
+  uint64 group_id = 1;
+  GroupMemberInfo inviter_info = 2;
+  repeated uint32 map_ids = 4;
+  uint32 game_mode = 5;
+  uint32 group_mode = 6;
+  uint32 match_mode = 7;
+  string secret_code = 8;  // has default
+}
+
+message GroupInviteReq {
+  uint64 invitee_id = 1;
+  string invitee_region = 2;  // has default
+  InviteChannelType channel_type = 3;
+  COW.InviteeType invitee_type = 4;
+}
+
+message GroupJoinReq {
+  uint64 participant_id = 1;
+  string self_region = 2;  // has default
+  JoinFromType from_type = 3;
+  COW.InviteeType target_type = 4;
+  repeated uint32 available_maps = 5;
+  string nickname = 6;  // has default
+  uint32 rank = 7;
+  uint32 ranking_points = 8;
+  uint32 emulator_score = 9;
+  string country_code = 10;  // has default
+  string signature_md5 = 11;  // has default
+  uint32 using_version = 12;
+  uint64 partic_group_id = 13;
+  uint32 system_platform = 16;
+  MatchClientInfo client_info = 17;
+  uint32 cs_rank = 18;
+  uint32 cs_ranking_points = 19;
+  repeated AccountIDCPingInfo ping_list = 20;
+  uint32 peak_rank_pos = 21;
+  uint32 cs_peak_rank_pos = 22;
+}
+
+message GroupJoinRequestNtf {
+  uint64 joiner_id = 1;
+  repeated uint32 available_maps = 2;
+  string nickname = 3;  // has default
+  uint32 rank = 4;
+  uint32 ranking_points = 5;
+  uint32 emulator_score = 6;
+  string country_code = 7;  // has default
+  string signature_md5 = 8;  // has default
+  uint32 using_version = 9;
+  COW.InviteeType target_type = 10;
+  uint32 system_platform = 13;
+  MatchClientInfo client_info = 14;
+  uint32 cs_rank = 15;
+  uint32 cs_ranking_points = 16;
+  repeated AccountIDCPingInfo ping_list = 17;
+  uint32 peak_rank_pos = 18;
+  uint32 cs_peak_rank_pos = 19;
+}
+
+message GroupJoinRoomReq {
+  uint64 room_id = 1;
+  string code = 2;  // has default
+  uint64 group_id = 3;
+  bool is_solo = 4;
+  string group_name = 5;  // has default
+  RoomType room_type = 6;
+  string group_abbr_name = 7;  // has default
+}
+
+message GroupLeaveNtf {
+  uint64 leaver_id = 1;
+  LeaveReason reason = 2;
+  GroupInfo group_info = 3;
+}
+
+message GroupLeaveReq {
+  uint64 group_id = 1;
+}
+
+message GroupMemberAccounts {
+  repeated uint64 ids = 1;
+}
+
+message GroupMemberInfo {
+  uint64 account_id = 1;
+  string nickname = 2;  // has default
+  string region = 3;  // has default
+  uint64 join_time = 4;
+  uint32 level = 5;
+  uint32 avatar_id = 6;
+  uint32 skin_color = 7;
+  repeated uint32 clothes = 8;
+  bool ready = 9;
+  uint32 rank = 10;
+  uint32 ranking_points = 11;
+  uint32 banner_id = 12;
+  uint32 head_pic = 13;
+  uint32 role = 14;
+  repeated uint32 shows = 15;
+  GroupMemberPetInfo pet_info = 16;
+  uint32 pve_weapon_id = 17;
+  repeated uint32 available_maps = 18;
+  uint32 cs_rank = 19;
+  uint32 cs_ranking_points = 20;
+  uint32 pin_id = 21;
+  bool is_cs_ranking_ban = 22;
+  repeated IntimacyRelation intimacy_relations = 23;
+  uint32 using_version = 24;
+  bool is_emulator = 25;
+  uint32 game_bag_show = 26;
+  uint32 peak_rank_pos = 27;
+  uint32 cs_peak_rank_pos = 28;
+  uint32 periodic_rank = 29;
+  uint32 periodic_ranking_points = 30;
+}
+
+message GroupMemberPetInfo {
+  uint32 id = 1;
+  string name = 2;  // has default
+  uint32 level = 3;
+  uint32 skin_id = 4;
+}
+
+message GroupReadyReq {
+  uint64 group_id = 1;
+  bool ready = 2;
+}
+
+message GroupRefuseReq {
+  uint64 group_id = 1;
+}
+
+message GroupSpectateRoomReq {
+  uint64 room_id = 1;
+  string code = 2;  // has default
+  uint64 group_id = 3;
+  bool is_solo = 4;
+  RoomType room_type = 5;
+}
+
+message GroupStartNtf {
+  GroupInfo group_info = 1;
+  uint32 avg_wait_time_sec = 2;
+}
+
+message GroupStartReq {
+  uint64 group_id = 1;
+  uint32 workshop_group_mode = 2;
+  repeated string workshop_codes = 3;
+  bool is_workshop_team_contest = 4;
+  string workshop_name = 5;  // has default
+  repeated uint32 workshop_team_counts = 6;
+}
+
+message GroupStopNtf {
+  GroupMemberInfo stoper_info = 1;
+  GroupInfo group_info = 2;
+}
+
+message GroupStopReq {
+  uint64 group_id = 1;
+}
+
+message IngameItem {
+  uint32 item_id = 1;
+  uint32 cnt = 2;
+}
+
+message IntimacyChangeNtf {
+  uint64 related_friend_id = 1;
+  uint32 relation_type = 2;
+  uint32 add_value = 3;
+}
+
+message IntimacyRelation {
+  uint64 related_friend_id = 1;
+  uint32 relation_type = 2;
+  uint32 intimacy = 3;
+}
+
+message InventoryEpCardNtf {
+  string code = 1;  // has default
+  bool is_active = 2;
+}
+
+message InventoryRebateCardNtf {
+  uint32 txn_type = 1;
+  uint32 rebate_card_id = 2;
+  int32 point_amount = 3;
+  uint32 channel_id = 4;
+  string channel_name = 5;  // has default
+  string currency = 6;  // has default
+  float currency_amount = 7;
+}
+
+message InventoryTopupNtf {
+  uint32 txn_type = 1;
+  int32 recharge_points = 2;
+  string currency = 3;  // has default
+  float currency_amount = 4;
+}
+
+message InventoryWalletUpdateNtf {
+  uint32 coins = 1;
+  int32 gems = 2;
+}
+
+message InviteToChampionshipTeamReq {
+  uint64 inviter_id = 1;
+  string inviter_name = 2;  // has default
+  uint64 team_id = 3;
+  string team_name = 4;  // has default
+}
+
+message InviteToClanReq {
+  uint64 inviter_id = 1;
+  uint64 clan_id = 2;
+  string clan_name = 3;  // has default
+  string inviter_name = 4;  // has default
+}
+
+message InviteToClanWarReq {
+  uint64 inviter_id = 1;
+}
+
+message InviteToCupTeamReq {
+  uint64 inviter_id = 1;
+  string inviter_name = 2;  // has default
+  uint64 cup_team_id = 3;
+  string cup_team_name = 4;  // has default
+  uint32 cup_type = 5;
+  uint32 cup_id = 6;
+}
+
+message ItemTCP {
+  uint32 id = 1;
+  uint32 cnt = 2;
+}
+
+message JoinClanWarReq {
+  uint64 new_member_id = 1;
+  uint32 new_member_type = 2;
+}
+
+message JoinRoomPlayerInfo {
+  uint64 conn_id = 1;
+  uint32 emulator_score = 2;
+  AccountMatchInfo basic_info = 3;
+  repeated uint32 available_maps = 4;
+  string country_code = 5;  // has default
+  uint32 using_version = 6;
+}
+
+message JoinWorldChanNtf {
+  uint64 channel_id = 1;
+  uint32 left_talk_times_default = 2;
+  uint32 left_talk_times_fast = 3;
+  uint32 daily_msg_limit_default = 4;
+  uint32 daily_msg_limit_fast = 5;
+  bool enable_custom_msg = 6;
+}
+
+message JumpsuitReceiveHelpNtf {
+  uint64 helper_id = 1;
+  string helper_name = 2;  // has default
+  int64 help_time = 3;
+}
+
+message KickOutReq {
+  uint64 kickout_id = 1;
+}
+
+message LightFeatureNtf {
+  string feature_name = 1;  // has default
+  bytes feature_data = 2;
+  uint32 data_len = 3;
+  uint32 data_crc = 4;
+}
+
+message LikeMsg {
+  uint64 account_id = 1;
+  bool liked = 2;
+}
+
+message LikeMsgReq {
+  uint64 sender_id = 1;
+  repeated LikeMsg like_list = 2;
+}
+
+message LinkageActivityUpdateInfo {
+  uint32 id = 1;
+  uint32 today_data = 2;
+  uint32 total_data = 3;
+  uint32 state = 4;
+}
+
+message LinkageActivityUpdateNtf {
+  LinkageActivityUpdateInfo activity = 1;
+}
+
+message LinkageInfo {
+  uint32 activity_id = 1;
+  uint32 activity_type = 2;
+  uint32 today_data = 3;
+  uint32 day = 4;
+}
+
+message LoadoutInfo {
+  uint32 loadout_id = 1;
+  uint32 loadout_num = 2;
+  bool is_free_play = 3;
+}
+
+message LockCupTeamReq {
+  uint64 cup_team_id = 1;
+  uint32 cup_type = 2;
+  uint32 cup_id = 3;
+}
+
+message ManualMapRewardUpdateInfo {
+  uint32 map_id = 1;
+  uint32 state = 2;
+}
+
+message ManualMapRewardUpdateNtf {
+  ManualMapRewardUpdateInfo map_info = 1;
+}
+
+message ManualWeaponRewardUpdateInfo {
+  uint32 quantity_period = 1;
+  uint32 state = 2;
+}
+
+message ManualWeaponRewardUpdateNtf {
+  repeated ManualWeaponRewardUpdateInfo weapons = 1;
+}
+
+message MatchClientInfo {
+  string tpsdk_str = 1;  // has default
+  uint32 start_time = 2;
+  bytes file_exception = 3;
+  bytes lib_result = 4;
+  uint32 exception_count = 5;
+  uint32 scan_count = 6;
+  bytes native_result = 7;
+  string client_version = 8;  // has default
+  uint32 channel_type = 9;
+  uint32 architecture_type = 10;
+}
+
+message MatchEndInfo {
+  uint32 championship_type = 1;
+}
+
+message MatchmakingCheckIngamePlayerReq {
+  uint32 system_platform = 1;
+}
+
+message MatchmakingDropMatchReq {
+  uint64 group_id = 1;
+  COW.GameMode game_mode = 2;
+}
+
+message MatchmakingGroupStartReq {
+  repeated uint32 map_ids = 1;
+  uint64 group_id = 2;
+  GroupMode group_mode = 3;
+  repeated MatchmakingPlayer players = 4;
+  COW.GameMode game_mode = 6;
+  uint32 difficulty = 7;
+  bool auto_group = 8;
+  repeated GroupMemberAccounts group_members = 9;
+  string group_idc = 11;  // has default
+  MatchMode match_mode = 12;
+  uint32 random_map_id = 13;
+  uint64 voice_id = 14;
+  repeated string workshop_codes = 15;
+  bool is_workshop_team_contest = 16;
+  repeated uint32 workshop_team_counts = 17;
+}
+
+message MatchmakingMassGroupCancelReq {
+  uint64 group_id = 1;
+}
+
+message MatchmakingMassGroupStartReq {
+  repeated uint32 map_ids = 1;
+  uint64 group_id = 2;
+  MatchMode match_mode = 3;
+  GroupMode group_mode = 4;
+  COW.GameMode game_mode = 5;
+  uint32 difficulty = 6;
+  repeated uint64 member_ids = 7;
+  repeated AccountIDCPingInfo ping_list = 8;
+  uint32 system_platform = 9;
+  MatchClientInfo client_info = 10;
+}
+
+message MatchmakingPlayer {
+  uint64 account_id = 1;
+  uint64 conn_id = 2;
+  uint64 group_id = 3;
+  string noti_region = 4;  // has default
+  AccountMatchInfo basic_info = 5;
+  bool is_hacker = 6;
+  uint32 using_version = 7;
+  string ip_region = 8;  // has default
+  uint32 emulator_score = 9;
+  uint32 hacker_cdt_id = 10;
+  repeated AccountIDCPingInfo ping_list = 11;
+  string pre_group_idc = 12;  // has default
+}
+
+message MatchmakingStartNtf {
+  repeated uint32 map_ids = 1;
+  uint32 game_mode = 2;
+  uint32 difficulty = 3;
+  uint32 match_mode = 4;
+  uint32 avg_wait_time_sec = 5;
+}
+
+message MatchmakingStartReq {
+  repeated uint32 map_ids = 1;
+  uint32 game_mode = 2;
+  uint32 difficulty = 4;
+  uint32 wta_currency_type = 5;
+  repeated AccountIDCPingInfo ping_list = 7;
+  uint32 match_mode = 8;
+  repeated uint32 available_maps = 9;
+  uint32 system_platform = 11;
+  MatchClientInfo client_info = 12;
+  repeated string workshop_codes = 13;
+  GroupMode workshop_group_mode = 14;
+  bool is_workshop_team_contest = 15;
+  repeated uint32 workshop_team_counts = 16;
+}
+
+message MatchmakingSussNtf {
+  uint64 match_id = 1;
+  string server_addr = 2;  // has default
+  string secret = 3;  // has default
+  string prepare_token = 4;  // has default
+  uint32 sleep_ms = 5;
+  uint32 map_id = 6;
+  uint32 game_mode = 7;
+  uint32 match_mode = 8;
+  bool use_cache = 9;
+  uint32 level_visual_style = 11;
+  uint32 difficulty = 12;
+  bool first_login = 13;
+  bool is_in_special_pool = 14;
+  bytes workshop_settings = 15;
+  bytes object_attribute_settings = 17;
+  repeated MatchPregameInfo pregame_infos = 18;
+  string workshop_code = 19;  // has default
+  string workshop_name = 20;  // has default
+  GroupMode group_mode = 21;
+  bool is_in_emulator_pool = 22;
+}
+
+message MatchPregameInfo {
+  uint64 account_id = 1;
+  uint32 head_pic = 2;
+  string nickname = 3;  // has default
+  uint32 avatar_id = 4;
+  bool has_elite_pass = 5;
+  uint32 badge_cnt = 6;
+  uint32 badge_id = 7;
+  repeated BattleTagInfo battle_tags = 8;
+  uint32 cs_rank = 9;
+  uint32 cs_ranking_points = 10;
+  repeated uint32 cs_heroic_seasons = 11;
+  StatsInfo cs_ranking_stats = 12;
+  AccountPrefersInfo prefers = 14;
+}
+
+message MatchPrepareInfo {
+  uint64 account_id = 1;
+  string nickname = 2;  // has default
+  uint32 level = 3;
+  uint32 avatar_id = 4;
+  uint32 skin_color = 5;
+  repeated uint32 clothes = 6;
+  repeated uint32 slots = 7;
+  uint64 group_id = 8;
+  GroupMode group_mode = 9;
+  uint64 match_id = 10;
+  uint32 wait_join_time = 11;
+  uint32 room_role = 12;
+  uint32 bot_cnt = 13;
+  int32 ranking_points = 14;
+  repeated uint32 skills = 15;
+  string lock_region = 16;  // has default
+  string noti_region = 17;  // has default
+  MatchMode match_mode = 18;
+  uint32 banner_id = 19;
+  uint32 head_pic = 20;
+  string clan_name = 21;  // has default
+  uint32 season_rank = 22;
+  repeated LoadoutInfo loadouts = 23;
+  uint32 map_id = 24;
+  COW.GameMode game_mode = 25;
+  uint64 room_id = 26;
+  bool has_elite_pass = 27;
+  uint32 badge_cnt = 28;
+  uint32 badge_id = 29;
+  bool use_cache = 30;
+  uint32 ep_goldlimit_bonus = 32;
+  uint32 bot_cnt_lv1 = 33;
+  uint32 bot_cnt_lv2 = 34;
+  uint32 bot_cnt_lv3 = 35;
+  uint32 bot_cnt_lv4 = 36;
+  bool enable_death_spectate = 37;
+  uint32 room_type = 39;
+  bool show_rank = 40;
+  repeated EmoteInfo emotes = 41;
+  string group_name = 42;  // has default
+  bool enable_group_icon = 43;
+  repeated RedEnvelopeInfo red_envelopes = 44;
+  repeated uint32 shows = 45;
+  PetInfo pet_info = 46;
+  uint32 difficulty = 47;
+  uint32 pve_primary_weapon_skin = 48;
+  repeated ReviveTokenInfo revive_tokens = 49;
+  WalletInfo wallet = 50;
+  ReviveTokenCost revive_token_cost = 51;
+  uint32 wta_currency_type = 52;
+  WarmGameInfo warmGame = 53;
+  uint32 room_max_mmr = 55;
+  uint32 max_level = 56;
+  uint32 room_setting = 57;
+  CustomRoomSinglePlayerMatchStats custom_room_match_stats = 58;
+  ChampionshipInfo championship_info = 59;
+  uint64 room_creator_id = 60;
+  LinkageInfo linkage_activity_info = 61;
+  uint32 room_min_mmr = 62;
+  uint32 level_of_min_mmr_player = 63;
+  uint32 bot_cnt_lv5 = 64;
+  uint32 bot_cnt_lv6 = 65;
+  uint32 casual_player_safe_zone_switch = 66;
+  uint32 pin_id = 67;
+  uint32 room_setting2 = 68;
+  TrainingTokenInfo training_token_info = 69;
+  string group_abbr_name = 70;  // has default
+  bool is_cs_advanced = 71;
+  bytes cs_advanced_setting = 72;
+  uint32 werewolves_room_param = 73;
+  uint32 werewolves_room_param2 = 74;
+  TokenCupMatchInfo cup_info = 75;
+  uint32 game_bag_show = 76;
+  repeated IngameItem ingame_items = 77;
+  uint32 werewolves_room_param3 = 78;
+  uint64 voice_id = 79;
+  uint64 pre_group_id = 80;
+  uint32 peak_rank_pos = 81;
+  bytes mode_settings = 82;
+  uint32 clan_badge = 83;
+  uint64 clan_id = 84;
+  uint32 ai_cnt = 85;
+  repeated AIInfo ai_infos = 86;
+  uint32 workshop_team_index = 87;
+}
+
+message MatchStatsRes {
+  uint64 account_id = 1;
+  uint64 match_id = 2;
+  uint32 level_before = 5;
+  uint32 level_after = 6;
+  bytes income = 7;
+  bytes match_stats = 8;
+  uint32 group_mode = 9;
+}
+
+message MaxLobbyDisplayInfo {
+  repeated uint32 weapon_ids = 1;
+  uint32 vehicle_display = 2;
+  uint32 gloo_display = 3;
+  uint32 skyboard_display = 4;
+}
+
+message MemberPrepareReq {
+  uint64 member_id = 1;
+  bool need_prepare = 2;
+}
+
+message MMRInfo {
+  COW.GameMode game_mode = 1;
+  uint32 mmr = 2;
+  uint32 bot_point = 3;
+}
+
+message NewLuckyBagList {
+  repeated NewLuckyBagReq new_lucky_bags = 1;
+}
+
+message NewLuckyBagReq {
+  uint64 clan_id = 1;
+  uint64 bag_id = 2;
+  uint64 creater_id = 3;
+  uint64 created_at = 4;
+  uint32 total_num = 5;
+  uint32 reason = 6;
+  uint32 level = 7;
+  uint32 type = 8;
+}
+
+message NewPlayerLevelUpTaskUpdateInfo {
+  uint32 id = 1;
+  uint32 state = 2;
+}
+
+message NewPlayerLevelUpTaskUpdateNtf {
+  repeated NewPlayerLevelUpTaskUpdateInfo tasks = 1;
+}
+
+message PetInfo {
+  uint32 id = 1;
+  string name = 2;  // has default
+  uint32 level = 3;
+  uint32 exp = 4;
+  uint32 skin_id = 5;
+  repeated uint32 actions = 7;
+  repeated PetSkillInfo skills = 8;
+}
+
+message PetLevelUpNtf {
+  uint32 id = 1;
+  uint32 old_level = 2;
+  uint32 new_level = 3;
+  uint32 old_exp = 4;
+  uint32 new_exp = 5;
+  uint32 add_exp = 6;
+}
+
+message PetSkillInfo {
+  uint32 skill_id = 1;
+  uint32 skill_level = 2;
+}
+
+message PrepareClanWarReq {
+  uint64 member_id = 1;
+  bool has_prepared = 2;
+}
+
+message PresenceInfo {
+  uint64 i = 1;
+  string r = 2;  // has default
+  uint32 p = 3;
+  int64 update_time = 4;
+  uint32 m = 5;
+  uint32 g = 6;
+  uint32 a = 7;
+  uint64 gi = 8;
+}
+
+message PresenceListReq {
+  repeated uint64 account_ids = 1;
+  uint32 account_list_type = 2;
+}
+
+message PresenceListRes {
+  repeated PresenceInfo presences = 1;
+  uint32 account_list_type = 2;
+  repeated uint64 offline_account_ids = 3;
+}
+
+message ProfileNewSkillNtf {
+  uint32 new_skill_id = 1;
+}
+
+message ProtoReq {
+  uint32 cmd = 1;
+  bytes data = 2;
+}
+
+message PushMailNtf {
+  uint32 new_mail_cnt = 1;
+}
+
+message QuitClanWarReq {
+  uint64 quit_member_id = 1;
+  uint64 new_captain_id = 2;
+}
+
+message RampagePointsUpdateNtf {
+  uint64 account_id = 1;
+  uint64 rampage_points = 2;
+  uint32 rampage_rank = 3;
+}
+
+message RecvAntiDataReq {
+  bytes anti_data = 1;
+  uint32 data_len = 2;
+}
+
+message RedEnvelopeInfo {
+  uint32 id = 1;
+  uint32 cnt = 2;
+  uint32 expire_time = 3;
+}
+
+message RelatedFriendOnlineNtf {
+  uint64 account_id = 1;
+  uint32 relation_type = 2;
+}
+
+message RelatedFriendRequestNtf {
+  uint64 friend_id = 1;
+  int64 request_time = 2;
+  uint32 relation_type = 3;
+  bool is_create = 4;
+}
+
+message RemoveChampionshipTeamMemberReq {
+  uint64 team_id = 1;
+  uint64 removee_id = 2;
+}
+
+message RemoveClanWarMemberReq {
+  uint64 removee_id = 1;
+  uint64 new_captain_id = 2;
+}
+
+message RemoveCupTeamMemberReq {
+  uint64 cup_team_id = 1;
+  uint64 removee_id = 2;
+  uint32 cup_type = 3;
+  uint32 cup_id = 4;
+}
+
+message RemoveMemberReq {
+  uint64 clan_id = 1;
+  uint64 remover_id = 2;
+}
+
+message ReportChatReq {
+  uint64 target_account_id = 1;
+  uint32 reason = 2;
+  string message = 3;  // has default
+}
+
+message RequestJoinChampionshipTeamReq {
+  uint64 applicant_id = 1;
+}
+
+message RequestJoinCupTeamReq {
+  uint64 applicant_id = 1;
+  uint32 cup_type = 2;
+  uint32 cup_id = 3;
+}
+
+message ReviveTokenCost {
+  uint32 gem_cost_self = 1;
+  uint32 gem_cost_teammate = 2;
+  uint32 gem_cost_wiped = 3;
+}
+
+message ReviveTokenInfo {
+  uint32 id = 1;
+  uint32 cnt = 2;
+  uint32 expire_time = 3;
+}
+
+message RoleCheckPlayersNtf {
+  repeated uint64 account_ids = 1;
+}
+
+message RoomBasicInfo {
+  uint64 id = 1;
+  string name = 2;  // has default
+  uint32 map_id = 3;
+  uint32 game_mode = 4;
+  uint32 group_mode = 5;
+  uint32 cur_member_num = 6;
+  uint32 max_member_num = 7;
+  uint32 cur_spectator_num = 8;
+  uint32 max_spectator_num = 9;
+  uint32 state = 10;
+  bool need_code = 11;
+  uint32 banner = 12;
+  uint32 color = 13;
+  uint32 icon = 14;
+  SimpleJSON.Type room_type = 15;
+  uint32 level_visual_style = 16;
+  bool enable_emulator_check = 17;
+  uint32 owner_role = 18;
+  bool is_cs_advanced = 19;
+  uint32 language = 20;
+  bool contestant_role_check = 21;
+  uint32 room_setting = 22;
+}
+
+message RoomCardInfo {
+  uint32 id = 1;
+  uint32 cnt = 2;
+  uint32 expire_time = 3;
+}
+
+message RoomChangeAvailableMapsNtf {
+  uint64 account_id = 1;
+  repeated uint32 available_maps = 2;
+  uint64 room_id = 3;
+}
+
+message RoomChangeAvailableMapsReq {
+  uint64 room_id = 1;
+  repeated uint32 available_maps = 2;
+  SimpleJSON.Type room_type = 3;
+}
+
+message RoomChangeReq {
+  uint64 room_id = 1;
+  string room_name = 2;  // has default
+  string code = 3;  // has default
+  uint32 map_id = 4;
+  uint32 game_mode = 5;
+  uint32 max_member_num = 6;
+  uint32 max_spectator_num = 7;
+  bool enable_death_spectate = 8;
+  bool enable_group_icon = 9;
+  uint32 level_visual_style = 10;
+  uint32 room_setting = 11;
+  uint32 room_setting2 = 12;
+  SimpleJSON.Type room_type = 13;
+  bytes cs_advanced_setting = 14;
+  uint32 werewolves_room_param = 15;
+  uint32 werewolves_room_param2 = 16;
+  uint32 werewolves_room_param3 = 17;
+}
+
+message RoomCountDownNtf {
+  uint32 count_down_seconds = 1;
+}
+
+message RoomCountDownReq {
+  uint64 room_id = 1;
+  uint32 count_down_seconds = 2;
+}
+
+message RoomCreateReq {
+  uint32 map_id = 1;
+  uint32 game_mode = 2;
+  uint32 group_mode = 3;
+  string room_name = 4;  // has default
+  string code = 5;  // has default
+  uint32 max_member_num = 6;
+  uint32 max_spectator_num = 7;
+  bool enable_death_spectate = 8;
+  SimpleJSON.Type room_type = 9;
+  uint64 group_id = 10;
+  bool enable_group_icon = 11;
+  uint32 level_visual_style = 12;
+  uint64 room_id = 13;
+  uint32 room_setting = 14;
+  repeated AccountIDCPingInfo ping_list = 15;
+  repeated uint32 available_maps = 16;
+  uint64 reopen_id = 17;
+  uint32 room_setting2 = 18;
+  bool enable_emulator_check = 19;
+  uint32 creater_role = 20;
+  bool is_cs_advanced = 21;
+  bytes cs_advanced_setting = 22;
+  uint32 werewolves_room_param = 23;
+  uint32 werewolves_room_param2 = 24;
+  uint32 language = 25;
+  bool contestant_role_check = 26;
+  bool room_data_inherit = 27;
+  uint32 workshop_id = 28;
+  uint32 werewolves_room_param3 = 29;
+  uint32 workshop_slot_type = 30;
+  string workshop_code = 31;  // has default
+  int64 workshop_update_time = 32;
+  uint32 workshop_map_source = 33;
+}
+
+message RoomDismissNtf {
+  uint64 leaver_id = 1;
+  uint64 room_id = 2;
+  DismissReason reason = 3;
+}
+
+message RoomGroupInfo {
+  uint64 id = 1;
+  string name = 2;  // has default
+  repeated RoomPlayerInfo members = 3;
+  string abbr_name = 4;  // has default
+}
+
+message RoomIDReq {
+  uint64 room_id = 1;
+  SimpleJSON.Type room_type = 2;
+}
+
+message RoomInfo {
+  uint64 id = 1;
+  string name = 2;  // has default
+  uint64 owner = 3;
+  uint32 map_id = 4;
+  uint32 game_mode = 5;
+  uint32 group_mode = 6;
+  uint32 max_member_num = 7;
+  uint32 max_spectator_num = 8;
+  uint32 state = 9;
+  string code = 10;  // has default
+  repeated RoomGroupInfo groups = 11;
+  repeated RoomPlayerInfo spectators = 12;
+  bool enable_death_spectate = 13;
+  SimpleJSON.Type room_type = 14;
+  bool enable_group_icon = 15;
+  uint32 match_times = 16;
+  uint32 level_visual_style = 17;
+  uint32 room_setting = 18;
+  uint32 room_setting2 = 19;
+  bool enable_emulator_check = 20;
+  bool is_cs_advanced = 21;
+  bytes cs_advanced_setting = 22;
+  uint32 werewolves_room_param = 23;
+  uint32 werewolves_room_param2 = 24;
+  uint32 language = 25;
+  bool contestant_role_check = 26;
+  WorkshopInfo workshop = 27;
+  uint32 werewolves_room_param3 = 28;
+  bool enough_room_card = 29;
+  bool owner_online = 30;
+  uint64 voice_id = 31;
+}
+
+message RoomInfoReq {
+  uint64 room_id = 1;
+  SimpleJSON.Type room_type = 2;
+}
+
+message RoomInviteNtf {
+  uint64 room_id = 1;
+  RoomPlayerInfo inviter_info = 2;
+  uint32 map_id = 3;
+  uint32 game_mode = 4;
+  uint32 group_mode = 5;
+  uint64 owner_id = 6;
+  SimpleJSON.Type room_type = 7;
+}
+
+message RoomInviteReq {
+  uint64 invitee_id = 1;
+}
+
+message RoomJoinNtf {
+  repeated RoomPlayerInfo join_player_list = 1;
+  RoomInfo room_info = 2;
+}
+
+message RoomJoinReq {
+  uint64 room_id = 1;
+  string code = 2;  // has default
+  uint64 group_id = 3;
+  bool is_solo = 4;
+  repeated JoinRoomPlayerInfo players = 5;
+  string group_name = 6;  // has default
+  uint64 inviter_account_id = 7;
+  repeated AccountIDCPingInfo ping_list = 8;
+  repeated uint32 available_maps = 9;
+  SimpleJSON.Type room_type = 10;
+  string group_abbr_name = 11;  // has default
+}
+
+message RoomKickNtf {
+  RoomPlayerInfo kick_player_info = 1;
+  RoomInfo room_info = 2;
+}
+
+message RoomKickReq {
+  uint64 kick_account_id = 1;
+  uint64 room_id = 2;
+}
+
+message RoomLeaveNtf {
+  RoomPlayerInfo leaver_info = 1;
+  RoomInfo room_info = 2;
+}
+
+message RoomLeaveReq {
+  uint64 room_id = 1;
+}
+
+message RoomListReq {
+  uint64 room_id = 1;
+  SimpleJSON.Type room_type = 2;
+  repeated COW.GameMode game_modes = 3;
+  COW.TabType room_tab_type = 4;
+}
+
+message RoomListRes {
+  repeated RoomBasicInfo room_list = 1;
+}
+
+message RoomOwnerSwitchGroupReq {
+  uint64 room_id = 1;
+  uint32 from_group_pos = 2;
+  uint64 from_group_id = 3;
+  uint32 to_group_pos = 4;
+  uint64 to_group_id = 5;
+  SimpleJSON.Type room_type = 6;
+}
+
+message RoomPlayerInfo {
+  uint64 group_id = 1;
+  uint64 account_id = 2;
+  string nickname = 3;  // has default
+  uint32 emulator_score = 4;
+  uint32 head_pic = 5;
+  bool ready = 6;
+  uint32 banner_id = 7;
+  uint32 role = 8;
+  repeated uint32 available_maps = 9;
+  uint32 pin_id = 10;
+  uint32 using_version = 11;
+  uint32 rank = 12;
+  uint32 ranking_points = 13;
+  uint32 cs_rank = 14;
+  uint32 cs_ranking_points = 15;
+  uint64 voice_id = 16;
+  uint32 peak_rank_pos = 17;
+  uint32 cs_peak_rank_pos = 18;
+}
+
+message RoomSetReadyNtf {
+  uint64 room_id = 1;
+  repeated RoomPlayerInfo players = 2;
+}
+
+message RoomSetReadyReq {
+  bool ready = 1;
+  bool set_group = 2;
+}
+
+message RoomSpectateReq {
+  uint64 room_id = 1;
+  string code = 2;  // has default
+  uint64 group_id = 3;
+  bool is_solo = 4;
+  repeated JoinRoomPlayerInfo players = 5;
+  repeated AccountIDCPingInfo ping_list = 6;
+  repeated uint32 available_maps = 7;
+  SimpleJSON.Type room_type = 8;
+}
+
+message RoomStartReq {
+  uint64 room_id = 1;
+}
+
+message RoomStateNtf {
+  uint64 room_id = 1;
+  uint32 state = 2;
+}
+
+message RoomSwitchSeatReq {
+  uint64 room_id = 1;
+  uint64 account_id = 2;
+  PlayerRole to_role = 3;
+  uint32 to_room_pos = 4;
+  uint32 to_group_pos = 5;
+  SimpleJSON.Type room_type = 6;
+}
+
+message SecReportFlowReq {
+  uint32 plat_id = 1;
+  uint32 area_id = 2;
+  string open_id = 3;  // has default
+  uint64 battle_id = 4;
+  string be_report_open_id = 5;  // has default
+  uint32 be_report_camp = 6;
+  uint32 complaint_type = 7;
+  string sec_report_data = 8;  // has default
+  uint32 is_special_mode = 9;
+  uint32 be_report_plat_id = 10;
+}
+
+message SendDataToClientNtf {
+  bytes anti_data = 1;
+  uint32 data_len = 2;
+}
+
+message ShowEmoteNtf {
+  uint64 account_id = 1;
+  uint32 emote_id = 2;
+  repeated AccountEmoteRandomID random_id_list = 4;
+}
+
+message ShowEmoteReq {
+  uint64 group_id = 1;
+  uint32 emote_id = 2;
+  repeated AccountEmoteRandomID random_id_list = 4;
+}
+
+message ShowPetActionNtf {
+  uint64 account_id = 1;
+  uint32 action_id = 2;
+}
+
+message ShowPetActionReq {
+  uint64 group_id = 1;
+  uint32 action_id = 2;
+}
+
+message SpeedFromTaskChangeNtf {
+  uint32 deposit = 1;
+  uint32 current_speed_from_task = 2;
+  uint32 speed_change_time = 3;
+}
+
+message StatsInfo {
+  uint32 wins = 1;
+  uint32 kills = 2;
+  uint32 deaths = 3;
+  uint32 mvp_count = 4;
+  uint32 damage = 5;
+  uint32 games_played = 6;
+  uint32 double_kills = 7;
+  uint32 triple_kills = 8;
+  uint32 four_kills = 9;
+  uint32 head_shot_kills = 10;
+}
+
+message TeamMatchEndInfo {
+  uint32 cup_type = 1;
+  uint32 cup_id = 2;
+  bool is_invalid_match = 3;
+  uint64 opponent_team_id = 4;
+  string opponent_team_name = 5;  // has default
+  uint32 opponent_head_pic = 6;
+}
+
+message TeammateCheatingNtf {
+  string invitee_nickname = 1;  // has default
+}
+
+message TextMsgReq {
+  uint64 sender_id = 1;
+  uint64 channel_id = 2;
+  uint32 channel_type = 3;
+  string content = 4;  // has default
+  uint64 send_at = 5;
+  uint64 group_id = 6;
+  MsgType msg_type = 7;
+  string extra_info = 8;  // has default
+  BriefProfile profile = 9;
+  string channel_lang = 10;  // has default
+}
+
+message TokenCupMatchInfo {
+  uint64 team_id = 1;
+  uint32 cup_type = 2;
+  uint32 cup_id = 3;
+  string team_name = 4;  // has default
+  uint32 head_pic = 5;
+}
+
+message TrainingTokenInfo {
+  uint32 token_id = 1;
+  uint32 daily_gained_cnt = 2;
+  uint32 token_cnt = 3;
+}
+
+message TypedCupMatchInfo {
+  uint64 team_id = 1;
+  uint32 cup_type = 2;
+  uint32 cup_id = 3;
+  uint32 tier = 4;
+  string team_name = 5;  // has default
+  string country_or_area = 6;  // has default
+  uint32 head_pic = 7;
+  uint32 banner_id = 8;
+  bool is_locked = 9;
+  uint64 captain_id = 10;
+  uint32 member_num = 11;
+  uint32 win_count = 12;
+  repeated uint64 member_ids = 13;
+  bool is_qualified = 14;
+  repeated bool battle_record = 15;
+}
+
+message VeteranTaskUpdateInfo {
+  uint32 id = 1;
+  uint32 data = 2;
+  uint32 state = 3;
+  string context = 4;  // has default
+}
+
+message VeteranTaskUpdateNtf {
+  repeated VeteranTaskUpdateInfo tasks = 1;
+  uint32 finished_task_cnt = 2;
+}
+
+message VipCardPurchaseNtf {
+  repeated VipCardType card_types = 1;
+}
+
+message WalletInfo {
+  uint32 coins = 1;
+  int32 gems = 2;
+}
+
+message WarmGameInfo {
+  uint32 type = 1;
+  uint32 level = 2;
+}
+
+message WinnerTakesAllDesc {
+  uint32 chip_cost = 1;
+  uint32 diamond_cost = 2;
+}
+
+message WorkshopInfo {
+  string workshop_name = 2;  // has default
+  uint64 perf_cost = 3;
+  bytes workshop_settings = 4;
+  uint32 slot_type = 5;
+  uint32 slot_id = 6;
+  uint64 resource_statistics = 7;
+  int64 last_update_time = 8;
+  string workshop_code = 9;  // has default
+  string author_name = 10;  // has default
+  uint64 like_count = 11;
+  uint64 subscribe_count = 12;
+  string workshop_desc = 13;  // has default
+  uint64 author_id = 14;
+  bytes mode_settings = 15;
+  GroupMode group_mode = 16;
+  repeated uint32 tags = 17;
+  bytes object_attribute_settings = 18;
+  COW.GameMode game_mode = 19;
+  uint32 team_count = 20;
+  bytes mini_map_settings = 21;
+  bytes mini_map_object_settings = 22;
+}
