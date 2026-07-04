@@ -15,12 +15,12 @@ import (
 // out-of-zone damage here (CS is a fixed 50 HP every 3s).
 const (
 	zoneMargin      = 45.0             // metres of buffer beyond the gates for the outer circle
-	zoneInnerRatio  = 0.35             // fully-shrunk radius as a fraction of the outer
+	zoneInnerRatio  = 0.01             // fully-shrunk radius as a fraction of the outer
 	zoneDefaultR    = 70.0             // outer radius when there is no arena (fixed MATCH_SPAWN)
 	zoneWaitDur     = 20 * time.Second // Fight time before the zone starts shrinking
 	zoneShrinkDur   = 25 * time.Second // time to shrink outer -> inner
 	zoneDamage      = 50               // HP lost per tick outside the zone (CS fixed)
-	zoneDamageEvery = 3 * time.Second  // damage interval (CS fixed)
+	zoneDamageEvery = 2 * time.Second  // damage interval (CS fixed)
 )
 
 // zoneGeometry returns the circle centre + outer radius for the current round: the
@@ -81,6 +81,17 @@ func (s *session) runSafeZone(stop chan struct{}) {
 			}
 		}
 	}
+}
+
+// broadcastZone sends the current arena's safe zone in the waiting stage. Called at a
+// city-spawn teleport (round transition) so the client renders the NEW city's circle
+// right away — otherwise the previous round's circle (at the old city's coords) stays up
+// until the Fight phase's runSafeZone re-sends it, leaving a wrong/absent zone during the
+// buy phase at the new city.
+func (s *session) broadcastZone() {
+	center, outerR := s.zoneGeometry()
+	innerR := outerR * zoneInnerRatio
+	s.sendZone(byte(s.round), center, outerR, center, innerR, message.ZoneWaiting, zoneWaitDur)
 }
 
 // sendZone emits one cmd 117 zone update, StartMs=now and EndMs=now+dur on the match

@@ -106,6 +106,7 @@ func (s *session) roundTransition(revivePlayer bool) {
 	// Introduction: reveal the new round number and fade back to light (still frozen, so
 	// keep pulling an alive player to the new gate through the fade).
 	s.round++
+	s.broadcastZone() // re-draw the safe zone at the NEW city now that the player teleported
 	time.Sleep(150 * time.Millisecond)
 	if !s.streamPhase(message.CSPhaseIntroduction, introReveal, pull, false) {
 		return

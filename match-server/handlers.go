@@ -92,6 +92,7 @@ func (s *session) handleJoinMatchPost(p *packet.Packet) {
 			s.bot.SpawnPos.X, s.bot.SpawnPos.Y, s.bot.SpawnPos.Z))
 
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
+	s.broadcastZone() // draw the safe zone at the NEW city now that the player joined
 	s.startCSSync()
 }
 
