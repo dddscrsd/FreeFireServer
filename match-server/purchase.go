@@ -33,6 +33,16 @@ var armorSlot = map[uint32]byte{
 	305: message.SlotHelmet, // level 2 helmet
 }
 
+// buildingSlot maps a deployable "building" item (gloo/ice wall) DataID to its OWN loadout
+// slot (13). The gloo wall is NOT a grenade: classifying it as a throwable (Filter 4) put
+// it in the grenade slot (3), where the client couldn't select it (its gloo-wall button
+// maps to slot 13) and it clashed with the weapon/grenade slots. DataIDs 801 (old) / 1201
+// (loot) per the reference EQUIP_SLOT_MAP.
+var buildingSlot = map[uint32]byte{
+	801:  message.SlotBuilding,
+	1201: message.SlotBuilding,
+}
+
 // csItemPlacement describes how a purchased item enters the loadout.
 type csItemPlacement struct {
 	slot      byte   // equipment slot, or slotNone; for a primary weapon resolved live
@@ -52,6 +62,9 @@ func placeItem(item *message.ShopItem) csItemPlacement {
 		return csItemPlacement{slot: slotNone, ammo: ammo, isWeapon: true, isPrimary: true}
 	}
 	if slot, ok := armorSlot[item.ItemID]; ok {
+		return csItemPlacement{slot: slot}
+	}
+	if slot, ok := buildingSlot[item.ItemID]; ok { // gloo/ice wall -> its own Building slot (not the grenade slot)
 		return csItemPlacement{slot: slot}
 	}
 	if item.Filter == shopFilterThrowable && item.ItemID != itemMushroom {
@@ -158,10 +171,12 @@ func (s *session) addPurchasedItemLocked(item *message.ShopItem, qty uint32) ([]
 	}
 	uid := s.nextUIDLocked()
 	inv := []message.InvItem{{Unique: uid, Data: item.ItemID, Count: qty}}
+	s.clientUIDs = append(s.clientUIDs, uid) // track so a respawn can cmd-327 clear it
 	if place.isWeapon {
 		inv[0].Runtime = ClipSize(item.ItemID, SkinForWeapon(item.ItemID, s.player.Slots)) // loaded magazine
 		ammoUID := s.nextUIDLocked()
 		inv = append(inv, message.InvItem{Unique: ammoUID, Data: place.ammo, Count: ammoCountFor(place.ammo)})
+		s.clientUIDs = append(s.clientUIDs, ammoUID)
 		s.itemOnHand = uid // switch to the newly bought weapon
 		s.weapons[place.slot] = csWeapon{slot: place.slot, data: item.ItemID, unique: uid, ammo: place.ammo, ammoUID: ammoUID}
 	}

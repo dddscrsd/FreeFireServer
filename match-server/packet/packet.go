@@ -29,35 +29,36 @@ const (
 
 // cmds (message.OPNCEEBBMJH enum values recovered from the client).
 const (
-	CmdHello             = 1   // client HELLO / server S2C_Hello_Res
-	CmdAck               = 2   // reliable ACK / keepalive
-	CmdPing              = 3   // unreliable ping (client<->server)
-	CmdReconnect         = 5   // client reconnect hello (carries SessionKey)
-	CmdBattleStart       = 110 // server -> client: JAKKPBMHLAI (start the match)
-	CmdForceSync         = 144 // server -> client: JIIKBLKJCKM force-sync (SyncStateWithServer) — position + phys state (handler DDBOMMOJHDD)
-	CmdTeleport          = 145 // server -> client: JIIKBLKJCKM teleport (SyncTeleportInfo) — position + ROTATION (handler OHPEJIKNCMD)
-	CmdJoinMatchFinished = 130 // server -> client: LGBENPIAFIN (join complete / HUD)
-	CmdJoinMatchRes      = 100 // server -> client: LGIGCGIDOKP (join result)
-	CmdPlayerJoin        = 101 // server -> client: GKBDLJFGGMI (player join)
-	CmdMatchEnd          = 103 // server -> client: RUDP_MATCH_END (also used as the SendKick(so=3) carrier on shutdown)
-	CmdChangeHeldItem    = 108 // client -> server: RUDP_CHANGE_INVENTORY_ON_HAND — [entity u32][itemUnique u32]
-	CmdTakeDamage        = 106 // client -> server: hit report (victim u32, damage u16, attacker u32, ...); server applies HP
-	CmdDead              = 107 // server -> client: OGCHKCGKGKN — entity died (victim, killer, position, ...)
-	CmdBindPRI           = 118 // server -> client: S2C_RUDP_BindPRI (reliable) — maps RepIDs to entities; local player FIRST
-	CmdSyncInventory     = 174 // server -> client: BGKCMKNDAGA (typed) — player inventory/equipment sync (additive; send once)
-	CmdPlayerQuitReq     = 191
-	CmdPlayerQuitRes     = 192  // server -> client: typed — player quit
-	CmdCSShop            = 407  // server -> client: NDBLNLLMMJA (typed) — Contra Squad buy-phase shop (LOJA) item list
-	CmdCSPurchase        = 408  // client <-> server: IIOCLGDNBBB (typed) — buy request / result (result carries new coin balance)
-	CmdCSRoundResult     = 409  // server -> client: DMJPAJFMMMB (typed) — round result (winner team id -> VICTORY/DEFEAT + score tally)
-	CmdSafeZoneChange    = 117  // server -> client: KGOHADAMBLI (typed) — circular safezone (outer->inner shrink; EndMs drives the Fight timer)
-	CmdNotifyRevive      = 388  // server -> client: MJCMIMNHILD (typed) — revive an EXISTING dead player at a position (keeps team/faction/loadout)
-	CmdPRISync           = 900  // server -> client: PRI replication (per-player), 0x384. (1.70.1; ref's 500 is an unrelated typed handler AJNCGCHMNIP)
-	CmdGRISync           = 901  // server -> client: GRI replication (game-wide match state), single block, 0x385. (1.70.1; ref's 501 is an unrelated typed handler JPKINIIHOFP)
-	CmdJoinMatchPrepare  = 439  // client -> server: RUDP_JOIN_MATCH_PREPARE — [u32 totalLen][token chunk] (big prepare_token, bigger half)
-	CmdJoinMatchPost     = 440  // client -> server: RUDP_JOIN_MATCH_POST (match metadata + small/tail prepare_token)
-	CmdSyncServerTime    = 1000 // server -> client: uint32 ServerGameTickCount; client clock = tick/30s (drives the CS timers)
-	CmdClientPos         = 1001 // client -> server: per-tick position/state update (carries the local player's world pos)
+	CmdHello               = 1   // client HELLO / server S2C_Hello_Res
+	CmdAck                 = 2   // reliable ACK / keepalive
+	CmdPing                = 3   // unreliable ping (client<->server)
+	CmdReconnect           = 5   // client reconnect hello (carries SessionKey)
+	CmdBattleStart         = 110 // server -> client: JAKKPBMHLAI (start the match)
+	CmdForceSync           = 144 // server -> client: JIIKBLKJCKM force-sync (SyncStateWithServer) — position + phys state (handler DDBOMMOJHDD)
+	CmdTeleport            = 145 // server -> client: JIIKBLKJCKM teleport (SyncTeleportInfo) — position + ROTATION (handler OHPEJIKNCMD)
+	CmdJoinMatchFinished   = 130 // server -> client: LGBENPIAFIN (join complete / HUD)
+	CmdJoinMatchRes        = 100 // server -> client: LGIGCGIDOKP (join result)
+	CmdPlayerJoin          = 101 // server -> client: GKBDLJFGGMI (player join)
+	CmdMatchEnd            = 103 // server -> client: RUDP_MATCH_END (also used as the SendKick(so=3) carrier on shutdown)
+	CmdChangeHeldItem      = 108 // client -> server: RUDP_CHANGE_INVENTORY_ON_HAND — [entity u32][itemUnique u32]
+	CmdTakeDamage          = 106 // client -> server: hit report (victim u32, damage u16, attacker u32, ...); server applies HP
+	CmdDead                = 107 // server -> client: OGCHKCGKGKN — entity died (victim, killer, position, ...)
+	CmdBindPRI             = 118 // server -> client: S2C_RUDP_BindPRI (reliable) — maps RepIDs to entities; local player FIRST
+	CmdSyncInventory       = 174 // server -> client: BGKCMKNDAGA (typed) — player inventory/equipment sync (additive; send once)
+	CmdRemoveInventoryList = 327 // server -> client: ABJFDIFIILN (typed) — REMOVE items by unique from a player's inventory (the only remove path)
+	CmdPlayerQuitReq       = 191
+	CmdPlayerQuitRes       = 192  // server -> client: typed — player quit
+	CmdCSShop              = 407  // server -> client: NDBLNLLMMJA (typed) — Contra Squad buy-phase shop (LOJA) item list
+	CmdCSPurchase          = 408  // client <-> server: IIOCLGDNBBB (typed) — buy request / result (result carries new coin balance)
+	CmdCSRoundResult       = 409  // server -> client: DMJPAJFMMMB (typed) — round result (winner team id -> VICTORY/DEFEAT + score tally)
+	CmdSafeZoneChange      = 117  // server -> client: KGOHADAMBLI (typed) — circular safezone (outer->inner shrink; EndMs drives the Fight timer)
+	CmdNotifyRevive        = 388  // server -> client: MJCMIMNHILD (typed) — revive an EXISTING dead player at a position (keeps team/faction/loadout)
+	CmdPRISync             = 900  // server -> client: PRI replication (per-player), 0x384. (1.70.1; ref's 500 is an unrelated typed handler AJNCGCHMNIP)
+	CmdGRISync             = 901  // server -> client: GRI replication (game-wide match state), single block, 0x385. (1.70.1; ref's 501 is an unrelated typed handler JPKINIIHOFP)
+	CmdJoinMatchPrepare    = 439  // client -> server: RUDP_JOIN_MATCH_PREPARE — [u32 totalLen][token chunk] (big prepare_token, bigger half)
+	CmdJoinMatchPost       = 440  // client -> server: RUDP_JOIN_MATCH_POST (match metadata + small/tail prepare_token)
+	CmdSyncServerTime      = 1000 // server -> client: uint32 ServerGameTickCount; client clock = tick/30s (drives the CS timers)
+	CmdClientPos           = 1001 // client -> server: per-tick position/state update (carries the local player's world pos)
 )
 
 var (

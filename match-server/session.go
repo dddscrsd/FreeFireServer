@@ -64,9 +64,10 @@ type session struct {
 	invMu      sync.Mutex
 	coins      uint32              // buy-phase money
 	award      uint32              // coins awarded for the round (kills + win bonus) — added to coins at the next buy phase
-	uidCounter uint32              // allocates unique item instance ids
+	uidCounter uint32              // allocates unique item instance ids — MONOTONIC (never reset), so a new item can't collide with a stale one the client hasn't dropped yet
 	equipment  []message.Equipment // full loadout slot map (re-sent whole each sync)
 	weapons    map[byte]csWeapon   // current loadout weapons keyed by slot (2-primary placement + round-restart ammo refill)
+	clientUIDs []uint32            // every item unique currently on the client (weapons, ammo, gloo walls, armour) so a respawn can cmd-327 clear them all
 	itemOnHand uint32              // unique of the currently held item
 
 	// Per-entity current HP (entity game id -> HP), guarded by hpMu. Damage reports

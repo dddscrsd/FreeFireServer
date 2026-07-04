@@ -35,7 +35,7 @@ var csShopItems = []message.ShopItem{
 	{ItemID: 303, Price: 1000, Filter: 2},               // lvl3 vest
 	{ItemID: 106, Price: 200, Filter: 2},                // armour repair kit
 	{ItemID: 601, Price: 200, Filter: 4},                // frag grenade
-	{ItemID: 1201, Price: 300, Filter: 4},               // gel grenade
+	{ItemID: 1201, Price: 300, Filter: 4},               // gloo wall (deployable — Building slot 13)
 	{ItemID: 709, Price: 200, Filter: 4, Limitation: 2}, // mushroom (max 2/round)
 }
 

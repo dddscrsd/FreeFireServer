@@ -231,13 +231,14 @@ func (s *session) shopWarmup() {
 // the economy). See giveLoadout.
 func (s *session) sendStartingLoadout() { s.giveLoadout(true) }
 
-// giveLoadout (re-)issues the base USP loadout via cmd 174: a USP (data 3) in the
-// secondary/pistol slot, held in hand, plus pistol ammo (data 202). At match start
-// (resetCoins) it also seeds the economy; on a REVIVE (resetCoins=false) it re-gives the
-// weapon the death dropped WITHOUT touching the accumulated coins — the client clears the
-// loadout to fists on death, so this restores it (uidCounter resets so the uids match a
-// cleared inventory, no duplicate). Purchased weapons are lost on death; the player
-// re-buys with their kept coins.
+// giveLoadout resets the player to the base loadout. It FIRST clears whatever the client
+// currently holds — cmd 327 (RemoveInventoryList) over every tracked unique — then issues a
+// fresh USP (data 3) in the pistol slot + pistol ammo (data 202) via cmd 174. The clear is
+// essential: a pending-revive death keeps the pawn, so the client never drops its loadout on
+// its own, and cmd 174 can only ADD, so without the wipe the player would keep every stale
+// weapon/gloo-wall/armour across a respawn. This makes the respawn start fresh with ONLY the
+// USP. At match start (resetCoins) it also seeds the economy; on a revive (resetCoins=false)
+// it keeps the accumulated coins so the player re-buys with their kept money.
 func (s *session) giveLoadout(resetCoins bool) {
 	const uspData = 3
 	const pistolAmmo, pistolAmmoCount = 202, 120
@@ -246,7 +247,10 @@ func (s *session) giveLoadout(resetCoins bool) {
 	if resetCoins {
 		s.coins = startingCoins
 	}
-	s.uidCounter = 0
+	// Snapshot the client's current items so cmd 327 can DELETE them before we re-add. Do
+	// NOT reset uidCounter (keep it monotonic) so the fresh USP's unique can't collide with
+	// a stale item that hasn't been cleared yet.
+	stale := append([]uint32(nil), s.clientUIDs...)
 	uspUID := s.nextUIDLocked()
 	ammoUID := s.nextUIDLocked()
 	s.equipment = []message.Equipment{
@@ -256,6 +260,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 	s.weapons = map[byte]csWeapon{
 		message.SlotSecondary: {slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo, ammoUID: ammoUID},
 	}
+	s.clientUIDs = []uint32{uspUID, ammoUID} // the only items the client should have after the reset
 	s.itemOnHand = uspUID
 	uspMag := ClipSize(uspData, SkinForWeapon(uspData, s.player.Slots)) // was hardcoded 12
 	inv := []message.InvItem{
@@ -266,6 +271,10 @@ func (s *session) giveLoadout(resetCoins bool) {
 	onHand := s.itemOnHand
 	s.invMu.Unlock()
 
+	if len(stale) > 0 { // wipe the previous loadout FIRST so the respawn starts fresh (USP only)
+		s.sendDataLog(packet.CmdRemoveInventoryList, message.RemoveInventoryList(s.player.EntityID, stale),
+			fmt.Sprintf("cmd=327 RemoveInventoryList (clear %d stale items)", len(stale)))
+	}
 	body := message.SyncInventory(s.player.EntityID, inv, nil, equip, onHand)
 	s.sendDataLog(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (USP + ammo)")
 }

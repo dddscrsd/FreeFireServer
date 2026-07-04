@@ -16,6 +16,7 @@ const (
 	SlotHelmet    byte = 6
 	SlotBag       byte = 7
 	SlotVest      byte = 8
+	SlotBuilding  byte = 13 // gloo/ice wall (deployable) — its OWN slot, NOT the grenade slot
 )
 
 // InvItem is one inventory or attachment entry (JPALKHEHFIM): a unique runtime
@@ -53,6 +54,24 @@ func SyncInventory(playerID uint32, inventory, attachments []InvItem, equipment 
 	w.U32(itemOnHand)
 	w.I32(0) // PHLFCPAOBMJ (unknown; 0)
 	w.I32(0) // JGHFAGHIGOG (unknown; 0)
+	return w.B
+}
+
+// RemoveInventoryList builds the cmd 327 (RUDP_REMOVE_INVENTORYLIST, message ABJFDIFIILN)
+// payload: an entity id plus a list of item UNIQUES to DELETE from that player's inventory.
+// The client (PlayerNetwork::SyncRemoveInventoryList -> NPCNMJAGIKI::JIFIDHGODMG) looks up
+// each unique and removes it (which also unequips it, clearing its loadout slot). This is
+// the ONLY way to remove items — cmd 174 SyncInventory is purely additive/upsert — so it is
+// what resets a respawning player's loadout to fresh (a pending-revive death keeps the pawn,
+// so the client never drops the loadout itself). Wire verified from ABJFDIFIILN::UnSerialize
+// @0x35a23ec: [u32 entity][i16 count][u32 unique]×count. Only applies to the local player.
+func RemoveInventoryList(entityID uint32, uniques []uint32) []byte {
+	w := &Writer{}
+	w.U32(entityID)
+	w.I16(int16(len(uniques)))
+	for _, u := range uniques {
+		w.U32(u)
+	}
 	return w.B
 }
 
