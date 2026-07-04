@@ -33,6 +33,7 @@ import (
 
 type csArena struct {
 	City   string
+	ZoneID uint16
 	Fence0 message.Vec3 // faction 0 (left) gate
 	Fence1 message.Vec3 // faction 1 (right) gate
 }
@@ -41,18 +42,18 @@ func v(x, y, z float64) message.Vec3 { return message.Vec3{X: x, Y: y, Z: z} }
 
 // csArenas: 12 cities, each a pair of opposing gate fences (world meters).
 var csArenas = []csArena{
-	{"sentosa", v(1188.6, 5.6, -376.0), v(1162.8, 6.0, -482.0)},
-	{"cape town", v(1228.0, 0.2, 116.3), v(1336.4, 0.2, 128.0)},
-	{"riverside", v(601.9, 14.2, 494.5), v(509.6, 14.2, 494.5)},
-	{"katulistiwa", v(131.0, 2.1, 415.6), v(197.8, 1.4, 278.6)},
-	{"observatory", v(-146.4, 30.0, 320.5), v(-122.3, 27.4, 408.8)},
-	{"shipyard", v(306.0, 9.7, 769.7), v(420.8, 9.6, 704.9)},
-	{"factory", v(366.6, 15.9, -261.5), v(477.7, 15.9, -250.6)},
-	{"clock tower", v(158.8, 0.4, -148.4), v(295.3, 2.5, -85.6)},
-	{"mill", v(909.9, 49.1, 450.5), v(906.9, 47.3, 546.4)},
-	{"hangar", v(-33.8, -0.3, 39.7), v(43.8, -0.4, 121.0)},
-	{"mars electric", v(565.5, 24.7, -560.1), v(467.1, 24.7, -508.5)},
-	{"pochinok", v(659.5, 25.1, -227.0), v(645.6, 25.1, -335.4)},
+	{"factory", 0, v(366.6, 15.9, -261.5), v(477.7, 15.9, -250.6)},
+	{"clock tower", 1, v(158.8, 0.4, -148.4), v(295.3, 2.5, -85.6)},
+	{"observatory", 2, v(-146.4, 30.0, 320.5), v(-122.3, 27.4, 408.8)},
+	{"katulistiwa", 3, v(131.0, 2.1, 415.6), v(197.8, 1.4, 278.6)},
+	{"shipyard", 4, v(306.0, 9.7, 769.7), v(420.8, 9.6, 704.9)},
+	{"mars electric", 5, v(565.5, 24.7, -560.1), v(467.1, 24.7, -508.5)},
+	{"pochinok", 6, v(659.5, 25.1, -227.0), v(645.6, 25.1, -335.4)},
+	{"sentosa", 7, v(1188.6, 5.6, -376.0), v(1162.8, 6.0, -482.0)},
+	{"cape town", 8, v(1228.0, 0.2, 116.3), v(1336.4, 0.2, 128.0)},
+	{"mill", 9, v(909.9, 49.1, 450.5), v(906.9, 47.3, 546.4)},
+	{"hangar", 10, v(-33.8, -0.3, 39.7), v(43.8, -0.4, 121.0)},
+	{"riverside", 11, v(601.9, 14.2, 494.5), v(509.6, 14.2, 494.5)},
 }
 
 var spawnRand = rand.New(rand.NewSource(time.Now().UnixNano()))

@@ -129,6 +129,12 @@ func CSGRIPhase(phase, param uint16) []byte {
 	})
 }
 
+func CSGRIMatchPoint(point uint8) []byte {
+	return ReplicationBlock([]RepEntry{
+		{RepU8, CSFieldMatchPoint, uint64(point)},
+	})
+}
+
 // --- PRI (cmd 900) + BindPRI (cmd 118) -------------------------------------
 // Format from the working reference (udp.py: send_bind_pri / build_pri_hp_block /
 // build_sync_pri_multi_entity) + IDA (DNCBMEDLPGP @0x194e080). BindPRI is reliable

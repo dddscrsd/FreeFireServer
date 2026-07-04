@@ -100,6 +100,7 @@ func (s *session) killEntity(victim, killer uint32, bodyPart uint8) {
 		s.roundKills.Add(1) // local player killed the bot — counts toward the round coin award
 	}
 	var weapon int32
+	var weaponSkin int32
 	switch killer {
 	case playerEntityID: // only the local player's loadout is tracked so far
 		if (s.heldWeaponData()) == 0 {
@@ -107,8 +108,10 @@ func (s *session) killEntity(victim, killer uint32, bodyPart uint8) {
 		} else {
 			weapon = int32(s.heldWeaponData()) // the held weapon's ID
 		}
+		weaponSkin = int32(SkinForWeapon(uint32(weapon), []uint32(s.player.Slots)))
 	case 0: // out-of-zone environment death
 		weapon = killCauseDamageZone
+		weaponSkin = 0
 	}
 	var observe uint32
 	if victim == playerEntityID { // the dead local client must be given something to spectate
@@ -119,9 +122,9 @@ func (s *session) killEntity(victim, killer uint32, bodyPart uint8) {
 	// cmd 388 revive has nothing to resurrect. The bot (and the deciding death, observe=0)
 	// stay full deaths.
 	pendingRevive := victim == playerEntityID
-	body := message.PlayerDead(victim, killer, uint32(weapon), observe, bodyPart, s.deathPos(victim), pendingRevive)
+	body := message.PlayerDead(victim, killer, uint32(weapon), uint32(weaponSkin), observe, bodyPart, s.deathPos(victim), pendingRevive)
 	s.sendDataLog(packet.CmdDead, body,
-		fmt.Sprintf("cmd=107 DEAD victim=%#x killer=%#x weapon=%d observe=%#x bodyPart=%d pending=%v", victim, killer, weapon, observe, bodyPart, pendingRevive))
+		fmt.Sprintf("cmd=107 DEAD victim=%#x killer=%#x weapon=%d weaponSkin=%d observe=%#x bodyPart=%d pending=%v", victim, killer, weapon, weaponSkin, observe, bodyPart, pendingRevive))
 }
 
 // spectateTarget returns the ObserveID (spectate focus) for a dead local player. It is
