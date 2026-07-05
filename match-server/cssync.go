@@ -241,7 +241,7 @@ func (s *session) sendStartingLoadout() { s.giveLoadout(true) }
 // it keeps the accumulated coins so the player re-buys with their kept money.
 func (s *session) giveLoadout(resetCoins bool) {
 	const uspData = 3
-	const pistolAmmo, pistolAmmoCount = 202, 120
+	const pistolAmmo = 202
 
 	s.invMu.Lock()
 	if resetCoins {
@@ -250,23 +250,33 @@ func (s *session) giveLoadout(resetCoins bool) {
 	// Snapshot the client's current items so cmd 327 can DELETE them before we re-add. Do
 	// NOT reset uidCounter (keep it monotonic) so the fresh USP's unique can't collide with
 	// a stale item that hasn't been cleared yet.
-	stale := append([]uint32(nil), s.clientUIDs...)
+	stale := make([]uint32, 0, len(s.clientUIDs))
+	for uid := range s.clientUIDs {
+		stale = append(stale, uid)
+	}
+	// Snapshot + clear any ground-loot boxes so a respawn/round-reset wipes stale containers
+	// (the round world resets); each id gets a cmd 228 DelContainer after the unlock.
+	var staleBoxes []uint16
+	for id := range s.containers {
+		staleBoxes = append(staleBoxes, id)
+	}
+	s.containers = map[uint16]*container{}
 	uspUID := s.nextUIDLocked()
-	ammoUID := s.nextUIDLocked()
+	uspMag := ClipSize(uspData, SkinForWeapon(uspData, s.player.Slots)) // loaded magazine (was hardcoded 12)
 	s.equipment = []message.Equipment{
 		{Slot: message.SlotMelee, Data: 0, Unique: 0},                // fist (melee slot must always exist)
 		{Slot: message.SlotSecondary, Data: uspData, Unique: uspUID}, // USP
 	}
 	s.weapons = map[byte]csWeapon{
-		message.SlotSecondary: {slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo, ammoUID: ammoUID},
+		message.SlotSecondary: {slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo},
 	}
-	s.clientUIDs = []uint32{uspUID, ammoUID} // the only items the client should have after the reset
+	s.clientUIDs = map[uint32]lootItem{ // seed with the USP; giveAmmoStacksLocked adds the ammo stacks
+		uspUID: {unique: uspUID, data: uspData, count: 1, runtime: uspMag},
+	}
 	s.itemOnHand = uspUID
-	uspMag := ClipSize(uspData, SkinForWeapon(uspData, s.player.Slots)) // was hardcoded 12
-	inv := []message.InvItem{
-		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag},  // USP weapon
-		{Unique: ammoUID, Data: pistolAmmo, Count: pistolAmmoCount}, // pistol ammo
-	}
+	inv := append([]message.InvItem{
+		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}, // USP weapon
+	}, s.giveAmmoStacksLocked(pistolAmmo)...) // pistol-ammo reserve as 30-round stacks
 	equip := append([]message.Equipment(nil), s.equipment...)
 	onHand := s.itemOnHand
 	s.invMu.Unlock()
@@ -274,6 +284,10 @@ func (s *session) giveLoadout(resetCoins bool) {
 	if len(stale) > 0 { // wipe the previous loadout FIRST so the respawn starts fresh (USP only)
 		s.sendDataLog(packet.CmdRemoveInventoryList, message.RemoveInventoryList(s.player.EntityID, stale),
 			fmt.Sprintf("cmd=327 RemoveInventoryList (clear %d stale items)", len(stale)))
+	}
+	for _, id := range staleBoxes { // remove stale ground boxes so they vanish on respawn/reset
+		s.sendDataLog(packet.CmdDelContainer, message.DelContainer(id, message.ContainerDynamic),
+			fmt.Sprintf("cmd=228 DelContainer box=%d (loadout reset)", id))
 	}
 	body := message.SyncInventory(s.player.EntityID, inv, nil, equip, onHand)
 	s.sendDataLog(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (USP + ammo)")
@@ -286,7 +300,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 // KANLCBHFONB::NKJJELOAGGL), so re-sending the SAME uniques resets ammo, not duplicates.
 func (s *session) reissueLoadout() {
 	s.invMu.Lock()
-	inv := make([]message.InvItem, 0, len(s.weapons)*2)
+	inv := make([]message.InvItem, 0, len(s.weapons)+len(s.clientUIDs))
 	for _, w := range s.weapons {
 		inv = append(inv, message.InvItem{
 			Unique:  w.unique,
@@ -294,8 +308,12 @@ func (s *session) reissueLoadout() {
 			Count:   1,
 			Runtime: ClipSize(w.data, SkinForWeapon(w.data, s.player.Slots)), // full magazine
 		})
-		if w.ammoUID != 0 {
-			inv = append(inv, message.InvItem{Unique: w.ammoUID, Data: w.ammo, Count: ammoCountFor(w.ammo)})
+	}
+	// Refill every ammo stack the player still holds back to a full 30 (ammo is decoupled from
+	// weapons now the reserve is split into stacks); re-sending the same unique upserts the count.
+	for uid, it := range s.clientUIDs {
+		if isAmmoData(it.data) {
+			inv = append(inv, message.InvItem{Unique: uid, Data: it.data, Count: ammoStack})
 		}
 	}
 	equip := append([]message.Equipment(nil), s.equipment...)

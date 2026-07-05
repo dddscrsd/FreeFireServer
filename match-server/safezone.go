@@ -17,7 +17,7 @@ const (
 	zoneMargin      = 45.0             // metres of buffer beyond the gates for the outer circle
 	zoneInnerRatio  = 0.01             // fully-shrunk radius as a fraction of the outer
 	zoneDefaultR    = 70.0             // outer radius when there is no arena (fixed MATCH_SPAWN)
-	zoneWaitDur     = 30 * time.Second // Fight time before the zone starts shrinking
+	zoneWaitDur     = 90 * time.Second // Fight time before the zone starts shrinking
 	zoneShrinkDur   = 25 * time.Second // time to shrink outer -> inner
 	zoneDamage      = 50               // HP lost per tick outside the zone (CS fixed)
 	zoneDamageEvery = 2 * time.Second  // damage interval (CS fixed)

@@ -41,6 +41,13 @@ const (
 	CmdPlayerJoin          = 101 // server -> client: GKBDLJFGGMI (player join)
 	CmdMatchEnd            = 103 // server -> client: RUDP_MATCH_END (also used as the SendKick(so=3) carrier on shutdown)
 	CmdChangeHeldItem      = 108 // client -> server: RUDP_CHANGE_INVENTORY_ON_HAND — [entity u32][itemUnique u32]
+	CmdPickupInventory     = 111  // client -> server: LHODJLEHDND — RUDP_PICKUP_INVENTORY (pick a ground item by UniqueID)
+	CmdDropInventory       = 112  // client <-> server: KJBONEENCAL — RUDP_DROP_INVENTORY (req: u32 unique,u32 count,u8 reason; res reuses class)
+	CmdAddPickup           = 114  // server -> client: INMIMMDMPFM — RUDP_ADD_PICKUP (one ground-loot item at a position)
+	CmdDelPickup           = 115  // server -> client: KBHENKFBDAJ — RUDP_DEL_PICKUP (remove one ground-loot item)
+	CmdAddPickupList       = 225  // server -> client: ANICDCDDCLN — RUDP_ADD_PICKUPLIST (a shared-position list of items in a container)
+	CmdAddContainer        = 227  // server -> client: GONMBPDMEBE — RUDP_ADD_CONTAINER ([i16 count]{u32,f32,bool}; no position)
+	CmdDelContainer        = 228  // server -> client: OPNFJLJGPFC — RUDP_DEL_CONTAINER ([u16 containerID][u8 containerType])
 	CmdTakeDamage          = 106 // client -> server: hit report (victim u32, damage u16, attacker u32, ...); server applies HP
 	CmdDead                = 107 // server -> client: OGCHKCGKGKN — entity died (victim, killer, position, ...)
 	CmdBindPRI             = 118 // server -> client: S2C_RUDP_BindPRI (reliable) — maps RepIDs to entities; local player FIRST

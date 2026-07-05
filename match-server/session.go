@@ -17,11 +17,10 @@ import (
 // Unique updates in place — for a weapon it sets the loaded clip = InvItem.Runtime via
 // KANLCBHFONB::NKJJELOAGGL), so reusing the uniques resets ammo without duplicating.
 type csWeapon struct {
-	slot    byte
-	data    uint32 // weapon DataID
-	unique  uint32 // weapon InvItem Unique
-	ammo    uint32 // ammo DataID
-	ammoUID uint32 // ammo InvItem Unique
+	slot   byte
+	data   uint32 // weapon DataID
+	unique uint32 // weapon InvItem Unique
+	ammo   uint32 // ammo DataID (the reserve itself is separate 30-round stacks tracked in clientUIDs)
 }
 
 // session is one client's connection state (keyed by remote UDP address).
@@ -67,8 +66,14 @@ type session struct {
 	uidCounter uint32              // allocates unique item instance ids — MONOTONIC (never reset), so a new item can't collide with a stale one the client hasn't dropped yet
 	equipment  []message.Equipment // full loadout slot map (re-sent whole each sync)
 	weapons    map[byte]csWeapon   // current loadout weapons keyed by slot (2-primary placement + round-restart ammo refill)
-	clientUIDs []uint32            // every item unique currently on the client (weapons, ammo, gloo walls, armour) so a respawn can cmd-327 clear them all
+	clientUIDs map[uint32]lootItem // uid -> item the client holds; source of truth for the cmd-327 respawn clear AND for dropping ANY item (cmd 112) by unique (consumables/throwables have no weapon slot)
 	itemOnHand uint32              // unique of the currently held item
+
+	// Ground loot, guarded by invMu (same lock as the loadout it flows to/from, so a
+	// drop↔loadout mutation stays atomic). containers holds the live ground pickup boxes
+	// keyed by their wire ContainerObjectID; nextContainerID is the runtime id allocator.
+	containers      map[uint16]*container // live ground boxes keyed by ContainerObjectID
+	nextContainerID uint16                // runtime container-id allocator (runtimeContainerBase..Max)
 
 	// Per-entity current HP (entity game id -> HP), guarded by hpMu. Damage reports
 	// (cmd 106) decrement it; the PRI stream replicates it so the client sees kills.

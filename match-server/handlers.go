@@ -31,6 +31,10 @@ func (s *session) handle(p *packet.Packet) {
 		s.handleTakeDamage(p)
 	case packet.CmdChangeHeldItem: // 108
 		s.handleChangeHeldItem(p)
+	case packet.CmdPickupInventory: // 111 — pick up a ground-loot item
+		s.handlePickup(p)
+	case packet.CmdDropInventory: // 112 — drop a loadout weapon to the ground
+		s.handleDrop(p)
 	case packet.CmdClientPos: // 1001
 		s.handleClientPos(p)
 	case packet.CmdPlayerQuitReq: // 191
