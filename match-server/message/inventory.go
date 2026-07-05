@@ -1,5 +1,7 @@
 package message
 
+import "encoding/binary"
+
 // Player inventory sync (cmd 174, message BGKCMKNDAGA) and shop purchase result
 // (cmd 408, message IIOCLGDNBBB). Reverse-engineered from FF 1.70.1 — see
 // [[cs-shop-inventory]]. WriteString/count details verified against the client's
@@ -73,6 +75,31 @@ func RemoveInventoryList(entityID uint32, uniques []uint32) []byte {
 		w.U32(u)
 	}
 	return w.B
+}
+
+// UseInventoryReq is a parsed cmd 113 RUDP_USE_INVENTORY (client->server): the client
+// finished channelling a consumable. Wire (little-endian, the client sends 12 bytes):
+//
+//	off 0 : u32 Unique — the used item's inventory UniqueID (the key the server matches)
+//	off 4 : u32 Count  — the item's post-use count (client-side; advisory)
+//	off 8 : u32 Param  — action param (advisory)
+type UseInventoryReq struct {
+	Unique uint32
+	Count  uint32
+	Param  uint32
+}
+
+// ParseUseInventory decodes a cmd 113 payload; ok=false if it lacks the leading UniqueID.
+func ParseUseInventory(payload []byte) (UseInventoryReq, bool) {
+	if len(payload) < 4 {
+		return UseInventoryReq{}, false
+	}
+	r := UseInventoryReq{Unique: binary.LittleEndian.Uint32(payload[0:])}
+	if len(payload) >= 12 {
+		r.Count = binary.LittleEndian.Uint32(payload[4:])
+		r.Param = binary.LittleEndian.Uint32(payload[8:])
+	}
+	return r, true
 }
 
 func writeInvList(w *Writer, items []InvItem) {

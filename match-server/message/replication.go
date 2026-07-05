@@ -213,6 +213,16 @@ func SyncPRI(entities []PRIEntity) []byte {
 	return w.B
 }
 
+// PRIHealHP builds a minimal cmd 900 PRI carrying ONLY the entity's new current HP (field
+// 0 CUR_HP, u16). SetData is per-field on the client, so a lone field-0 update just moves
+// the HP bar — used by the medkit heal-over-time to stream 5 HP steps without re-sending
+// the full player block (which the regular ~3/s stream still carries).
+func PRIHealHP(repID uint32, hp uint16) []byte {
+	return SyncPRI([]PRIEntity{
+		{RepID: repID, Block: ReplicationBlock([]RepEntry{{RepU16, 0, uint64(hp)}})},
+	})
+}
+
 // PRIHPBlock builds a full alive-player PRI block. The field ids/types/order match
 // the reference's build_pri_hp_block exactly (derived from the client's
 // OnUserDefineReplicationInfo @0x190676c AddData registration). SetData is keyed by

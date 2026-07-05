@@ -39,6 +39,10 @@ func (s *session) handle(p *packet.Packet) {
 		s.handlePickup(p)
 	case packet.CmdDropInventory: // 112 — drop a loadout weapon to the ground
 		s.handleDrop(p)
+	case packet.CmdUseInventory: // 113 — finished using a consumable (medkit heal-over-time)
+		s.handleUseInventory(p)
+	case packet.CmdTryUseInventory: // 131 — started channelling a consumable
+		s.handleTryUseInventory(p)
 	case packet.CmdClientPos: // 1001
 		s.handleClientPos(p)
 	case packet.CmdPlayerQuitReq: // 191

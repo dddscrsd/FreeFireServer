@@ -68,9 +68,6 @@ func (s *session) dropOverriddenAfterEquip(outgoing []lootItem) {
 	var out []outPkt
 	s.invMu.Lock()
 	for _, it := range outgoing {
-		out = append(out, outPkt{packet.CmdRemoveInventoryList,
-			message.RemoveInventoryList(s.player.EntityID, []uint32{it.unique}),
-			fmt.Sprintf("cmd=327 remove overridden uid=%d", it.unique)})
 		out = s.dropToGroundLocked(it, pos, out)
 	}
 	s.invMu.Unlock()

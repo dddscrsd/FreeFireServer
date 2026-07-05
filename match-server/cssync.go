@@ -286,6 +286,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 	}
 	s.containers = map[uint16]*container{}
 	uspUID := s.nextUIDLocked()
+	medkitID := s.nextUIDLocked()
 	uspMag := ClipSize(uspData, SkinForWeapon(uspData, s.player.Slots)) // loaded magazine (was hardcoded 12)
 	s.equipment = []message.Equipment{
 		{Slot: message.SlotMelee, Data: 0, Unique: 0},                // fist (melee slot must always exist)
@@ -294,12 +295,14 @@ func (s *session) giveLoadout(resetCoins bool) {
 	s.weapons = map[byte]csWeapon{
 		message.SlotSecondary: {slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo},
 	}
-	s.clientUIDs = map[uint32]lootItem{ // seed with the USP; giveAmmoStacksLocked adds the ammo stacks
-		uspUID: {unique: uspUID, data: uspData, count: 1, runtime: uspMag},
+	s.clientUIDs = map[uint32]lootItem{ // seed with the USP + medkits; giveAmmoStacksLocked adds the ammo stacks
+		uspUID:   {unique: uspUID, data: uspData, count: 1, runtime: uspMag},
+		medkitID: {unique: medkitID, data: medkitData, count: 2, runtime: 2},
 	}
 	s.itemOnHand = uspUID
 	inv := append([]message.InvItem{
 		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}, // USP weapon
+		{Unique: medkitID, Data: medkitData, Count: 2, Runtime: 2}, // 2x medkits (Runtime = stack count for the HUD)
 	}, s.giveAmmoStacksLocked(pistolAmmo)...) // pistol-ammo reserve as 30-round stacks
 	if cfg.infiniteGloo { // testing: seed gloo walls so placing needs no shop trip
 		glooUID := s.nextUIDLocked()

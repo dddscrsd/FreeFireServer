@@ -32,9 +32,10 @@ import (
 
 const (
 	glooDataID   uint32 = 1201             // gloo-wall item DataID (equips SlotBuilding=13)
-	glooMaxHP    uint16 = 500              // fresh-wall HP (matches the client's spawn default)
-	glooCrackHP  uint16 = 220              // <=44% of 500 -> cracked (tune here)
-	glooLifetime        = 60 * time.Second // hard force-break regardless of HP/state
+	glooMaxHP    uint16 = 750              // fresh-wall HP (matches the client's spawn default)
+	glooCrackHP  uint16 = 330              // <=44% of 750 -> cracked (tune here)
+	glooLifetime        = 90 * time.Second // hard force-break regardless of HP/state
+	glooWallCap         = 3                // max active walls per player (FIFO trim)
 
 	// Wall entity/game id band, DISJOINT from player (0x01xxxxxx) + bot (0x02xxxxxx) + the
 	// container id band. The wall's PRI RepID is the SAME value as its game id (see
@@ -181,7 +182,6 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 		log.Printf("[mm-udp] cmd=218 place with 0 gloo in inventory — ignoring")
 		return
 	}
-	wallCap := int(glooCount) // "current gloo-wall inventory count" — read BEFORE the deduction
 
 	// 1) DEDUCT one, unless infinite. cmd 112 DropInventoryRes SETS the client's stack to
 	//    the new count (client removes the item at 0).
@@ -190,6 +190,7 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 		if newCount == 0 {
 			delete(s.clientUIDs, glooUID)
 			s.clearEquipLocked(message.SlotBuilding) // free slot 13
+
 		} else {
 			it := s.clientUIDs[glooUID]
 			it.count = newCount
@@ -216,13 +217,13 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 
 	// 3) FIFO-TRIM active walls down to the cap (oldest first). One place normally trims
 	//    at most one; the loop robustly enforces active <= cap.
-	for s.ownerWallCountLocked(playerEntityID) > wallCap {
+	for s.ownerWallCountLocked(playerEntityID) > glooWallCap {
 		oldest := s.popOldestWallLocked(playerEntityID)
 		if oldest == nil {
 			break
 		}
 		out = append(out, outPkt{packet.CmdRemoveIcewall, message.RemoveIcewall(oldest.id),
-			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (FIFO cap=%d)", oldest.id, wallCap)})
+			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (FIFO cap=%d)", oldest.id, glooWallCap)})
 	}
 	s.invMu.Unlock()
 
