@@ -28,10 +28,7 @@ type session struct {
 	conn   *net.UDPConn
 	remote *net.UDPAddr
 	key    []byte
-
-	mu            sync.Mutex
-	sendSeq       uint16 // global reliable sequence counter
-	sendDataOrder uint16 // order counter for send_option=2 data packets
+	out    *Writer // this connection's outbound path — owns seq/order + every send (see writer.go)
 
 	joined      bool
 	syncStarted bool        // csSyncLoop already running for this session (guard)
@@ -92,76 +89,55 @@ type session struct {
 	playerPos message.Vec3
 }
 
-// write encodes and sends one packet to this session's remote.
+// write queues one packet to this session's remote through its Writer, which owns the
+// seq/order counters and the socket; senders never take a lock, they just enqueue.
 func (s *session) write(p *packet.Packet) {
-	wire, err := p.Encode(s.key)
-	if err != nil {
-		log.Printf("[mm-udp] encode cmd=%d err: %v", p.Cmd, err)
-		return
-	}
-	if _, err := s.conn.WriteToUDP(wire, s.remote); err != nil {
-		log.Printf("[mm-udp] write err: %v", err)
-	}
+	s.out.send(p, "")
 }
 
 // kick sends a SendKick (so=3) packet, which the client's transport treats as "kicked
 // by server" and returns to the lobby — the cmd/payload are not significant, so=3 is
 // the kick signal. Sent to every client on server shutdown (see kickAllAndExit).
 func (s *session) kick() {
-	s.write(&packet.Packet{SendOption: packet.SendKick, Cmd: packet.CmdMatchEnd, Flags: 0})
+	s.out.send(&packet.Packet{SendOption: packet.SendKick, Cmd: packet.CmdMatchEnd, Flags: 0}, "")
 }
 
-// ack sends the unreliable cmd=2 ACK for a received reliable seq.
+// ack queues the unreliable cmd=2 ACK for a received reliable seq (pre-encoded, sent verbatim).
 func (s *session) ack(seq uint16) {
 	wire, err := packet.BuildAck(seq, 0, s.key)
 	if err != nil {
 		log.Printf("[mm-udp] ack err: %v", err)
 		return
 	}
-	s.conn.WriteToUDP(wire, s.remote)
+	s.out.sendRaw(wire)
 }
 
-// sendHelloRes sends the S2C_Hello_Res (send_option=1) using the next seq; the hello
-// reply is not part of the ordered data stream, so order stays 0.
-func (s *session) sendHelloRes(payload []byte) (seq uint16) {
-	s.mu.Lock()
-	seq = s.sendSeq
-	s.sendSeq++
-	s.mu.Unlock()
-	s.write(&packet.Packet{SendOption: packet.SendHello, Cmd: packet.CmdHello, SeqID: seq, OrderID: 0, Flags: 0, Payload: payload})
-	return
+// sendHelloRes queues the S2C_Hello_Res (send_option=1); the Writer assigns the next seq (the
+// hello reply is not part of the ordered data stream, so its order stays 0).
+func (s *session) sendHelloRes(payload []byte) {
+	s.out.send(&packet.Packet{SendOption: packet.SendHello, Cmd: packet.CmdHello, Flags: 0, Payload: payload}, "")
 }
 
-// sendData sends a reliable, encrypted send_option=2 application packet, assigning
-// the next seq and data order id.
-func (s *session) sendData(cmd uint16, payload []byte) (seq, order uint16) {
-	s.mu.Lock()
-	seq = s.sendSeq
-	s.sendSeq++
-	order = s.sendDataOrder
-	s.sendDataOrder++
-	s.mu.Unlock()
-	s.write(&packet.Packet{SendOption: packet.SendReliable, Cmd: cmd, SeqID: seq, OrderID: order, Flags: packet.FlagEncrypted, Payload: payload})
-	return
+// sendData queues a reliable, encrypted send_option=2 application packet; the Writer assigns
+// the next seq + data order id.
+func (s *session) sendData(cmd uint16, payload []byte) {
+	s.out.send(&packet.Packet{SendOption: packet.SendReliable, Cmd: cmd, Flags: packet.FlagEncrypted, Payload: payload}, "")
 }
 
-// sendDataLog sends a reliable data packet and logs it. `what` is a short label
-// (e.g. "cmd=100 LGIGCGIDOKP result=0") — this replaces the repeated
-// send-then-log-Printf pattern at the call sites.
+// sendDataLog queues a reliable data packet; the Writer logs it once sent, with the assigned
+// seq/order. `what` is a short label (e.g. "cmd=100 LGIGCGIDOKP result=0").
 func (s *session) sendDataLog(cmd uint16, payload []byte, what string) {
-	seq, order := s.sendData(cmd, payload)
-	log.Printf("[mm-udp] -> %s (seq=%d order=%d %dB) %v", what, seq, order, len(payload), s.remote)
+	s.out.send(&packet.Packet{SendOption: packet.SendReliable, Cmd: cmd, Flags: packet.FlagEncrypted, Payload: payload}, what)
 }
 
-// sendVar sends an unreliable VAR replication packet (send_option=4), the channel
-// the client consumes cmd 900 (PRI) / 901 (GRI) on. VAR packets are plaintext
-// (flags=0) and unreliable (no seq/order), so they are resent `repeat` times / on a
-// loop to survive drops.
+// sendVar queues `repeat` copies of an unreliable VAR replication packet (send_option=4), the
+// channel the client consumes cmd 900 (PRI) / 901 (GRI) on. VAR packets are plaintext (flags=0)
+// and carry no seq/order, so they are resent to survive drops.
 func (s *session) sendVar(cmd uint16, payload []byte, repeat int) {
 	if repeat < 1 {
 		repeat = 1
 	}
 	for i := 0; i < repeat; i++ {
-		s.write(&packet.Packet{SendOption: packet.SendVar, Cmd: cmd, Flags: 0, Payload: payload})
+		s.out.send(&packet.Packet{SendOption: packet.SendVar, Cmd: cmd, Flags: 0, Payload: payload}, "")
 	}
 }

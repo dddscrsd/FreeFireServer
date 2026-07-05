@@ -62,8 +62,8 @@ func (s *session) handle(p *packet.Packet) {
 // but our CS replication stream died with the old session, so resume it.
 func (s *session) handleHello(p *packet.Packet) {
 	res := packet.BuildHelloRes("libmadoka", 0, 0, false)
-	seq := s.sendHelloRes(res)
-	log.Printf("[mm-udp] HELLO(cmd=%d) %v -> S2C_Hello_Res (seq=%d %dB)", p.Cmd, s.remote, seq, len(res))
+	s.sendHelloRes(res)
+	log.Printf("[mm-udp] HELLO(cmd=%d) %v -> S2C_Hello_Res (%dB)", p.Cmd, s.remote, len(res))
 	if p.Cmd == packet.CmdReconnect && !s.syncStarted {
 		if s.player.AccountID == 0 {
 			s.player = resolvePlayer("") // fallback player (EntityID=1, RepID 1000) — matches the original join

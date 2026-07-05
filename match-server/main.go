@@ -78,7 +78,7 @@ func serve(conn *net.UDPConn, key []byte) {
 		sessionsMu.Lock()
 		s := sessions[raddr]
 		if s == nil {
-			s = &session{conn: conn, remote: remote, key: key}
+			s = &session{conn: conn, remote: remote, key: key, out: newWriter(conn, remote, key)}
 			sessions[raddr] = s
 			log.Printf("[mm-udp] new session %v", remote)
 		}
