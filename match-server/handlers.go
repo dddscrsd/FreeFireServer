@@ -27,6 +27,10 @@ func (s *session) handle(p *packet.Packet) {
 		s.handleJoinMatchPost(p)
 	case packet.CmdCSPurchase: // 408
 		s.handleCSPurchase(p)
+	case packet.CmdAddIcewall: // 218 — client's gloo-wall PLACE request (bidirectional cmd)
+		s.handlePlaceIcewall(p)
+	case packet.CmdIcewallTakeDamage: // 219 — a placed gloo wall took damage
+		s.handleIcewallDamage(p)
 	case packet.CmdTakeDamage: // 106
 		s.handleTakeDamage(p)
 	case packet.CmdChangeHeldItem: // 108
@@ -59,6 +63,7 @@ func (s *session) handleHello(p *packet.Packet) {
 		s.joined = true
 		log.Printf("[mm-udp] reconnect mid-match -> resuming CS sync loop (no re-join) %v", s.remote)
 		s.startCSSync()
+		s.resyncWalls() // redraw any live gloo walls the fresh transport session lost (cmd 220)
 	}
 }
 

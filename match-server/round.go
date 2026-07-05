@@ -77,6 +77,7 @@ func (s *session) roundTransition(revivePlayer bool) {
 	// damage a STALE position (cmd 1001 is throttled while the player stands still, so
 	// without this the zone check keeps using the previous round's city coords)
 	s.hpMu.Unlock()
+	s.clearWalls() // gloo walls are per-round world state — wipe them during the black window
 	s.respawnBot()
 	// Reposition the local player at the new gate. A DEAD player is stuck spectating, so
 	// re-join it via cmd 101 (authoritative — the client accepts it and revives the pawn).

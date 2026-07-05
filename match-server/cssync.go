@@ -65,7 +65,9 @@ func (s *session) csSyncLoop() {
 		// Fight: run the shrinking SafeZone; the round ends when the bot OR the local
 		// player dies (out-of-zone damage can eliminate the player).
 		zoneStop := make(chan struct{})
-		go s.runSafeZone(zoneStop)
+		if !cfg.noZone {
+			go s.runSafeZone(zoneStop)
+		}
 		ok := s.streamPhase(message.CSPhaseFight, 6*time.Hour, nil, true)
 		close(zoneStop)
 		if !ok {
@@ -143,6 +145,8 @@ func (s *session) streamPhase(phase uint16, dur time.Duration, pull *message.Vec
 
 		s.sendVar(packet.CmdGRISync, message.CSGRIMatchPoint(uint8(point)), 1)
 
+		s.sweepWalls() // force-break any gloo wall past its ~60s lifetime
+
 		if untilBotDead && (s.entityHP(s.botEntity) == 0 || s.entityHP(playerEntityID) == 0) {
 			return true
 		}
@@ -194,6 +198,7 @@ func (s *session) priPayload() []byte {
 	s.invMu.Lock()
 	coins := uint16(s.coins)
 	award := uint16(s.award)
+
 	s.invMu.Unlock()
 	// CS round-win score (field 28), packed from each entity's OWN team perspective so
 	// the client resolves my/oppo consistently whichever player's score changes.
@@ -205,6 +210,25 @@ func (s *session) priPayload() []byte {
 	if s.entityHP(s.botEntity) > 0 {
 		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(s.entityHP(s.botEntity), maxHP, 0, 0, botScore, botFaction)})
 	}
+	return message.SyncPRI(ents)
+}
+
+func (s *session) resyncWallsPri() []byte {
+	// Snapshot each live gloo wall's (RepID, state) so its per-wall PRI rides the same
+	// cmd 900 stream as the player/bot; built after the unlock to avoid sending under invMu.
+	type wallSnap struct {
+		rep   uint32
+		state byte
+	}
+	walls := make([]wallSnap, 0, len(s.walls))
+	for _, w := range s.walls {
+		walls = append(walls, wallSnap{rep: w.id, state: w.state})
+	}
+	ents := []message.PRIEntity{}
+	for _, w := range walls { // one per-wall state block, keyed by the wall's own RepID
+		ents = append(ents, message.PRIEntity{RepID: w.rep, Block: iceWallPRIBlock(w.state)})
+	}
+
 	return message.SyncPRI(ents)
 }
 
@@ -277,6 +301,12 @@ func (s *session) giveLoadout(resetCoins bool) {
 	inv := append([]message.InvItem{
 		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}, // USP weapon
 	}, s.giveAmmoStacksLocked(pistolAmmo)...) // pistol-ammo reserve as 30-round stacks
+	if cfg.infiniteGloo { // testing: seed gloo walls so placing needs no shop trip
+		glooUID := s.nextUIDLocked()
+		s.equipment = append(s.equipment, message.Equipment{Slot: message.SlotBuilding, Data: glooDataID, Unique: glooUID})
+		s.clientUIDs[glooUID] = lootItem{unique: glooUID, data: glooDataID, count: 5}
+		inv = append(inv, message.InvItem{Unique: glooUID, Data: glooDataID, Count: 5})
+	}
 	equip := append([]message.Equipment(nil), s.equipment...)
 	onHand := s.itemOnHand
 	s.invMu.Unlock()

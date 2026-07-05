@@ -24,6 +24,9 @@ type config struct {
 	teleport    *teleportTest // MATCH_TELEPORT="x,y,z": stream a force-teleport at the player (nil = off)
 	debugPos    bool          // MATCH_DEBUG_POS=1: log every parsed client position (cmd 1001)
 	zoneTest    bool          // MATCH_ZONE_TEST=1: offset the zone 100m + short wait so the player dies to it fast (spectate/death testing)
+
+	infiniteGloo bool // MATCH_INFINITE_GLOO=1: placing a gloo wall does NOT deduct from inventory (active walls still capped at the inventory count via FIFO evict-oldest)
+	noZone       bool // MATCH_NO_ZONE=1: skip the Fight-phase SafeZone so the passive test player doesn't die to it (self-testing only)
 }
 
 var cfg config
@@ -31,12 +34,14 @@ var cfg config
 // loadConfig reads the environment into a config. Called once from main().
 func loadConfig() config {
 	c := config{
-		jwtSecret:   []byte(envOr("MATCH_JWT_SECRET", "dev-match-secret-change-me")),
-		buyPhase:    10 * time.Second,
-		spawnFace:   message.Vec3{X: 0, Y: 0, Z: 1},
-		holdPrepare: os.Getenv("MATCH_HOLD_PREPARE") == "1",
-		debugPos:    os.Getenv("MATCH_DEBUG_POS") == "1",
-		zoneTest:    os.Getenv("MATCH_ZONE_TEST") == "1",
+		jwtSecret:    []byte(envOr("MATCH_JWT_SECRET", "dev-match-secret-change-me")),
+		buyPhase:     10 * time.Second,
+		spawnFace:    message.Vec3{X: 0, Y: 0, Z: 1},
+		holdPrepare:  os.Getenv("MATCH_HOLD_PREPARE") == "1",
+		debugPos:     os.Getenv("MATCH_DEBUG_POS") == "1",
+		zoneTest:     os.Getenv("MATCH_ZONE_TEST") == "1",
+		infiniteGloo: os.Getenv("MATCH_INFINITE_GLOO") == "1",
+		noZone:       os.Getenv("MATCH_NO_ZONE") == "1",
 	}
 	if sp, ok := parseVec3(os.Getenv("MATCH_SPAWN")); ok {
 		c.spawn = &sp

@@ -75,6 +75,14 @@ type session struct {
 	containers      map[uint16]*container // live ground boxes keyed by ContainerObjectID
 	nextContainerID uint16                // runtime container-id allocator (runtimeContainerBase..Max)
 
+	// Placed gloo (ice) walls, guarded by invMu (the SAME lock as clientUIDs, so the
+	// PLACE path can read the gloo inventory count, deduct it, mutate the wall list and
+	// compute the FIFO cap in one atomic step). walls is FIFO-ordered: walls[0] is the
+	// oldest placed. wallSeq is a monotonic allocator (never reused) for wall entity ids
+	// and per-wall PRI RepIDs. See gloo.go.
+	walls   []*iceWall
+	wallSeq uint32
+
 	// Per-entity current HP (entity game id -> HP), guarded by hpMu. Damage reports
 	// (cmd 106) decrement it; the PRI stream replicates it so the client sees kills.
 	// playerPos is the local player's last-reported world position (cmd 1001), used by

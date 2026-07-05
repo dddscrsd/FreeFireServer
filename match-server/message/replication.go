@@ -145,11 +145,13 @@ func CSGRIMatchPoint(point uint8) []byte {
 // scheme: RepID = 500 + (EntityGameID - 1001); e.g. oildrum gameID 1001 -> 500).
 func RepIDForEntity(entityGameID uint32) uint32 { return 500 + entityGameID - 1001 }
 
-// BindPRI entity types.
+// BindPRI entity types (message FJAMLLEPEKN EntityTag; the switch in the cmd 118
+// handler KPDMJKOEHEE::JPBEOILPAAA @0x194cf70 maps each tag to a level-object type).
 const (
 	BindEntityPlayer  byte = 1
 	BindEntityVehicle byte = 3
 	BindEntityOilDrum byte = 5
+	BindEntityIceWall byte = 13 // tag 0xD -> OFJHNKMJNGA_IceWall; binds a gloo wall's PRI
 )
 
 // BindEntry binds a RepID to a game entity (one cmd 118 entry).
@@ -191,14 +193,22 @@ type PRIEntity struct {
 	Block []byte
 }
 
-// SyncPRI builds the cmd 500 payload: per entity [RepID u32][outerLen u16][block]
-// (the entity wrapper adds an outer length around the block's own blockLen).
+// SyncPRI builds the cmd 900 PRI payload: per entity [RepID u32][block], where
+// block == ReplicationBlock == [blockLen u16][tuples]. The client reads exactly ONE
+// u16 per entity: DNCBMEDLPGP @0x194e080 -> OnSyncReplicationData @0x33f9078 ->
+// ReplicationDataPool::SyncReplicationData @0x33f4f5c does a single ReadFixUInt16
+// (= blockLen) then loops [u8 type][u8 field][value]. Do NOT prepend a second (outer)
+// u16 length: the extra u16 makes the pool read the inner blockLen's LOW BYTE as a
+// typeCode, mis-typing field 0. Large blocks (player) survived by luck — the stray
+// byte hit the parser's unsupported-type default case and re-aligned — but a small
+// block like the 1-field ice wall (block 03 00 01 00 01) got its 0x03 read as U16, so
+// SetData<u16> ran instead of SetData<byte> and the crack DataChangedHandler never
+// fired. One u16 per entity is correct for both.
 func SyncPRI(entities []PRIEntity) []byte {
 	w := &Writer{}
 	for _, e := range entities {
 		w.U32(e.RepID)
-		w.U16(uint16(len(e.Block)))
-		w.B = append(w.B, e.Block...)
+		w.B = append(w.B, e.Block...) // block already carries its own [blockLen u16]
 	}
 	return w.B
 }
