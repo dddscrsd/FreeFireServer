@@ -18,7 +18,6 @@ const (
 // faction) and, while alive, the current-round bot (HP + opposite faction). A dead bot
 // is dropped from the stream so its death (cmd 107) is not undone by a fresh HP update.
 func (s *session) priPayload() []byte {
-	s.invMu.Lock()
 	var coins uint16
 	if cfg.unlimitedMoneyTest {
 		coins = 9999
@@ -27,7 +26,6 @@ func (s *session) priPayload() []byte {
 	}
 	award := uint16(s.award)
 
-	s.invMu.Unlock()
 	// CS round-win score (field 28), packed from each entity's OWN team perspective so
 	// the client resolves my/oppo consistently whichever player's score changes.
 	localScore := message.PackScore(s.teamScore[0], s.teamScore[1])
@@ -43,7 +41,7 @@ func (s *session) priPayload() []byte {
 
 func (s *session) resyncWallsPri() []byte {
 	// Snapshot each live gloo wall's (RepID, state) so its per-wall PRI rides the same
-	// cmd 900 stream as the player/bot; built after the unlock to avoid sending under invMu.
+	// cmd 900 stream as the player/bot.
 	type wallSnap struct {
 		rep   uint32
 		state byte
@@ -76,7 +74,6 @@ func (s *session) giveLoadout(resetCoins bool) {
 	const uspData = 3
 	const pistolAmmo = 202
 
-	s.invMu.Lock()
 	if resetCoins {
 		s.coins = startingCoins
 	}
@@ -88,14 +85,14 @@ func (s *session) giveLoadout(resetCoins bool) {
 		stale = append(stale, uid)
 	}
 	// Snapshot + clear any ground-loot boxes so a respawn/round-reset wipes stale containers
-	// (the round world resets); each id gets a cmd 228 DelContainer after the unlock.
+	// (the round world resets); each id gets a cmd 228 DelContainer below.
 	var staleBoxes []uint16
 	for id := range s.containers {
 		staleBoxes = append(staleBoxes, id)
 	}
 	s.containers = map[uint16]*container{}
-	uspUID := s.nextUIDLocked()
-	medkitID := s.nextUIDLocked()
+	uspUID := s.nextUID()
+	medkitID := s.nextUID()
 	uspMag := loadedMagFor(uspData, SkinForWeapon(uspData, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
 	s.equipment = []message.Equipment{
 		{Slot: message.SlotMelee, Data: 0, Unique: 0},                // fist (melee slot must always exist)
@@ -104,27 +101,26 @@ func (s *session) giveLoadout(resetCoins bool) {
 	s.weapons = map[byte]csWeapon{
 		message.SlotSecondary: {slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo},
 	}
-	s.clientUIDs = map[uint32]lootItem{ // seed with the USP + medkits; giveAmmoStacksLocked adds the ammo stacks
+	s.clientUIDs = map[uint32]lootItem{ // seed with the USP + medkits; giveAmmoStacks adds the ammo stacks
 		uspUID:   {unique: uspUID, data: uspData, count: 1, runtime: uspMag},
 		medkitID: {unique: medkitID, data: medkitData, count: 2, runtime: 2},
 	}
 	s.itemOnHand = uspUID
 	// Max the starter USP's attachments too (magazine/muzzle) so its ammo is full and it
 	// matches bought guns; the attachment items ride the cmd 174 below, then cmd 124 mounts them.
-	uspAttach, uspEquips := s.buildWeaponAttachmentsLocked(uspUID, uspData)
+	uspAttach, uspEquips := s.buildWeaponAttachments(uspUID, uspData)
 	inv := append([]message.InvItem{
 		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}, // USP weapon
 		{Unique: medkitID, Data: medkitData, Count: 2, Runtime: 2}, // 2x medkits (Runtime = stack count for the HUD)
-	}, s.giveAmmoStacksLocked(pistolAmmo)...) // pistol-ammo reserve as 30-round stacks
+	}, s.giveAmmoStacks(pistolAmmo)...) // pistol-ammo reserve as 30-round stacks
 	if cfg.infiniteGloo { // testing: seed gloo walls so placing needs no shop trip
-		glooUID := s.nextUIDLocked()
+		glooUID := s.nextUID()
 		s.equipment = append(s.equipment, message.Equipment{Slot: message.SlotBuilding, Data: glooDataID, Unique: glooUID})
 		s.clientUIDs[glooUID] = lootItem{unique: glooUID, data: glooDataID, count: 5}
 		inv = append(inv, message.InvItem{Unique: glooUID, Data: glooDataID, Count: 5})
 	}
 	equip := append([]message.Equipment(nil), s.equipment...)
 	onHand := s.itemOnHand
-	s.invMu.Unlock()
 
 	if len(stale) > 0 { // wipe the previous loadout FIRST so the respawn starts fresh (USP only)
 		s.sendDataLog(packet.CmdRemoveInventoryList, message.RemoveInventoryList(s.player.EntityID, stale),
@@ -145,7 +141,6 @@ func (s *session) giveLoadout(resetCoins bool) {
 // (SyncInventoryInfo -> OJKKGKBGKMJ sets an existing weapon's clip = InvItem.Runtime via
 // KANLCBHFONB::NKJJELOAGGL), so re-sending the SAME uniques resets ammo, not duplicates.
 func (s *session) reissueLoadout() {
-	s.invMu.Lock()
 	inv := make([]message.InvItem, 0, len(s.weapons)+len(s.clientUIDs))
 	for _, w := range s.weapons {
 		inv = append(inv, message.InvItem{
@@ -164,7 +159,6 @@ func (s *session) reissueLoadout() {
 	}
 	equip := append([]message.Equipment(nil), s.equipment...)
 	onHand := s.itemOnHand
-	s.invMu.Unlock()
 	if len(inv) == 0 {
 		return
 	}

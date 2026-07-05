@@ -120,12 +120,47 @@ func watchStopFile(path string) {
 	}
 }
 
-// dispatch runs handle with panic recovery so one bad packet can't kill the server.
+// dispatch acks a reliable packet immediately (stateless + prompt, so the client doesn't resend),
+// then routes it. Once the match loop is running, the handler is ENQUEUED so it executes on run()'s
+// goroutine — the single owner of match state (Step 3b); the ping echo and the pre-match join/hello
+// handlers run inline on the receive goroutine. Panic recovery wraps the inline work here; the
+// enqueued handler carries its own (see enqueue), so one bad packet can't kill the server or the
+// match loop.
 func (s *session) dispatch(p *packet.Packet) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("[mm-udp] handler panic: %v", r)
+			log.Printf("[mm-udp] dispatch panic: %v", r)
 		}
 	}()
-	s.handle(p)
+	if packet.IsReliable(p.Cmd, p.SendOption) {
+		s.ack(p.SeqID)
+	}
+	if p.Cmd == packet.CmdPing { // stateless echo — keep it prompt, don't inflate the client's ping
+		s.handlePing(p)
+		return
+	}
+	if s.syncStarted { // the match loop owns the state — process the handler on its goroutine
+		s.enqueue(func() { s.route(p) })
+		return
+	}
+	s.route(p) // pre-match (join/hello): run inline, run() isn't up yet
+}
+
+// enqueue hands a handler to the match loop (run()) so it mutates match state on the single owning
+// goroutine. The handler runs with its own panic recovery. If the mailbox is somehow full (run()
+// wedged), it drops + logs rather than blocking the receive loop — which is shared by every client.
+func (s *session) enqueue(fn func()) {
+	wrapped := func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("[mm-udp] handler panic: %v", r)
+			}
+		}()
+		fn()
+	}
+	select {
+	case s.mailbox <- wrapped:
+	default:
+		log.Printf("[mm-udp] mailbox full — dropped a handler for %v", s.remote)
+	}
 }

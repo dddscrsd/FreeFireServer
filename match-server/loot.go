@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"libmadoka/match-server/message"
 	"libmadoka/match-server/packet"
@@ -52,56 +51,48 @@ const (
 	mergeDistM float64 = 1.5
 )
 
-// overrideDropDelay holds a purchase-displaced weapon in the bag this long before dropping it, so
-// the client finishes equipping the newly-bought weapon (filling the slot) first. The client's
-// weapon auto-pickup only fires into an EMPTY slot of the weapon's type (RE:
-// NPCNMJAGIKI::IHOEHGHNBDN gates on HKAAOCIIMAD(slot)==null), so a FULL slot at drop time leaves the
-// dropped weapon on the ground instead of yanking it back into the slot the buy just filled. Tunable.
-const overrideDropDelay = 1 * time.Millisecond
-
-// dropOverriddenAfterEquip removes (cmd 327) then ground-drops each weapon a purchase displaced,
-// after overrideDropDelay so the client's auto-pickup sees the target slot already full. Runs in its
-// own goroutine so the purchase handler doesn't block.
+// dropOverriddenAfterEquip removes (cmd 327) then ground-drops each weapon a purchase displaced.
+// It runs inline on the match loop AFTER the new weapon's equip (cmd 174) has been queued, so the
+// drop is the last packet out and the client — which processes our reliable sends IN ORDER — has
+// filled the slot before the drop lands. The client's weapon auto-pickup only fires into an EMPTY
+// slot of the weapon's type (RE: NPCNMJAGIKI::IHOEHGHNBDN gates on HKAAOCIIMAD(slot)==null), so a
+// FULL slot at drop time leaves the weapon on the ground instead of yanking it back into the slot
+// the buy just filled. Was a 1ms-delayed goroutine; run()'s single-owner, in-order sends make the
+// delay (and the goroutine, which would now race run()) unnecessary.
 func (s *session) dropOverriddenAfterEquip(outgoing []lootItem) {
-	time.Sleep(overrideDropDelay)
 	pos := s.snapPlayerPos()
 	var out []outPkt
-	s.invMu.Lock()
 	for _, it := range outgoing {
-		out = s.dropToGroundLocked(it, pos, out)
+		out = s.dropToGround(it, pos, out)
 	}
-	s.invMu.Unlock()
 	s.flush(out)
 }
 
-// outPkt is one queued outbound packet. Handlers BUILD their packets into a slice under
-// invMu, release the lock, then flush — never send while holding a lock (sendDataLog takes
-// s.mu for the seq counter).
+// outPkt is one queued outbound packet. Handlers build their packets into a slice, then flush
+// them in order — a tidy batch kept from when sends couldn't happen inside the old locked
+// sections (run() owns the state now, so it is purely for readable ordering).
 type outPkt struct {
 	cmd     uint16
 	payload []byte
 	label   string
 }
 
-// flush sends every queued packet in order. Call ONLY after invMu is released.
+// flush sends every queued packet in order.
 func (s *session) flush(out []outPkt) {
 	for _, o := range out {
 		s.sendDataLog(o.cmd, o.payload, o.label)
 	}
 }
 
-// snapPlayerPos reads the local player's live world position under hpMu and releases it, so
-// the caller can then take invMu (hpMu and invMu are never nested).
+// snapPlayerPos returns the local player's last-reported world position (cmd 1001).
 func (s *session) snapPlayerPos() message.Vec3 {
-	s.hpMu.Lock()
 	pos := s.playerPos
-	s.hpMu.Unlock()
 	return pos
 }
 
-// ensureLootLocked lazily initialises the container map + id allocator (the session is
-// created bare). Caller holds invMu.
-func (s *session) ensureLootLocked() {
+// ensureLoot lazily initialises the container map + id allocator (the session is
+// created bare).
+func (s *session) ensureLoot() {
 	if s.containers == nil {
 		s.containers = map[uint16]*container{}
 	}
@@ -110,10 +101,10 @@ func (s *session) ensureLootLocked() {
 	}
 }
 
-// allocContainerIDLocked returns the next runtime ContainerObjectID, monotonic with wrap
-// INSIDE the band. Caller holds invMu.
-func (s *session) allocContainerIDLocked() uint16 {
-	s.ensureLootLocked()
+// allocContainerID returns the next runtime ContainerObjectID, monotonic with wrap
+// INSIDE the band.
+func (s *session) allocContainerID() uint16 {
+	s.ensureLoot()
 	id := s.nextContainerID
 	next := id + 1
 	if next > runtimeContainerMax || next < runtimeContainerBase { // wrap inside the band
@@ -145,28 +136,28 @@ func weaponClass(data uint32) (isWeapon, isPrimary bool) {
 	return true, ammo != 202
 }
 
-// trackItemLocked records an item the client now holds. clientUIDs is the source of truth for
+// trackItem records an item the client now holds. clientUIDs is the source of truth for
 // the cmd 327 respawn clear AND for dropping ANY item (cmd 112) by unique — so consumables and
-// throwables, which occupy no weapon slot, are still droppable. Caller holds invMu.
-func (s *session) trackItemLocked(it lootItem) {
+// throwables, which occupy no weapon slot, are still droppable.
+func (s *session) trackItem(it lootItem) {
 	if s.clientUIDs == nil {
 		s.clientUIDs = map[uint32]lootItem{}
 	}
 	s.clientUIDs[it.unique] = it
 }
 
-// removeTrackedItemLocked fully removes the item with the given unique from the loadout: drops
+// removeTrackedItem fully removes the item with the given unique from the loadout: drops
 // it from s.weapons + blanks its slot if it is a weapon, else blanks its equipment slot if it
 // occupies one, untracks it, clears itemOnHand if held, and queues a cmd 327 so the client drops
-// it too. Used by the manual drop (cmd 112) for ANY item type. Caller holds invMu.
-func (s *session) removeTrackedItemLocked(unique uint32, out []outPkt) []outPkt {
-	if slot, _, ok := s.findLoadoutWeaponLocked(unique); ok {
+// it too. Used by the manual drop (cmd 112) for ANY item type.
+func (s *session) removeTrackedItem(unique uint32, out []outPkt) []outPkt {
+	if slot, _, ok := s.findLoadoutWeapon(unique); ok {
 		delete(s.weapons, slot)
-		s.clearEquipLocked(slot)
+		s.clearEquip(slot)
 	} else {
 		for _, e := range s.equipment {
 			if e.Unique == unique {
-				s.clearEquipLocked(e.Slot)
+				s.clearEquip(e.Slot)
 				break
 			}
 		}
@@ -181,16 +172,16 @@ func (s *session) removeTrackedItemLocked(unique uint32, out []outPkt) []outPkt 
 	return out
 }
 
-// dropToGroundLocked places `it` on the ground at pos (metres) with the PROXIMITY MERGE: if
+// dropToGround places `it` on the ground at pos (metres) with the PROXIMITY MERGE: if
 // an existing container is within mergeDistM, the item is appended to it (the client already
 // knows that box, so only a cmd 114 AddPickup carrying the box id+pos is emitted); otherwise
 // a fresh container id is allocated and cmd 227 AddContainer + cmd 114 AddPickup are emitted.
-// The fist (data==0) is never dropped. Returns the queued packets; caller holds invMu.
-func (s *session) dropToGroundLocked(it lootItem, pos message.Vec3, out []outPkt) []outPkt {
+// The fist (data==0) is never dropped. Returns the queued packets.
+func (s *session) dropToGround(it lootItem, pos message.Vec3, out []outPkt) []outPkt {
 	if it.unique == 0 && it.data == 0 { // fist is fixed, never dropped
 		return out
 	}
-	s.ensureLootLocked()
+	s.ensureLoot()
 
 	// Find the nearest existing container within the merge radius (squared distance, no sqrt).
 	var box *container
@@ -211,7 +202,7 @@ func (s *session) dropToGroundLocked(it lootItem, pos message.Vec3, out []outPkt
 		// the item's position. cmd 227 AddContainer is a SEPARATE op that toggles PRE-PLACED
 		// map level-objects (CKEDDPABIMN → GetLevelObjectType on a real level id), so sending
 		// it for a runtime id is wrong — it must NOT be emitted here.
-		id := s.allocContainerIDLocked()
+		id := s.allocContainerID()
 		box = &container{id: id, pos: pos, ctype: message.ContainerDynamic}
 		box.items = append(box.items, it)
 		s.containers[id] = box
@@ -230,9 +221,8 @@ func (s *session) dropToGroundLocked(it lootItem, pos message.Vec3, out []outPkt
 	return out
 }
 
-// findLootLocked locates a ground loot item (and its container) by inventory unique. Caller
-// holds invMu.
-func (s *session) findLootLocked(unique uint32) (*container, lootItem, bool) {
+// findLoot locates a ground loot item (and its container) by inventory unique.
+func (s *session) findLoot(unique uint32) (*container, lootItem, bool) {
 	for _, c := range s.containers {
 		for _, it := range c.items {
 			if it.unique == unique {
@@ -243,9 +233,8 @@ func (s *session) findLootLocked(unique uint32) (*container, lootItem, bool) {
 	return nil, lootItem{}, false
 }
 
-// removeItemFromContainerLocked slices the item with the given unique out of box. Caller
-// holds invMu.
-func removeItemFromContainerLocked(box *container, unique uint32) {
+// removeItemFromContainer slices the item with the given unique out of box.
+func removeItemFromContainer(box *container, unique uint32) {
 	out := box.items[:0]
 	for _, it := range box.items {
 		if it.unique != unique {
@@ -255,9 +244,8 @@ func removeItemFromContainerLocked(box *container, unique uint32) {
 	box.items = out
 }
 
-// findLoadoutWeaponLocked returns the loadout slot + csWeapon holding the given unique.
-// Caller holds invMu.
-func (s *session) findLoadoutWeaponLocked(unique uint32) (byte, csWeapon, bool) {
+// findLoadoutWeapon returns the loadout slot + csWeapon holding the given unique.
+func (s *session) findLoadoutWeapon(unique uint32) (byte, csWeapon, bool) {
 	for slot, w := range s.weapons {
 		if w.unique == unique {
 			return slot, w, true
@@ -266,9 +254,8 @@ func (s *session) findLoadoutWeaponLocked(unique uint32) (byte, csWeapon, bool) 
 	return 0, csWeapon{}, false
 }
 
-// clearEquipLocked removes a slot's equipment entry (a removed weapon's slot goes empty).
-// Caller holds invMu.
-func (s *session) clearEquipLocked(slot byte) {
+// clearEquip removes a slot's equipment entry (a removed weapon's slot goes empty).
+func (s *session) clearEquip(slot byte) {
 	out := s.equipment[:0]
 	for _, e := range s.equipment {
 		if e.Slot != slot {
@@ -278,18 +265,18 @@ func (s *session) clearEquipLocked(slot byte) {
 	s.equipment = out
 }
 
-// removeLoadoutWeaponLocked fully removes the weapon in `slot` from the loadout: drops it
+// removeLoadoutWeapon fully removes the weapon in `slot` from the loadout: drops it
 // from s.weapons, blanks its equipment slot, removes its unique from clientUIDs, and clears
 // itemOnHand if it was held. It appends a cmd 327 RemoveInventoryList for the weapon's unique
 // (the client must not hold that Unique while it also sits on the ground) and returns the
-// updated queue + the removed weapon. The reserve ammo item is left intact. Caller holds invMu.
-func (s *session) removeLoadoutWeaponLocked(slot byte, out []outPkt) ([]outPkt, csWeapon, bool) {
+// updated queue + the removed weapon. The reserve ammo item is left intact.
+func (s *session) removeLoadoutWeapon(slot byte, out []outPkt) ([]outPkt, csWeapon, bool) {
 	w, ok := s.weapons[slot]
 	if !ok {
 		return out, csWeapon{}, false
 	}
 	delete(s.weapons, slot)
-	s.clearEquipLocked(slot)
+	s.clearEquip(slot)
 	delete(s.clientUIDs, w.unique)
 	if s.itemOnHand == w.unique {
 		s.itemOnHand = 0
@@ -311,17 +298,17 @@ func (s *session) weaponLoot(w csWeapon) lootItem {
 	}
 }
 
-// pickupWeaponSlotLocked resolves the TYPE-AWARE target slot for a picked-up weapon: a
+// pickupWeaponSlot resolves the TYPE-AWARE target slot for a picked-up weapon: a
 // secondary/pistol always lands in SlotSecondary; a primary uses the SAME rule as a purchase —
 // fill an EMPTY SlotPrimary1/SlotPrimary2 first, overriding the held primary (or P1) only when
 // both are full. Filling an empty slot first is what lets a player who dropped BOTH primaries
 // pick both back up (gun1->P1, gun2->P2); the old "override the held slot" rule kept sending the
-// second gun back into P1, so the two swapped in P1 forever under auto-pickup. Caller holds invMu.
-func (s *session) pickupWeaponSlotLocked(isPrimary bool) byte {
+// second gun back into P1, so the two swapped in P1 forever under auto-pickup.
+func (s *session) pickupWeaponSlot(isPrimary bool) byte {
 	if !isPrimary {
 		return message.SlotSecondary
 	}
-	return s.pickPrimarySlotLocked()
+	return s.pickPrimarySlot()
 }
 
 // handlePickup handles cmd 111 (RUDP_PICKUP_INVENTORY): the client picks a ground item by its
@@ -336,10 +323,8 @@ func (s *session) handlePickup(p *packet.Packet) {
 	pos := s.snapPlayerPos()
 	var pickEquips []attachEquip // maxed-attachment equips for a picked-up weapon (sent after flush)
 
-	s.invMu.Lock()
-	box, it, ok := s.findLootLocked(req.UniqueID)
+	box, it, ok := s.findLoot(req.UniqueID)
 	if !ok {
-		s.invMu.Unlock()
 		log.Printf("[mm-udp] cmd=111 pickup uid=%d not on ground — ignoring", req.UniqueID)
 		return
 	}
@@ -347,29 +332,29 @@ func (s *session) handlePickup(p *packet.Packet) {
 
 	// The picked item leaves its container (in memory). Ground-removal packets are emitted
 	// after the inventory sync so the item only disappears once the loadout has it.
-	removeItemFromContainerLocked(box, it.unique)
+	removeItemFromContainer(box, it.unique)
 
 	// Type-aware placement (weapons only). A weapon already in the target slot is dropped.
 	if isWeapon, isPrimary := weaponClass(it.data); isWeapon {
-		slot := s.pickupWeaponSlotLocked(isPrimary)
+		slot := s.pickupWeaponSlot(isPrimary)
 		var dropped *lootItem
 		if old, occupied := s.weapons[slot]; occupied && old.unique != it.unique {
 			var w csWeapon
-			out, w, _ = s.removeLoadoutWeaponLocked(slot, out)
+			out, w, _ = s.removeLoadoutWeapon(slot, out)
 			ld := s.weaponLoot(w)
 			dropped = &ld
 		}
-		// Install the picked weapon, REUSING its loot unique (no fresh nextUIDLocked) so the
+		// Install the picked weapon, REUSING its loot unique (no fresh nextUID) so the
 		// client keeps the UID it already knows.
 		s.weapons[slot] = csWeapon{slot: slot, data: it.data, unique: it.unique, ammo: weaponAmmo[it.data]}
-		s.setEquipLocked(slot, it.data, it.unique)
-		s.trackItemLocked(it)
+		s.setEquip(slot, it.data, it.unique)
+		s.trackItem(it)
 		s.itemOnHand = it.unique
 
 		// Max the picked weapon's attachments (same as a purchase) so a ground gun isn't stuck
 		// at the default no-attachment state; the attachment items ride the cmd 174, cmd 124 mounts.
 		var pickAttach []message.InvItem
-		pickAttach, pickEquips = s.buildWeaponAttachmentsLocked(it.unique, it.data)
+		pickAttach, pickEquips = s.buildWeaponAttachments(it.unique, it.data)
 
 		// Add the picked item to the client inventory (cmd 174) BEFORE it leaves the ground.
 		inv := []message.InvItem{{Unique: it.unique, Data: it.data, Count: it.count, Runtime: it.runtime}}
@@ -381,12 +366,12 @@ func (s *session) handlePickup(p *packet.Packet) {
 		// Now spawn the displaced weapon on the ground (may merge into the box we just took
 		// from, which then survives). Done after the 174 so its 327 already freed the unique.
 		if dropped != nil {
-			out = s.dropToGroundLocked(*dropped, pos, out)
+			out = s.dropToGround(*dropped, pos, out)
 		}
 	} else {
 		// Non-weapon (consumable/ammo/gloo): additive stack, no slot displacement.
 		inv := []message.InvItem{{Unique: it.unique, Data: it.data, Count: it.count, Runtime: it.runtime}}
-		s.trackItemLocked(it)
+		s.trackItem(it)
 		equip := append([]message.Equipment(nil), s.equipment...)
 		out = append(out, outPkt{packet.CmdSyncInventory,
 			message.SyncInventory(s.player.EntityID, inv, nil, equip, s.itemOnHand),
@@ -406,7 +391,6 @@ func (s *session) handlePickup(p *packet.Packet) {
 			message.DelContainer(box.id, box.ctype),
 			fmt.Sprintf("cmd=228 DelContainer box=%d (empty)", box.id)})
 	}
-	s.invMu.Unlock()
 
 	s.flush(out)
 	s.sendAttachEquips(pickEquips) // mount the picked weapon's maxed attachments (after the cmd 174 flush)
@@ -427,18 +411,15 @@ func (s *session) handleDrop(p *packet.Packet) {
 	}
 	pos := s.snapPlayerPos()
 
-	s.invMu.Lock()
 	it, tracked := s.clientUIDs[req.Unique]
 	if !tracked {
-		s.invMu.Unlock()
 		log.Printf("[mm-udp] cmd=112 drop uid=%d not a tracked item — ignoring", req.Unique)
 		return
 	}
 	// A weapon carries its full magazine as runtime; every other item drops its tracked stack.
 	var out []outPkt
-	out = s.removeTrackedItemLocked(req.Unique, out)
-	out = s.dropToGroundLocked(it, pos, out)
-	s.invMu.Unlock()
+	out = s.removeTrackedItem(req.Unique, out)
+	out = s.dropToGround(it, pos, out)
 
 	s.flush(out)
 }

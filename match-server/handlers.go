@@ -9,12 +9,10 @@ import (
 	"libmadoka/match-server/packet"
 )
 
-// handle acks (if reliable) and dispatches one decoded packet to its handler. Each
-// case is a thin delegate — the actual work lives in the handleXxx methods below.
-func (s *session) handle(p *packet.Packet) {
-	if packet.IsReliable(p.Cmd, p.SendOption) {
-		s.ack(p.SeqID) // stop the client resending
-	}
+// route dispatches one decoded packet to its handler. The ack + the serve()/run() routing are
+// done by dispatch; route runs either inline (pre-match) or on run()'s goroutine (via the mailbox).
+// Each case is a thin delegate — the actual work lives in the handleXxx methods below.
+func (s *session) route(p *packet.Packet) {
 	switch p.Cmd {
 	case packet.CmdHello, packet.CmdReconnect: // 1 / 5
 		s.handleHello(p)
@@ -71,7 +69,7 @@ func (s *session) handleHello(p *packet.Packet) {
 		s.joined = true
 		log.Printf("[mm-udp] reconnect mid-match -> resuming CS match loop (no re-join) %v", s.remote)
 		s.startCSMatch()
-		s.resyncWalls() // redraw any live gloo walls the fresh transport session lost (cmd 220)
+		s.enqueue(s.resyncWalls) // redraw lost gloo walls on run()'s goroutine (cmd 220) — it owns s.walls now
 	}
 }
 
@@ -177,9 +175,7 @@ func (s *session) handleClientPos(p *packet.Packet) {
 	y := int32(binary.LittleEndian.Uint32(p.Payload[8:]))
 	z := int32(binary.LittleEndian.Uint32(p.Payload[12:]))
 	pos := message.Vec3{X: float64(x) / 1000, Y: float64(y) / 1000, Z: float64(z) / 1000}
-	s.hpMu.Lock()
 	s.playerPos = pos
-	s.hpMu.Unlock()
 	if cfg.debugPos {
 		log.Printf("[mm-udp] POS cmd=1001 -> (%.1f,%.1f,%.1f)", pos.X, pos.Y, pos.Z)
 	}

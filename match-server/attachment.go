@@ -88,10 +88,10 @@ type attachEquip struct {
 	unique       uint32
 }
 
-// buildWeaponAttachmentsLocked issues a maxed attachment ITEM for each slot `weaponData`
+// buildWeaponAttachments issues a maxed attachment ITEM for each slot `weaponData`
 // supports, tracking each unique, and returns the InvItems to register via cmd 174 plus
-// the cmd 124 equip records. Caller holds invMu.
-func (s *session) buildWeaponAttachmentsLocked(weaponUnique, weaponData uint32) ([]message.InvItem, []attachEquip) {
+// the cmd 124 equip records.
+func (s *session) buildWeaponAttachments(weaponUnique, weaponData uint32) ([]message.InvItem, []attachEquip) {
 	maxes := weaponMaxAttachments(weaponData)
 	if len(maxes) == 0 {
 		return nil, nil
@@ -99,9 +99,9 @@ func (s *session) buildWeaponAttachmentsLocked(weaponUnique, weaponData uint32) 
 	inv := make([]message.InvItem, 0, len(maxes))
 	equips := make([]attachEquip, 0, len(maxes))
 	for _, m := range maxes {
-		uid := s.nextUIDLocked()
+		uid := s.nextUID()
 		inv = append(inv, message.InvItem{Unique: uid, Data: m.data, Count: 1})
-		s.trackItemLocked(lootItem{unique: uid, data: m.data, count: 1})
+		s.trackItem(lootItem{unique: uid, data: m.data, count: 1})
 		equips = append(equips, attachEquip{weaponUnique: weaponUnique, slot: m.slot, data: m.data, unique: uid})
 	}
 	return inv, equips

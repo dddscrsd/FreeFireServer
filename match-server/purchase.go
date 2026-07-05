@@ -53,7 +53,7 @@ type csItemPlacement struct {
 
 // placeItem resolves the item TYPE + fixed slot. A primary weapon's concrete slot
 // (Primary1 vs Primary2 vs override) depends on live state, so it is left slotNone here
-// and resolved by pickPrimarySlotLocked in addPurchasedItemLocked.
+// and resolved by pickPrimarySlot in addPurchasedItem.
 func placeItem(item *message.ShopItem) csItemPlacement {
 	if ammo, ok := weaponAmmo[item.ItemID]; ok {
 		if ammo == 202 { // pistols equip in the secondary slot
@@ -73,10 +73,10 @@ func placeItem(item *message.ShopItem) csItemPlacement {
 	return csItemPlacement{slot: slotNone} // consumables (repair kit, mushroom): no slot
 }
 
-// pickPrimarySlotLocked chooses the slot a newly bought primary weapon fills: an EMPTY
+// pickPrimarySlot chooses the slot a newly bought primary weapon fills: an EMPTY
 // SlotPrimary1/SlotPrimary2 if either is free; else the slot of the currently HELD primary
-// (itemOnHand maps to Primary1/Primary2); else SlotPrimary1. Caller holds invMu.
-func (s *session) pickPrimarySlotLocked() byte {
+// (itemOnHand maps to Primary1/Primary2); else SlotPrimary1.
+func (s *session) pickPrimarySlot() byte {
 	if _, ok := s.weapons[message.SlotPrimary1]; !ok {
 		return message.SlotPrimary1
 	}
@@ -114,16 +114,16 @@ func ammoStackCount(ammo uint32) int {
 // 204 shotgun, 205 SMG) — used to refill ammo stacks between rounds.
 func isAmmoData(data uint32) bool { return data >= 201 && data <= 205 }
 
-// giveAmmoStacksLocked issues ammoStackCount(ammo) stacks of ammoStack rounds of the given ammo
+// giveAmmoStacks issues ammoStackCount(ammo) stacks of ammoStack rounds of the given ammo
 // type, each as its own InvItem + unique tracked in clientUIDs, and returns the InvItems. The
-// split is what lets a player drop a single stack instead of the whole reserve. Caller holds invMu.
-func (s *session) giveAmmoStacksLocked(ammo uint32) []message.InvItem {
+// split is what lets a player drop a single stack instead of the whole reserve.
+func (s *session) giveAmmoStacks(ammo uint32) []message.InvItem {
 	n := ammoStackCount(ammo)
 	inv := make([]message.InvItem, 0, n)
 	for i := 0; i < n; i++ {
-		uid := s.nextUIDLocked()
+		uid := s.nextUID()
 		inv = append(inv, message.InvItem{Unique: uid, Data: ammo, Count: ammoStack})
-		s.trackItemLocked(lootItem{unique: uid, data: ammo, count: ammoStack})
+		s.trackItem(lootItem{unique: uid, data: ammo, count: ammoStack})
 	}
 	return inv
 }
@@ -150,10 +150,8 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	}
 	price := item.Price * qty
 
-	s.invMu.Lock()
 	if s.coins < price && !cfg.unlimitedMoneyTest {
 		coins := s.coins
-		s.invMu.Unlock()
 		s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseNoMoney, coins),
 			fmt.Sprintf("cmd=408 buy DENIED item=%d price=%d coins=%d (insufficient)", itemID, price, coins))
 		return
@@ -164,9 +162,8 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	}
 
 	coins := s.coins
-	inv, attach, equip, outgoing, attachEquips := s.addPurchasedItemLocked(item, qty)
+	inv, attach, equip, outgoing, attachEquips := s.addPurchasedItem(item, qty)
 	onHand := s.itemOnHand
-	s.invMu.Unlock()
 
 	// The purchase result drives the "purchase success" popup, but the shop money
 	// display and the client's own buy gating read the replicated CUR_COIN, so push
@@ -183,12 +180,12 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	s.sendAttachEquips(attachEquips)
 
 	// The new weapon took the slot in the cmd 174 above; the overridden weapon it displaced is
-	// dropped to the ground — but only AFTER a short delay (dropOverriddenAfterEquip) so the client
-	// has finished equipping the new weapon and the slot is FULL when the drop appears. Otherwise
-	// the client's auto-pickup (which only fires into an EMPTY slot) grabs the displaced weapon
-	// straight back into the slot the buy just filled. See loot.go for the RE.
+	// dropped to the ground LAST (inline — the sends are reliable and in order), so the client has
+	// finished equipping the new weapon and the slot is FULL when the drop appears. Otherwise the
+	// client's auto-pickup (which only fires into an EMPTY slot) grabs the displaced weapon straight
+	// back into the slot the buy just filled. See loot.go for the RE.
 	if len(outgoing) > 0 {
-		go s.dropOverriddenAfterEquip(outgoing)
+		s.dropOverriddenAfterEquip(outgoing)
 	}
 }
 
@@ -199,25 +196,25 @@ const (
 	purchaseNoMoney byte = 5
 )
 
-// addPurchasedItemLocked appends the bought item (and its ammo, for weapons) to the
+// addPurchasedItem appends the bought item (and its ammo, for weapons) to the
 // loadout, updates the equipment slot map / in-hand item, and returns the inventory
 // DELTA to sync (only the new items — the sync is additive) plus the full equipment
-// map. Caller holds invMu.
-func (s *session) addPurchasedItemLocked(item *message.ShopItem, qty uint32) (inv, attach []message.InvItem, equip []message.Equipment, outgoing []lootItem, attachEquips []attachEquip) {
+// map.
+func (s *session) addPurchasedItem(item *message.ShopItem, qty uint32) (inv, attach []message.InvItem, equip []message.Equipment, outgoing []lootItem, attachEquips []attachEquip) {
 	place := placeItem(item)
 	if place.isPrimary {
-		place.slot = s.pickPrimarySlotLocked()
+		place.slot = s.pickPrimarySlot()
 	}
-	uid := s.nextUIDLocked()
+	uid := s.nextUID()
 	inv = []message.InvItem{{Unique: uid, Data: item.ItemID, Count: qty}}
 	if place.isWeapon {
 		mag := loadedMagFor(item.ItemID, SkinForWeapon(item.ItemID, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
 		inv[0].Runtime = mag
-		s.trackItemLocked(lootItem{unique: uid, data: item.ItemID, count: 1, runtime: mag})
-		inv = append(inv, s.giveAmmoStacksLocked(place.ammo)...) // reserve ammo as 30-round stacks
+		s.trackItem(lootItem{unique: uid, data: item.ItemID, count: 1, runtime: mag})
+		inv = append(inv, s.giveAmmoStacks(place.ammo)...) // reserve ammo as 30-round stacks
 		// Force-equip the best attachment for every slot the weapon supports — added as
 		// inventory items here so the follow-up cmd 124 can resolve them by unique (attachment.go).
-		attach, attachEquips = s.buildWeaponAttachmentsLocked(uid, item.ItemID)
+		attach, attachEquips = s.buildWeaponAttachments(uid, item.ItemID)
 		// If the resolved slot is already occupied (a 3rd primary overrides the held primary;
 		// a 2nd pistol overrides SlotSecondary) capture the outgoing weapon so the caller can
 		// drop it to the ground, and untrack its unique (the caller cmd-327s it so the client
@@ -229,23 +226,23 @@ func (s *session) addPurchasedItemLocked(item *message.ShopItem, qty uint32) (in
 		s.itemOnHand = uid // switch to the newly bought weapon
 		s.weapons[place.slot] = csWeapon{slot: place.slot, data: item.ItemID, unique: uid, ammo: place.ammo}
 	} else {
-		s.trackItemLocked(lootItem{unique: uid, data: item.ItemID, count: qty})
+		s.trackItem(lootItem{unique: uid, data: item.ItemID, count: qty})
 	}
 	if place.slot != slotNone {
-		s.setEquipLocked(place.slot, item.ItemID, uid)
+		s.setEquip(place.slot, item.ItemID, uid)
 	}
 	equip = append([]message.Equipment(nil), s.equipment...)
 	return
 }
 
-// nextUIDLocked allocates a fresh unique item-instance id. Caller holds invMu.
-func (s *session) nextUIDLocked() uint32 {
+// nextUID allocates a fresh unique item-instance id.
+func (s *session) nextUID() uint32 {
 	s.uidCounter++
 	return s.uidCounter
 }
 
-// setEquipLocked sets (or replaces) the item mapped to a loadout slot. Caller holds invMu.
-func (s *session) setEquipLocked(slot byte, data, unique uint32) {
+// setEquip sets (or replaces) the item mapped to a loadout slot.
+func (s *session) setEquip(slot byte, data, unique uint32) {
 	for i := range s.equipment {
 		if s.equipment[i].Slot == slot {
 			s.equipment[i] = message.Equipment{Slot: slot, Data: data, Unique: unique}

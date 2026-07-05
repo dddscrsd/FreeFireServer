@@ -90,6 +90,7 @@ func (s *session) startCSMatch() {
 	if s.syncStarted {
 		return
 	}
+	s.mailbox = make(chan func(), 256) // inbound gameplay handlers run on run() (set before syncStarted)
 	s.syncStarted = true
 	m := &Match{s: s, done: make(chan struct{})}
 	log.Printf("[mm-udp] -> starting CS match loop (base %v, stream %v, clock %v) %v", baseTick, priTick, clockTick, s.remote)
@@ -106,9 +107,7 @@ func (m *Match) run() {
 	if cfg.unlimitedMoneyTest {
 		coins = 9999
 	}
-	s.invMu.Lock()
 	s.coins = coins
-	s.invMu.Unlock()
 
 	s.matchStart = time.Now()
 	if s.round == 0 { // reconnect path skips the join handler that seeds round 1
@@ -129,6 +128,8 @@ func (m *Match) run() {
 		select {
 		case <-m.done:
 			return
+		case fn := <-s.mailbox: // an inbound gameplay handler — runs here so run() owns all match state
+			fn()
 		case now := <-t.C:
 			if s.stopped.Load() {
 				log.Printf("[mm-udp] CS match loop stopped (player quit) %v", s.remote)
@@ -145,6 +146,7 @@ func (m *Match) run() {
 				lastStream = now
 			}
 			m.stepZone(now)
+			s.stepHeal(now) // medkit heal-over-time (run()-driven; was the healMedkit goroutine)
 			if now.Sub(lastClock) >= clockTick {
 				m.streamClock()
 				lastClock = now
@@ -310,11 +312,9 @@ func (m *Match) endFight(now time.Time) {
 	if localWon {
 		award += 500 // win bonus
 	}
-	s.invMu.Lock()
 	s.coins += award
 	s.award = award
 	total := s.coins
-	s.invMu.Unlock()
 	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d) +%d coins (=%d) %v",
 		s.round, winnerTeam, s.teamScore[0], s.teamScore[1], award, total, s.remote)
 
@@ -338,11 +338,9 @@ func (m *Match) endFight(now time.Time) {
 // teleport the surviving player + refill its ammo (won path). Was roundTransition steps 3-5.
 func (m *Match) postBannerEdge(now time.Time) {
 	s := m.s
-	s.hpMu.Lock()
 	s.hp = map[uint32]uint16{playerEntityID: maxHP, s.botEntity: maxHP}
 	s.playerPos = s.player.SpawnPos // reset so the shrinking zone can't damage a stale position
-	s.hpMu.Unlock()
-	s.clearWalls() // gloo walls are per-round world state
+	s.clearWalls()                  // gloo walls are per-round world state
 	s.respawnBot()
 	if m.revive {
 		s.respawnLocalPlayer() // cmd 388: clear the dead flag + reposition + un-spectate
@@ -404,9 +402,7 @@ func (m *Match) stepZone(now time.Time) {
 	if m.zoneShrink { // the radius the client is STILL rendering (a touch in the past)
 		curR = lerpRadius(m.zoneOuterR, m.zoneInnerR, now.Sub(m.zoneShrinkStart)-zoneClientLag)
 	}
-	s.hpMu.Lock()
 	pos := s.playerPos
-	s.hpMu.Unlock()
 	if d := dist2D(pos, m.zoneCenter); d > curR {
 		log.Printf("[mm-udp] ZONE damage: player %.0fm out (r=%.0f) at (%.0f,%.0f) -> -%d HP %v",
 			d-curR, curR, pos.X, pos.Z, zoneDamage, s.remote)

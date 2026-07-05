@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -23,7 +22,11 @@ type csWeapon struct {
 	ammo   uint32 // ammo DataID (the reserve itself is separate 30-round stacks tracked in clientUIDs)
 }
 
-// session is one client's connection state (keyed by remote UDP address).
+// session is one client's connection state (keyed by remote UDP address). Once the match loop
+// starts (startCSMatch), run() is the SOLE owner of the match state below: gameplay handlers run
+// on run()'s goroutine via the mailbox, so none of it needs a lock (Step 3b). Before the match
+// starts, the join handlers mutate it directly on the receive goroutine — run() isn't up yet, so
+// there is no contention.
 type session struct {
 	conn   *net.UDPConn
 	remote *net.UDPAddr
@@ -31,8 +34,9 @@ type session struct {
 	out    *Writer // this connection's outbound path — owns seq/order + every send (see writer.go)
 
 	joined      bool
-	syncStarted bool        // match loop already running for this session (guard)
-	stopped     atomic.Bool // set on player quit (cmd 191); the CS sync loop exits when true
+	syncStarted bool        // match loop already running (guard); once true, dispatch routes handlers to the mailbox
+	mailbox     chan func() // match-loop inbox: gameplay handlers execute here so run() is the single state owner
+	stopped     atomic.Bool // set on player quit (cmd 191); the match loop exits when true
 	player      joinPlayer  // resolved from the prepare_token (cmd 439/440)
 	bot         joinPlayer  // the current-round enemy bot
 	arena       csArena     // CS spawn city for the current round (re-picked each round)
@@ -55,9 +59,8 @@ type session struct {
 	matchStart time.Time
 	roundKills atomic.Uint32 // local player's kills this round (reset each round; drives the coin award)
 
-	// Contra Squad economy/loadout state, guarded by invMu. The buy-phase money and
-	// the current equipment slot map so purchases (cmd 408) can deduct and add items.
-	invMu      sync.Mutex
+	// Contra Squad economy/loadout state, owned by the match loop (run()). The buy-phase money
+	// and the current equipment slot map so purchases (cmd 408) can deduct and add items.
 	coins      uint32              // buy-phase money
 	award      uint32              // coins awarded for the round (kills + win bonus) — added to coins at the next buy phase
 	uidCounter uint32              // allocates unique item instance ids — MONOTONIC (never reset), so a new item can't collide with a stale one the client hasn't dropped yet
@@ -66,27 +69,31 @@ type session struct {
 	clientUIDs map[uint32]lootItem // uid -> item the client holds; source of truth for the cmd-327 respawn clear AND for dropping ANY item (cmd 112) by unique (consumables/throwables have no weapon slot)
 	itemOnHand uint32              // unique of the currently held item
 
-	// Ground loot, guarded by invMu (same lock as the loadout it flows to/from, so a
-	// drop↔loadout mutation stays atomic). containers holds the live ground pickup boxes
-	// keyed by their wire ContainerObjectID; nextContainerID is the runtime id allocator.
+	// Ground loot, owned by the match loop (run()) — it flows to/from the loadout above.
+	// containers holds the live ground pickup boxes keyed by their wire ContainerObjectID;
+	// nextContainerID is the runtime id allocator.
 	containers      map[uint16]*container // live ground boxes keyed by ContainerObjectID
 	nextContainerID uint16                // runtime container-id allocator (runtimeContainerBase..Max)
 
-	// Placed gloo (ice) walls, guarded by invMu (the SAME lock as clientUIDs, so the
-	// PLACE path can read the gloo inventory count, deduct it, mutate the wall list and
-	// compute the FIFO cap in one atomic step). walls is FIFO-ordered: walls[0] is the
-	// oldest placed. wallSeq is a monotonic allocator (never reused) for wall entity ids
-	// and per-wall PRI RepIDs. See gloo.go.
+	// Placed gloo (ice) walls, owned by the match loop (run()) — the PLACE path reads the gloo
+	// inventory count, deducts it, mutates the wall list and computes the FIFO cap in one step.
+	// walls is FIFO-ordered: walls[0] is the oldest placed. wallSeq is a monotonic allocator
+	// (never reused) for wall entity ids and per-wall PRI RepIDs. See gloo.go.
 	walls   []*iceWall
 	wallSeq uint32
 
-	// Per-entity current HP (entity game id -> HP), guarded by hpMu. Damage reports
-	// (cmd 106) decrement it; the PRI stream replicates it so the client sees kills.
-	// playerPos is the local player's last-reported world position (cmd 1001), used by
-	// the SafeZone to decide who is outside the circle. Also guarded by hpMu.
-	hpMu      sync.Mutex
+	// Per-entity current HP (entity game id -> HP), owned by the match loop (run()). Damage
+	// reports (cmd 106) decrement it; the PRI stream replicates it so the client sees kills.
+	// playerPos is the local player's last-reported world position (cmd 1001), used by the
+	// SafeZone to decide who is outside the circle.
 	hp        map[uint32]uint16
 	playerPos message.Vec3
+
+	// Medkit heal-over-time (run()-driven): cmd 113 arms it, stepHeal applies the accrued HP
+	// each tick until full HP / death / all steps done. See medkit.go.
+	healActive  bool
+	healStart   time.Time
+	healApplied int
 }
 
 // write queues one packet to this session's remote through its Writer, which owns the

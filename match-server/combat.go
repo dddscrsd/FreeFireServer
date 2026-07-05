@@ -16,16 +16,12 @@ import (
 // initHP seeds every tracked entity to full HP. Called once when the CS sync loop
 // starts, before the PRI stream begins replicating HP.
 func (s *session) initHP() {
-	s.hpMu.Lock()
 	s.hp = map[uint32]uint16{playerEntityID: maxHP, s.botEntity: maxHP}
 	s.playerPos = s.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
-	s.hpMu.Unlock()
 }
 
 // entityHP returns an entity's current HP (maxHP if untracked / not yet seeded).
 func (s *session) entityHP(entity uint32) uint16 {
-	s.hpMu.Lock()
-	defer s.hpMu.Unlock()
 	if hp, ok := s.hp[entity]; ok {
 		return hp
 	}
@@ -63,10 +59,8 @@ func (s *session) handleTakeDamage(p *packet.Packet) {
 // transition to 0 HP it sends the death packet (once — a victim already at 0 is
 // ignored). Untracked entities are ignored.
 func (s *session) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8) {
-	s.hpMu.Lock()
 	cur, ok := s.hp[victim]
 	if !ok || cur == 0 { // untracked, or already dead (don't re-kill)
-		s.hpMu.Unlock()
 		return
 	}
 	if dmg >= cur {
@@ -75,7 +69,6 @@ func (s *session) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint
 		cur -= dmg
 	}
 	s.hp[victim] = cur
-	s.hpMu.Unlock()
 
 	log.Printf("[mm-udp] TAKE_DAMAGE victim=%#x dmg=%d -> HP=%d", victim, dmg, cur)
 	if cur == 0 {
@@ -158,16 +151,12 @@ func (s *session) handleChangeHeldItem(p *packet.Packet) {
 	if entity != playerEntityID {
 		return // only track our local player's held item
 	}
-	s.invMu.Lock()
 	s.itemOnHand = unique
-	s.invMu.Unlock()
 }
 
 // heldWeaponData returns the DataID of the item the local player currently holds (the
 // equipment slot whose unique matches itemOnHand), or 0 (e.g. fists).
 func (s *session) heldWeaponData() uint32 {
-	s.invMu.Lock()
-	defer s.invMu.Unlock()
 	for _, e := range s.equipment {
 		if e.Unique == s.itemOnHand {
 			return e.Data
@@ -184,9 +173,7 @@ func (s *session) deathPos(entity uint32) message.Vec3 {
 	case s.botEntity:
 		return s.bot.SpawnPos
 	case playerEntityID:
-		s.hpMu.Lock()
 		pos := s.playerPos
-		s.hpMu.Unlock()
 		if pos != (message.Vec3{}) {
 			return pos
 		}
