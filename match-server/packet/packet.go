@@ -45,6 +45,9 @@ const (
 	CmdDropInventory       = 112 // client <-> server: KJBONEENCAL — RUDP_DROP_INVENTORY (req: u32 unique,u32 count,u8 reason; res reuses class)
 	CmdUseInventory        = 113 // client -> server: RUDP_USE_INVENTORY — finished channelling a consumable ([u32 uid][u32 count][u32 param]); server applies the effect + tracks the consume
 	CmdTryUseInventory     = 131 // client -> server: RUDP_TRYUSE_INVENTORY (KOMODKGGDBG, [u32 entity][u32 item][u32 tick]) — started channelling a consumable
+	CmdEquipAttachment     = 122 // client -> server: RUDP_EQUIP_ATTACHMENT — client's manual attachment equip (server auto-maxes on buy, so logged/ignored)
+	CmdUnequipAttachment   = 123 // client -> server: RUDP_UNEQUIP_ATTACHMENT — IGNORED (attachments are kept locked on the weapon)
+	CmdAttachmentChanged   = 124 // server -> client: KBDODAHANGB — RUDP_ATTACHMENT_CHANGED (force-equip a maxed attachment onto a bought weapon)
 	CmdAddPickup           = 114 // server -> client: INMIMMDMPFM — RUDP_ADD_PICKUP (one ground-loot item at a position)
 	CmdDelPickup           = 115 // server -> client: KBHENKFBDAJ — RUDP_DEL_PICKUP (remove one ground-loot item)
 	CmdAddIcewall          = 218 // client <-> server: RUDP_ADD_ICEWALL (0xDA) — C->S place request (JEGADMHBFKB, 29B); S->C spawn broadcast (KACGKFMOHNP, 41B)

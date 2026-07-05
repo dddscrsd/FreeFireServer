@@ -21,7 +21,7 @@ const slotNone byte = 0xFF
 // 205=SMG). Presence in this map is what identifies a DataID as a weapon.
 var weaponAmmo = map[uint32]uint32{
 	3: 202, 10: 202, 25: 202, 9: 202, // pistols (USP, G18, M500, Desert Eagle)
-	8: 205, 7: 205, 32: 205, 15: 205, // SMGs (MP5, UMP, P90, MP40)
+	8: 205, 7: 205, 32: 205, 15: 205, 88: 205, 43: 205, // SMGs (MP5, UMP, P90, MP40)
 	33: 201, 24: 201, 6: 201, 12: 201, // rifles (AN94, Famas, AK, SCAR)
 	21: 203, 4: 203, // snipers (Kar98k, AWM)
 	5: 204, 41: 204, // shotguns (M1014, M1887)
@@ -137,6 +137,7 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 		log.Printf("[mm-udp] cmd=408 buy req too short (%dB): %x", len(p.Payload), p.Payload)
 		return
 	}
+
 	qty := uint32(binary.LittleEndian.Uint16(p.Payload[0:]))
 	itemID := uint32(binary.LittleEndian.Uint16(p.Payload[2:]))
 	if qty == 0 {
@@ -150,16 +151,20 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	price := item.Price * qty
 
 	s.invMu.Lock()
-	if s.coins < price {
+	if s.coins < price && !cfg.unlimitedMoneyTest {
 		coins := s.coins
 		s.invMu.Unlock()
 		s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseNoMoney, coins),
 			fmt.Sprintf("cmd=408 buy DENIED item=%d price=%d coins=%d (insufficient)", itemID, price, coins))
 		return
 	}
-	s.coins -= price
+
+	if !cfg.unlimitedMoneyTest {
+		s.coins -= price
+	}
+
 	coins := s.coins
-	inv, equip, outgoing := s.addPurchasedItemLocked(item, qty)
+	inv, attach, equip, outgoing, attachEquips := s.addPurchasedItemLocked(item, qty)
 	onHand := s.itemOnHand
 	s.invMu.Unlock()
 
@@ -170,8 +175,12 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseOK, coins),
 		fmt.Sprintf("cmd=408 buy OK item=%d price=%d -> coins=%d", itemID, price, coins))
 	s.sendVar(packet.CmdPRISync, s.priPayload(), 2)
-	body := message.SyncInventory(s.player.EntityID, inv, nil, equip, onHand)
-	s.sendDataLog(packet.CmdSyncInventory, body, fmt.Sprintf("cmd=174 SyncInventory (+item %d x%d)", itemID, qty))
+	body := message.SyncInventory(s.player.EntityID, inv, attach, equip, onHand)
+	s.sendDataLog(packet.CmdSyncInventory, body, fmt.Sprintf("cmd=174 SyncInventory (+item %d x%d, +%d attach)", itemID, qty, len(attach)))
+	// Force-equip the maxed attachments onto the bought weapon (cmd 124). The cmd 174 above
+	// registered both the weapon and the attachment items in the client's inventory dict, so
+	// each cmd 124 can now resolve them by unique.
+	s.sendAttachEquips(attachEquips)
 
 	// The new weapon took the slot in the cmd 174 above; the overridden weapon it displaced is
 	// dropped to the ground — but only AFTER a short delay (dropOverriddenAfterEquip) so the client
@@ -194,19 +203,21 @@ const (
 // loadout, updates the equipment slot map / in-hand item, and returns the inventory
 // DELTA to sync (only the new items — the sync is additive) plus the full equipment
 // map. Caller holds invMu.
-func (s *session) addPurchasedItemLocked(item *message.ShopItem, qty uint32) ([]message.InvItem, []message.Equipment, []lootItem) {
+func (s *session) addPurchasedItemLocked(item *message.ShopItem, qty uint32) (inv, attach []message.InvItem, equip []message.Equipment, outgoing []lootItem, attachEquips []attachEquip) {
 	place := placeItem(item)
 	if place.isPrimary {
 		place.slot = s.pickPrimarySlotLocked()
 	}
 	uid := s.nextUIDLocked()
-	inv := []message.InvItem{{Unique: uid, Data: item.ItemID, Count: qty}}
-	var outgoing []lootItem
+	inv = []message.InvItem{{Unique: uid, Data: item.ItemID, Count: qty}}
 	if place.isWeapon {
-		mag := ClipSize(item.ItemID, SkinForWeapon(item.ItemID, s.player.Slots)) // loaded magazine
+		mag := loadedMagFor(item.ItemID, SkinForWeapon(item.ItemID, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
 		inv[0].Runtime = mag
 		s.trackItemLocked(lootItem{unique: uid, data: item.ItemID, count: 1, runtime: mag})
 		inv = append(inv, s.giveAmmoStacksLocked(place.ammo)...) // reserve ammo as 30-round stacks
+		// Force-equip the best attachment for every slot the weapon supports — added as
+		// inventory items here so the follow-up cmd 124 can resolve them by unique (attachment.go).
+		attach, attachEquips = s.buildWeaponAttachmentsLocked(uid, item.ItemID)
 		// If the resolved slot is already occupied (a 3rd primary overrides the held primary;
 		// a 2nd pistol overrides SlotSecondary) capture the outgoing weapon so the caller can
 		// drop it to the ground, and untrack its unique (the caller cmd-327s it so the client
@@ -223,7 +234,8 @@ func (s *session) addPurchasedItemLocked(item *message.ShopItem, qty uint32) ([]
 	if place.slot != slotNone {
 		s.setEquipLocked(place.slot, item.ItemID, uid)
 	}
-	return inv, append([]message.Equipment(nil), s.equipment...), outgoing
+	equip = append([]message.Equipment(nil), s.equipment...)
+	return
 }
 
 // nextUIDLocked allocates a fresh unique item-instance id. Caller holds invMu.

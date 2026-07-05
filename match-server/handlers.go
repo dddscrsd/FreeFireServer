@@ -43,6 +43,10 @@ func (s *session) handle(p *packet.Packet) {
 		s.handleUseInventory(p)
 	case packet.CmdTryUseInventory: // 131 — started channelling a consumable
 		s.handleTryUseInventory(p)
+	case packet.CmdEquipAttachment: // 122 — client's manual attachment equip (server auto-maxes)
+		s.handleEquipAttachment(p)
+	case packet.CmdUnequipAttachment: // 123 — never unequip; attachments stay locked on
+		s.handleUnequipAttachment(p)
 	case packet.CmdClientPos: // 1001
 		s.handleClientPos(p)
 	case packet.CmdPlayerQuitReq: // 191

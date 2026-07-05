@@ -307,7 +307,7 @@ func (s *session) weaponLoot(w csWeapon) lootItem {
 		unique:  w.unique,
 		data:    w.data,
 		count:   1,
-		runtime: ClipSize(w.data, SkinForWeapon(w.data, s.player.Slots)),
+		runtime: loadedMagFor(w.data, SkinForWeapon(w.data, s.player.Slots)),
 	}
 }
 
@@ -334,6 +334,7 @@ func (s *session) handlePickup(p *packet.Packet) {
 		return
 	}
 	pos := s.snapPlayerPos()
+	var pickEquips []attachEquip // maxed-attachment equips for a picked-up weapon (sent after flush)
 
 	s.invMu.Lock()
 	box, it, ok := s.findLootLocked(req.UniqueID)
@@ -365,12 +366,17 @@ func (s *session) handlePickup(p *packet.Packet) {
 		s.trackItemLocked(it)
 		s.itemOnHand = it.unique
 
+		// Max the picked weapon's attachments (same as a purchase) so a ground gun isn't stuck
+		// at the default no-attachment state; the attachment items ride the cmd 174, cmd 124 mounts.
+		var pickAttach []message.InvItem
+		pickAttach, pickEquips = s.buildWeaponAttachmentsLocked(it.unique, it.data)
+
 		// Add the picked item to the client inventory (cmd 174) BEFORE it leaves the ground.
 		inv := []message.InvItem{{Unique: it.unique, Data: it.data, Count: it.count, Runtime: it.runtime}}
 		equip := append([]message.Equipment(nil), s.equipment...)
 		out = append(out, outPkt{packet.CmdSyncInventory,
-			message.SyncInventory(s.player.EntityID, inv, nil, equip, s.itemOnHand),
-			fmt.Sprintf("cmd=174 SyncInventory (pickup data=%d uid=%d slot=%d)", it.data, it.unique, slot)})
+			message.SyncInventory(s.player.EntityID, inv, pickAttach, equip, s.itemOnHand),
+			fmt.Sprintf("cmd=174 SyncInventory (pickup data=%d uid=%d slot=%d, +%d attach)", it.data, it.unique, slot, len(pickAttach))})
 
 		// Now spawn the displaced weapon on the ground (may merge into the box we just took
 		// from, which then survives). Done after the 174 so its 327 already freed the unique.
@@ -403,6 +409,7 @@ func (s *session) handlePickup(p *packet.Packet) {
 	s.invMu.Unlock()
 
 	s.flush(out)
+	s.sendAttachEquips(pickEquips) // mount the picked weapon's maxed attachments (after the cmd 174 flush)
 }
 
 // handleDrop handles cmd 112 (RUDP_DROP_INVENTORY): the client drops ANY inventory item — a

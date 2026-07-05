@@ -1,0 +1,11 @@
+id,name,icon_sprite,type,dmg_redfactor,damage_ratio_limb,damage_ratio_head,durability_max,extra_hp,dmg_redfactor_explode,extra_capacity
+配件id,名字,图标,类别,护甲减伤提升（保留）,四肢伤害系数变化,头伤害系数变化,耐久上限倍率,玩家血量倍率,额外爆炸减伤系数（%）（总上限为75%）,额外背包空间
+5601,护甲插板,UI_icon_attach_equip_1,1,,,,1,1.1,,
+5602,护甲涂层,UI_icon_attach_equip_2,1,,,,1.1,1,,
+5603,头盔涂层,UI_icon_attach_equip_6,2,,,,1.1,1,,
+5604,全身护甲,UI_icon_attach_equip_3,1,,-0.25,,1,1,,
+5605,过量夹层,UI_icon_attach_equip_7,2,,,-1.6,1,1,,
+5606,防爆夹层,UI_icon_attach_equip_5,1,,,,1,1,50,
+5607,护甲包,UI_icon_attach_equip_4,3,,,,1,1,,50
+5608,护甲插板（全面防御版）,UI_icon_attach_equip_1,1,,-0.25,,,1.25,50,
+5609,头盔涂层（全面防御版）,UI_icon_attach_equip_6,2,,,-3,,1.25,,

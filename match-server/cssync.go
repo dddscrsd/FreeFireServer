@@ -34,7 +34,11 @@ func (s *session) startCSSync() {
 // teleports the player, and respawns a fresh bot near it. Bounded per session.
 func (s *session) csSyncLoop() {
 	s.invMu.Lock()
-	s.coins = startingCoins
+	if cfg.unlimitedMoneyTest {
+		s.coins = 9999
+	} else {
+		s.coins = startingCoins
+	}
 	s.invMu.Unlock()
 	s.matchStart = time.Now() // origin for the CS phase-countdown clock
 	go s.serverTimeLoop()     // sync the client's match clock so the CS timers count down
@@ -196,7 +200,12 @@ func (s *session) gameParam(hold time.Duration) uint16 {
 // is dropped from the stream so its death (cmd 107) is not undone by a fresh HP update.
 func (s *session) priPayload() []byte {
 	s.invMu.Lock()
-	coins := uint16(s.coins)
+	var coins uint16
+	if cfg.unlimitedMoneyTest {
+		coins = 9999
+	} else {
+		coins = uint16(s.coins)
+	}
 	award := uint16(s.award)
 
 	s.invMu.Unlock()
@@ -287,7 +296,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 	s.containers = map[uint16]*container{}
 	uspUID := s.nextUIDLocked()
 	medkitID := s.nextUIDLocked()
-	uspMag := ClipSize(uspData, SkinForWeapon(uspData, s.player.Slots)) // loaded magazine (was hardcoded 12)
+	uspMag := loadedMagFor(uspData, SkinForWeapon(uspData, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
 	s.equipment = []message.Equipment{
 		{Slot: message.SlotMelee, Data: 0, Unique: 0},                // fist (melee slot must always exist)
 		{Slot: message.SlotSecondary, Data: uspData, Unique: uspUID}, // USP
@@ -300,6 +309,9 @@ func (s *session) giveLoadout(resetCoins bool) {
 		medkitID: {unique: medkitID, data: medkitData, count: 2, runtime: 2},
 	}
 	s.itemOnHand = uspUID
+	// Max the starter USP's attachments too (magazine/muzzle) so its ammo is full and it
+	// matches bought guns; the attachment items ride the cmd 174 below, then cmd 124 mounts them.
+	uspAttach, uspEquips := s.buildWeaponAttachmentsLocked(uspUID, uspData)
 	inv := append([]message.InvItem{
 		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}, // USP weapon
 		{Unique: medkitID, Data: medkitData, Count: 2, Runtime: 2}, // 2x medkits (Runtime = stack count for the HUD)
@@ -322,8 +334,9 @@ func (s *session) giveLoadout(resetCoins bool) {
 		s.sendDataLog(packet.CmdDelContainer, message.DelContainer(id, message.ContainerDynamic),
 			fmt.Sprintf("cmd=228 DelContainer box=%d (loadout reset)", id))
 	}
-	body := message.SyncInventory(s.player.EntityID, inv, nil, equip, onHand)
+	body := message.SyncInventory(s.player.EntityID, inv, uspAttach, equip, onHand)
 	s.sendDataLog(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (USP + ammo)")
+	s.sendAttachEquips(uspEquips) // mount the starter USP's maxed attachments
 }
 
 // reissueLoadout refills every weapon currently in the loadout to a full magazine (and
@@ -339,7 +352,7 @@ func (s *session) reissueLoadout() {
 			Unique:  w.unique,
 			Data:    w.data,
 			Count:   1,
-			Runtime: ClipSize(w.data, SkinForWeapon(w.data, s.player.Slots)), // full magazine
+			Runtime: loadedMagFor(w.data, SkinForWeapon(w.data, s.player.Slots)), // full magazine (incl. auto-magazine boost)
 		})
 	}
 	// Refill every ammo stack the player still holds back to a full 30 (ammo is decoupled from

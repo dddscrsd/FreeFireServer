@@ -30,10 +30,12 @@ var weaponTableCSV []byte
 // WeaponTable.csv column indexes (0-based). Confirmed against the header row and
 // the USP data row (id 3 -> ammo_clip_size 12, ammo_id 202).
 const (
-	wtColID       = 0  // id           (weapon id)
-	wtColClipSize = 19 // ammo_clip_size (base loaded-magazine size = Runtime)
-	wtColAmmoID   = 22 // ammo_id      (kept for reference; weapon->ammo map is in purchase.go)
-	wtColSkinID   = 73 // id_weaponskin (default/base skin id; OFTEN BLANK -> 0)
+	wtColID         = 0  // id           (weapon id)
+	wtColClipSize   = 19 // ammo_clip_size (base loaded-magazine size = Runtime)
+	wtColAmmoID     = 22 // ammo_id      (kept for reference; weapon->ammo map is in purchase.go)
+	wtColAttachSlot = 23 // attachment_slot (`;`-list of the weapon's supported attachment slot indices)
+	wtColSightEquip = 39 // sight_equip  (`;`-list of scope/sight DataIDs the weapon accepts)
+	wtColSkinID     = 73 // id_weaponskin (default/base skin id; OFTEN BLANK -> 0)
 )
 
 // WeaponSkin.csv column indexes (0-based).
@@ -52,6 +54,11 @@ var (
 	weaponSkins = map[uint32][]uint32{}
 	// skinClipMod[skinID] = that skin's ammo_clip_size modifier (0 if blank; MAY be negative).
 	skinClipMod = map[uint32]int{}
+	// weaponAttachSlots[weaponID] = the CSV attachment_slot indices the weapon supports (its OWN
+	// numbering, distinct from the cmd-124 EAttachmentType — see attachment.go for the mapping).
+	weaponAttachSlots = map[uint32][]int{}
+	// weaponSights[weaponID] = the sight/scope DataIDs the weapon's sight_equip whitelist accepts.
+	weaponSights = map[uint32][]uint32{}
 )
 
 var skinToWeaponStatic = map[uint32]uint32{907000001: 3,
@@ -2448,7 +2455,43 @@ func parseWeaponTable(b []byte) {
 		if skin, ok := parseU32(rec[wtColSkinID]); ok {
 			weaponDefaultSkin[id] = skin
 		}
+		if len(rec) > wtColAttachSlot {
+			weaponAttachSlots[id] = parseSemiInts(rec[wtColAttachSlot])
+		}
+		if len(rec) > wtColSightEquip {
+			weaponSights[id] = parseSemiU32s(rec[wtColSightEquip])
+		}
 	}
+}
+
+// parseSemiInts splits a ';'-separated list of decimal ints (e.g. "0;1;2;3;4"), dropping blanks.
+func parseSemiInts(s string) []int {
+	if strings.TrimSpace(s) == "" {
+		return nil
+	}
+	parts := strings.Split(s, ";")
+	out := make([]int, 0, len(parts))
+	for _, p := range parts {
+		if n, ok := parseInt(p); ok {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// parseSemiU32s splits a ';'-separated list of decimal uint32s, dropping blanks.
+func parseSemiU32s(s string) []uint32 {
+	if strings.TrimSpace(s) == "" {
+		return nil
+	}
+	parts := strings.Split(s, ";")
+	out := make([]uint32, 0, len(parts))
+	for _, p := range parts {
+		if n, ok := parseU32(p); ok {
+			out = append(out, n)
+		}
+	}
+	return out
 }
 
 // SkinForWeapon returns the skin id the player has equipped for weaponID (fix 4).
