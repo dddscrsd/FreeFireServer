@@ -69,8 +69,8 @@ func (s *session) handleHello(p *packet.Packet) {
 			s.player = resolvePlayer("") // fallback player (EntityID=1, RepID 1000) — matches the original join
 		}
 		s.joined = true
-		log.Printf("[mm-udp] reconnect mid-match -> resuming CS sync loop (no re-join) %v", s.remote)
-		s.startCSSync()
+		log.Printf("[mm-udp] reconnect mid-match -> resuming CS match loop (no re-join) %v", s.remote)
+		s.startCSMatch()
 		s.resyncWalls() // redraw any live gloo walls the fresh transport session lost (cmd 220)
 	}
 }
@@ -110,7 +110,7 @@ func (s *session) handleJoinMatchPost(p *packet.Packet) {
 
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
 	s.broadcastZone() // draw the safe zone at the NEW city now that the player joined
-	s.startCSSync()
+	s.startCSMatch()
 }
 
 // handleJoinMatchPrepare handles cmd 439 (JOIN_MATCH_PREPARE): the client sends the

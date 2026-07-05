@@ -11,7 +11,7 @@ import (
 )
 
 // config holds server tunables plus the optional MATCH_* diagnostic knobs, read
-// once at startup so the hot paths (handlers, csSyncLoop) don't scatter os.Getenv
+// once at startup so the hot paths (handlers, the match loop) don't scatter os.Getenv
 // calls. cfg is the process-wide instance, set by main().
 type config struct {
 	jwtSecret []byte        // verifies the cmd 440 prepare_token (env MATCH_JWT_SECRET)

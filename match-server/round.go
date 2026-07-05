@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"time"
 
@@ -51,68 +50,6 @@ func (s *session) matchEnd(localWon bool) {
 	s.sendDataLog(packet.CmdMatchEnd, message.MatchEnd(rank),
 		fmt.Sprintf("cmd=103 MatchEnd rank=%d local=%s final=%d-%d",
 			rank, result, s.teamScore[0], s.teamScore[1]))
-}
-
-// roundTransition runs the real between-rounds flow (RE'd via IDA): the GRI Post phase
-// holds the VICTORY banner ~5s then the client auto-fades to black; during the black
-// window we teleport the local player and respawn the SAME bot at the new arena; the
-// Introduction phase reveals the new round and fades back to light. The csSyncLoop then
-// opens the next buy phase.
-func (s *session) roundTransition(revivePlayer bool) {
-	// Pick the next arena now so spawn targets are ready before the black window.
-	s.arena = pickArena()
-	s.player.SpawnPos, s.player.SpawnFace = s.arena.spawnFor(localFaction)
-	s.bot = botPlayer(s.player, s.botEntity) // same entity, new spot near the player
-	log.Printf("[mm-udp] round transition -> arena=%q local=(%.1f,%.1f,%.1f) revivePlayer=%v %v",
-		s.arena.City, s.player.SpawnPos.X, s.player.SpawnPos.Y, s.player.SpawnPos.Z, revivePlayer, s.remote)
-
-	// Post: banner then the client's hardcoded fade-to-black. Hold until fully black.
-	if !s.streamPhase(message.CSPhasePost, postToBlack, nil, false) {
-		return
-	}
-	// Fully black now — reposition unseen. Reset both to full HP; respawn the bot.
-	s.hpMu.Lock()
-	s.hp = map[uint32]uint16{playerEntityID: maxHP, s.botEntity: maxHP}
-	s.playerPos = s.player.SpawnPos // reset to the new spawn so the shrinking zone can't
-	// damage a STALE position (cmd 1001 is throttled while the player stands still, so
-	// without this the zone check keeps using the previous round's city coords)
-	s.hpMu.Unlock()
-	s.clearWalls() // gloo walls are per-round world state — wipe them during the black window
-	s.respawnBot()
-	// Reposition the local player at the new gate. A DEAD player is stuck spectating, so
-	// re-join it via cmd 101 (authoritative — the client accepts it and revives the pawn).
-	// An ALIVE (won) player can't be re-joined (the client IGNORES cmd 101 for a live
-	// local player), so stream the force-teleport instead — but ONLY inside this
-	// black/transition window (the player is frozen here so it sticks), NOT into the buy
-	// phase, so free-roam works there.
-	var pull *message.Vec3
-	if revivePlayer {
-		// Respawn the dead local player via cmd 388 (NOTIFYREVIVE) — RE-proven the ONLY
-		// packet in the build that clears a Player's dead flag (StopPendingRevive ->
-		// set_IsDead(false)). It reuses the EXISTING player object (no cmd 101 re-add, so
-		// no team glitch — the enemy bot is never touched) and repositions + un-spectates
-		// the client. The full un-spectate only fires because the death left the observer
-		// on the player itself (see spectateTarget). HP stays on the intact PRI binding;
-		// re-give the loadout the death dropped. cmd 388 carries the spawn, so no pull.
-		s.respawnLocalPlayer()
-		time.Sleep(150 * time.Millisecond)
-		s.bindPRIs()         // re-bind so the streamed PRI HP lands cleanly on the revived pawn
-		s.giveLoadout(false) // death dropped the weapon to fists — re-give the USP, keep coins
-	} else {
-		pull = &s.player.SpawnPos
-		s.reissueLoadout() // alive: refill every kept weapon's magazine + reserve for the new round
-	}
-	if !s.streamPhase(message.CSPhasePost, postBlackHold, pull, false) {
-		return
-	}
-	// Introduction: reveal the new round number and fade back to light (still frozen, so
-	// keep pulling an alive player to the new gate through the fade).
-	s.round++
-	s.broadcastZone() // re-draw the safe zone at the NEW city now that the player teleported
-	time.Sleep(150 * time.Millisecond)
-	if !s.streamPhase(message.CSPhaseIntroduction, introReveal, pull, false) {
-		return
-	}
 }
 
 // respawnLocalPlayer respawns the dead local player via cmd 388 (NOTIFYREVIVE) at the new

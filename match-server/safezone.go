@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"time"
 
@@ -46,66 +45,6 @@ func (s *session) zoneGeometry() (center message.Vec3, outerR float64) {
 		return s.arena.center(), s.arena.gateSpan()/2 + zoneMargin
 	}
 	return s.player.SpawnPos, zoneDefaultR
-}
-
-// runSafeZone drives the round's shrinking circle for the Fight phase: it sends the
-// wait-stage zone (the HUD timer counts down), then the shrink-stage zone (the circle
-// contracts). Damage is applied in BOTH stages to anyone outside the current circle:
-// while waiting, outside the static outer radius; while shrinking, outside the
-// interpolated (client-lag-compensated) radius. Runs in its own goroutine; returns when
-// `stop` closes (Fight ended / round over / session stopped).
-func (s *session) runSafeZone(stop chan struct{}) {
-	center, outerR := s.zoneGeometry()
-	innerR := outerR * zoneInnerRatio
-	stage := byte(s.round)
-	waitDur := zoneWaitDur
-	if cfg.zoneTest {
-		waitDur = 3 * time.Second
-	}
-
-	// Stage 1: wait — circle static at Outer; timer counts down to the shrink.
-	s.sendZone(stage, center, outerR, center, innerR, message.ZoneWaiting, waitDur)
-
-	// One damage ticker spans both stages so out-of-zone players bleed during the wait too.
-	ticker := time.NewTicker(zoneDamageEvery)
-	defer ticker.Stop()
-
-	// Fires once, at the wait->shrink boundary: sends the shrink zone and flips us into
-	// the shrinking stage. Until then the damage radius is the static outer circle.
-	shrinkTimer := time.NewTimer(waitDur)
-	defer shrinkTimer.Stop()
-
-	shrinking := false
-	var shrinkStart time.Time
-
-	for {
-		select {
-		case <-stop:
-			return
-		case <-shrinkTimer.C:
-			// Stage 2 begins: shrink — circle contracts Outer->Inner. No damage here;
-			// the ticker owns damage so the wait->shrink boundary can't double-apply.
-			s.sendZone(stage, center, outerR, center, innerR, message.ZoneShrinking, zoneShrinkDur)
-			shrinkStart = time.Now()
-			shrinking = true
-		case <-ticker.C:
-			// Radius to damage against: the static outer circle while waiting; once
-			// shrinking, the radius the client is STILL rendering (a touch in the past)
-			// so it matches the visible circle. See zoneClientLag.
-			curR := outerR
-			if shrinking {
-				curR = lerpRadius(outerR, innerR, time.Since(shrinkStart)-zoneClientLag)
-			}
-			s.hpMu.Lock()
-			pos := s.playerPos
-			s.hpMu.Unlock()
-			if d := dist2D(pos, center); d > curR {
-				log.Printf("[mm-udp] ZONE damage: player %.0fm out (r=%.0f) at (%.0f,%.0f) -> -%d HP %v",
-					d-curR, curR, pos.X, pos.Z, zoneDamage, s.remote)
-				s.applyDamage(playerEntityID, 0, zoneDamage, 0) // killer 0 -> environment zone death
-			}
-		}
-	}
 }
 
 // broadcastZone sends the current arena's safe zone in the waiting stage. Called at a

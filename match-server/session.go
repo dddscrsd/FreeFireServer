@@ -31,7 +31,7 @@ type session struct {
 	out    *Writer // this connection's outbound path — owns seq/order + every send (see writer.go)
 
 	joined      bool
-	syncStarted bool        // csSyncLoop already running for this session (guard)
+	syncStarted bool        // match loop already running for this session (guard)
 	stopped     atomic.Bool // set on player quit (cmd 191); the CS sync loop exits when true
 	player      joinPlayer  // resolved from the prepare_token (cmd 439/440)
 	bot         joinPlayer  // the current-round enemy bot
