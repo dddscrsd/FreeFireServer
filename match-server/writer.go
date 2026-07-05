@@ -85,3 +85,27 @@ func (w *Writer) send(p *packet.Packet, label string) {
 func (w *Writer) sendRaw(raw []byte) {
 	w.ch <- outItem{raw: raw}
 }
+
+// frameVar encodes an unreliable VAR packet (send_option=4, plaintext, no seq/order) ONCE.
+// VAR framing carries no per-connection state, so the resulting bytes are identical for every
+// recipient — this is what lets a match encode a PRI/GRI tick once and fan the SAME slice to all
+// players (the key is unused for a plaintext VAR, but Encode takes it). Returns nil on error.
+func frameVar(cmd uint16, payload, key []byte) []byte {
+	wire, err := (&packet.Packet{SendOption: packet.SendVar, Cmd: cmd, Flags: 0, Payload: payload}).Encode(key)
+	if err != nil {
+		log.Printf("[mm-udp] frameVar cmd=%d err: %v", cmd, err)
+		return nil
+	}
+	return wire
+}
+
+// broadcast enqueues the SAME pre-framed bytes to every recipient Writer (verbatim). Used for the
+// VAR replication streams (900/901/1000) whose bytes are identical for all players.
+func broadcast(wire []byte, outs []*Writer) {
+	if wire == nil {
+		return
+	}
+	for _, out := range outs {
+		out.sendRaw(wire)
+	}
+}

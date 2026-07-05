@@ -130,14 +130,18 @@ func (s *session) sendDataLog(cmd uint16, payload []byte, what string) {
 	s.out.send(&packet.Packet{SendOption: packet.SendReliable, Cmd: cmd, Flags: packet.FlagEncrypted, Payload: payload}, what)
 }
 
-// sendVar queues `repeat` copies of an unreliable VAR replication packet (send_option=4), the
-// channel the client consumes cmd 900 (PRI) / 901 (GRI) on. VAR packets are plaintext (flags=0)
-// and carry no seq/order, so they are resent to survive drops.
+// sendVar frames an unreliable VAR replication packet (send_option=4 — the channel the client
+// consumes cmd 900 PRI / 901 GRI on) ONCE, then fans it to every recipient `repeat` times to
+// survive drops. Encode-once is safe because VAR framing carries no per-connection state, so the
+// bytes are identical for all players — the primitive the multiplayer broadcast is built on. For
+// now the recipient list is just this session's Writer; Step 4 swaps it for the match's players.
 func (s *session) sendVar(cmd uint16, payload []byte, repeat int) {
 	if repeat < 1 {
 		repeat = 1
 	}
+	wire := frameVar(cmd, payload, s.key)
+	outs := []*Writer{s.out}
 	for i := 0; i < repeat; i++ {
-		s.out.send(&packet.Packet{SendOption: packet.SendVar, Cmd: cmd, Flags: 0, Payload: payload}, "")
+		broadcast(wire, outs)
 	}
 }
