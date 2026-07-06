@@ -21,7 +21,24 @@ type Match struct {
 	pull     *message.Vec3 // teleport target streamed on a phase entry (frozen-player pin), or nil
 	revive   bool          // set at the Fight edge: the local player died -> revive path in the transition
 	matchWon bool          // set at the Fight edge when the match ends: local team won
+	mailbox  chan func()   // inbound gameplay handlers run here (Step 3b); one inbox per match (Step 4)
 	done     chan struct{}
+
+	// Shared world state (moved off the session in Step 4a — the whole match sees ONE of each).
+	round      int               // 1-based CS round
+	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
+	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
+	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
+	arena      csArena           // spawn city for the current round (re-picked each round)
+	bot        joinPlayer        // the current-round enemy bot (becomes a roster *player in 4c)
+	botEntity  uint32            // the (fixed) enemy bot entity id
+	hp         map[uint32]uint16 // entity id -> current HP (player + bot); splits to per-player in 4c
+
+	// Shared world objects: placed gloo walls (FIFO, walls[0] oldest) + ground-loot boxes.
+	walls           []*iceWall
+	wallSeq         uint32                // monotonic wall entity-id / PRI-RepID allocator (never reused)
+	containers      map[uint16]*container // live ground boxes keyed by ContainerObjectID
+	nextContainerID uint16                // runtime container-id allocator (runtimeContainerBase..Max)
 
 	// Zone state (during Fight), replacing runSafeZone's goroutine + tickers.
 	zoneOn          bool
@@ -84,17 +101,24 @@ func griPhase(ph csPhase) (uint16, bool) {
 	}
 }
 
+// newMatch creates the Match a session belongs to, wiring the back-reference both ways. In Step 4
+// it is created 1:1 with the session (from main.go); Step 4b hands match creation to the
+// MatchManager so multiple players can share one match.
+func newMatch(s *session) *Match {
+	m := &Match{s: s, mailbox: make(chan func(), 256), done: make(chan struct{})}
+	s.match = m
+	return m
+}
+
 // startCSMatch launches the match's tick loop once per session. Safe to call from both the
 // fresh-join and the mid-match reconnect paths (replaces startCSSync).
 func (s *session) startCSMatch() {
 	if s.syncStarted {
 		return
 	}
-	s.mailbox = make(chan func(), 256) // inbound gameplay handlers run on run() (set before syncStarted)
 	s.syncStarted = true
-	m := &Match{s: s, done: make(chan struct{})}
 	log.Printf("[mm-udp] -> starting CS match loop (base %v, stream %v, clock %v) %v", baseTick, priTick, clockTick, s.remote)
-	go m.run()
+	go s.match.run()
 }
 
 // run is the single loop: each base tick it advances the phase machine and steps the zone, and
@@ -109,10 +133,10 @@ func (m *Match) run() {
 	}
 	s.coins = coins
 
-	s.matchStart = time.Now()
-	if s.round == 0 { // reconnect path skips the join handler that seeds round 1
-		s.round = 1
-		s.botEntity = botEntityID
+	m.matchStart = time.Now()
+	if m.round == 0 { // reconnect path skips the join handler that seeds round 1
+		m.round = 1
+		m.botEntity = botEntityID
 	}
 	s.initHP()
 
@@ -128,7 +152,7 @@ func (m *Match) run() {
 		select {
 		case <-m.done:
 			return
-		case fn := <-s.mailbox: // an inbound gameplay handler — runs here so run() owns all match state
+		case fn := <-m.mailbox: // an inbound gameplay handler — runs here so run() owns all match state
 			fn()
 		case now := <-t.C:
 			if s.stopped.Load() {
@@ -168,10 +192,10 @@ func (m *Match) stream() {
 		param = 0 // the Waiting hold shows no countdown (matches the old shopWarmup)
 	}
 	s.sendVar(packet.CmdPRISync, s.priPayload(), 1)
-	s.sendVar(packet.CmdGRISync, message.CSGRIInit(maxRound, uint8(s.round-1)), 1)
+	s.sendVar(packet.CmdGRISync, message.CSGRIInit(maxRound, uint8(m.round-1)), 1)
 	s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
 	point := 0
-	if s.teamScore[0] == roundsToWin-1 || s.teamScore[1] == roundsToWin-1 {
+	if m.teamScore[0] == roundsToWin-1 || m.teamScore[1] == roundsToWin-1 {
 		point = 1 // next round is the decider
 	}
 	s.sendVar(packet.CmdGRISync, message.CSGRIMatchPoint(uint8(point)), 1)
@@ -179,7 +203,7 @@ func (m *Match) stream() {
 
 // streamClock streams cmd 1000 (server clock) so the CS countdowns tick. Replaces serverTimeLoop.
 func (m *Match) streamClock() {
-	tick := uint32(time.Since(m.s.matchStart).Seconds() * 30)
+	tick := uint32(time.Since(m.matchStart).Seconds() * 30)
 	m.s.write(&packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdSyncServerTime, Flags: 0, Payload: message.SyncServerTime(tick)})
 }
 
@@ -191,9 +215,9 @@ func (m *Match) streamClock() {
 func (m *Match) phaseParam() uint16 {
 	var endSec float64
 	if m.deadline.IsZero() {
-		endSec = time.Since(m.s.matchStart).Seconds() + (6 * time.Hour).Seconds()
+		endSec = time.Since(m.matchStart).Seconds() + (6 * time.Hour).Seconds()
 	} else {
-		endSec = m.deadline.Sub(m.s.matchStart).Seconds()
+		endSec = m.deadline.Sub(m.matchStart).Seconds()
 	}
 	if endSec < 0 {
 		endSec = 0
@@ -222,8 +246,8 @@ func (m *Match) sendPull() {
 		return
 	}
 	s := m.s
-	s.tpSeq++
-	s.sendData(packet.CmdTeleport, message.ForceTeleport(playerEntityID, s.tpSeq, *m.pull, s.player.SpawnFace, 0))
+	m.tpSeq++
+	s.sendData(packet.CmdTeleport, message.ForceTeleport(playerEntityID, m.tpSeq, *m.pull, s.player.SpawnFace, 0))
 }
 
 // enterPrepare opens a buy phase (or holds it forever in the dev holdPrepare mode).
@@ -249,7 +273,7 @@ func (m *Match) startFight(now time.Time) {
 func (m *Match) advancePhase(now time.Time) {
 	s := m.s
 	if m.phase == phFight { // condition-based, not a deadline
-		if s.entityHP(s.botEntity) == 0 || s.entityHP(playerEntityID) == 0 {
+		if s.entityHP(m.botEntity) == 0 || s.entityHP(playerEntityID) == 0 {
 			m.endFight(now)
 		}
 		return
@@ -280,7 +304,7 @@ func (m *Match) advancePhase(now time.Time) {
 		m.enter(now, phPostBlack, postBlackHold)
 		m.sendPull() // m.pull is nil on the revive path (cmd 388 repositioned)
 	case phPostBlack:
-		s.round++
+		m.round++
 		s.broadcastZone() // draw the NEW city's safe zone now the player teleported
 		m.enter(now, phIntroWait, bindDelay)
 	case phIntroWait:
@@ -302,13 +326,13 @@ func (m *Match) endFight(now time.Time) {
 	localWon := s.entityHP(playerEntityID) > 0
 	winnerTeam := byte(localTeamID)
 	if localWon {
-		s.teamScore[0]++
+		m.teamScore[0]++
 	} else {
 		winnerTeam = enemyTeamID
-		s.teamScore[1]++
+		m.teamScore[1]++
 	}
 	award := 500 * s.roundKills.Swap(0)
-	award += 500 * uint32(s.round)
+	award += 500 * uint32(m.round)
 	if localWon {
 		award += 500 // win bonus
 	}
@@ -316,9 +340,9 @@ func (m *Match) endFight(now time.Time) {
 	s.award = award
 	total := s.coins
 	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d) +%d coins (=%d) %v",
-		s.round, winnerTeam, s.teamScore[0], s.teamScore[1], award, total, s.remote)
+		m.round, winnerTeam, m.teamScore[0], m.teamScore[1], award, total, s.remote)
 
-	if s.teamScore[0] >= roundsToWin || s.teamScore[1] >= roundsToWin || s.round >= maxRound {
+	if m.teamScore[0] >= roundsToWin || m.teamScore[1] >= roundsToWin || m.round >= maxRound {
 		m.matchWon = localWon
 		m.enter(now, phMatchEndPause, matchEndPause) // pause on the final kill, then cmd 103
 		return
@@ -326,10 +350,10 @@ func (m *Match) endFight(now time.Time) {
 	s.roundResult(winnerTeam) // cmd 409 round result (non-deciding rounds only)
 	m.revive = !localWon
 	// Transition setup (was roundTransition step 1): pick the next arena + spawns + a fresh bot.
-	s.arena = pickArena()
-	s.player.SpawnPos, s.player.SpawnFace = s.arena.spawnFor(localFaction)
-	s.bot = botPlayer(s.player, s.botEntity) // same entity, new spot near the player
-	log.Printf("[mm-udp] round transition -> arena=%q revivePlayer=%v %v", s.arena.City, m.revive, s.remote)
+	m.arena = pickArena()
+	s.player.SpawnPos, s.player.SpawnFace = m.arena.spawnFor(localFaction)
+	m.bot = botPlayer(s.player, m.botEntity) // same entity, new spot near the player
+	log.Printf("[mm-udp] round transition -> arena=%q revivePlayer=%v %v", m.arena.City, m.revive, s.remote)
 	m.enter(now, phPostBanner, postToBlack)
 }
 
@@ -338,7 +362,7 @@ func (m *Match) endFight(now time.Time) {
 // teleport the surviving player + refill its ammo (won path). Was roundTransition steps 3-5.
 func (m *Match) postBannerEdge(now time.Time) {
 	s := m.s
-	s.hp = map[uint32]uint16{playerEntityID: maxHP, s.botEntity: maxHP}
+	m.hp = map[uint32]uint16{playerEntityID: maxHP, m.botEntity: maxHP}
 	s.playerPos = s.player.SpawnPos // reset so the shrinking zone can't damage a stale position
 	s.clearWalls()                  // gloo walls are per-round world state
 	s.respawnBot()
@@ -375,7 +399,7 @@ func (m *Match) startZone() {
 	m.zoneShrink = false
 	m.zoneLastDmg = now // first out-of-zone damage fires ~zoneDamageEvery from now
 	m.zoneOn = true
-	s.sendZone(byte(s.round), center, outerR, center, m.zoneInnerR, message.ZoneWaiting, waitDur)
+	s.sendZone(byte(m.round), center, outerR, center, m.zoneInnerR, message.ZoneWaiting, waitDur)
 }
 
 // stopZone ends the Fight zone (round over).
@@ -390,7 +414,7 @@ func (m *Match) stepZone(now time.Time) {
 	}
 	s := m.s
 	if !m.zoneShrink && !now.Before(m.zoneWaitEnd) { // wait -> shrink boundary
-		s.sendZone(byte(s.round), m.zoneCenter, m.zoneOuterR, m.zoneCenter, m.zoneInnerR, message.ZoneShrinking, zoneShrinkDur)
+		s.sendZone(byte(m.round), m.zoneCenter, m.zoneOuterR, m.zoneCenter, m.zoneInnerR, message.ZoneShrinking, zoneShrinkDur)
 		m.zoneShrink = true
 		m.zoneShrinkStart = now
 	}

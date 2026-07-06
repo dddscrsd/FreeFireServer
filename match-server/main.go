@@ -79,6 +79,7 @@ func serve(conn *net.UDPConn, key []byte) {
 		s := sessions[raddr]
 		if s == nil {
 			s = &session{conn: conn, remote: remote, key: key, out: newWriter(conn, remote, key)}
+			newMatch(s) // create the session's Match (1:1 in Step 4; the MatchManager owns this in 4b)
 			sessions[raddr] = s
 			log.Printf("[mm-udp] new session %v", remote)
 		}
@@ -159,7 +160,7 @@ func (s *session) enqueue(fn func()) {
 		fn()
 	}
 	select {
-	case s.mailbox <- wrapped:
+	case s.match.mailbox <- wrapped:
 	default:
 		log.Printf("[mm-udp] mailbox full — dropped a handler for %v", s.remote)
 	}

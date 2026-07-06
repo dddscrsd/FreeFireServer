@@ -81,8 +81,8 @@ func (w *iceWall) iceWallState() message.IceWallState {
 // nextWall allocates a fresh (id, RepID) pair, monotonic and never reused so a new
 // wall can't collide with a stale one the client hasn't torn down.
 func (s *session) nextWall() (id, repID uint32) {
-	s.wallSeq++
-	id = wallEntityBase | s.wallSeq
+	s.match.wallSeq++
+	id = wallEntityBase | s.match.wallSeq
 	// RepID == the game id: the client self-binds a level object's PRI on OnStart using
 	// get_UniqueID() (== this id) as the ReplicationID, so the cmd 900 stream must key on it.
 	return id, id
@@ -90,7 +90,7 @@ func (s *session) nextWall() (id, repID uint32) {
 
 // wallByID returns the live wall with the given id, or nil.
 func (s *session) wallByID(id uint32) *iceWall {
-	for _, w := range s.walls {
+	for _, w := range s.match.walls {
 		if w.id == id {
 			return w
 		}
@@ -100,7 +100,7 @@ func (s *session) wallByID(id uint32) *iceWall {
 
 // ownerWallCount counts an owner's live walls.
 func (s *session) ownerWallCount(owner uint32) (n int) {
-	for _, w := range s.walls {
+	for _, w := range s.match.walls {
 		if w.owner == owner {
 			n++
 		}
@@ -110,9 +110,9 @@ func (s *session) ownerWallCount(owner uint32) (n int) {
 
 // popOldestWall removes and returns the owner's oldest wall (walls is FIFO), or nil.
 func (s *session) popOldestWall(owner uint32) *iceWall {
-	for i, w := range s.walls {
+	for i, w := range s.match.walls {
 		if w.owner == owner {
-			s.walls = append(s.walls[:i], s.walls[i+1:]...)
+			s.match.walls = append(s.match.walls[:i], s.match.walls[i+1:]...)
 			return w
 		}
 	}
@@ -121,9 +121,9 @@ func (s *session) popOldestWall(owner uint32) *iceWall {
 
 // removeWallByID drops the wall with the given id from the FIFO list.
 func (s *session) removeWallByID(id uint32) {
-	for i, w := range s.walls {
+	for i, w := range s.match.walls {
 		if w.id == id {
-			s.walls = append(s.walls[:i], s.walls[i+1:]...)
+			s.match.walls = append(s.match.walls[:i], s.match.walls[i+1:]...)
 			return
 		}
 	}
@@ -206,7 +206,7 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 	id, repID := s.nextWall()
 	w := &iceWall{id: id, repID: repID, owner: playerEntityID, pos: req.Pos, rot: req.Rot,
 		wallType: req.WallType, hp: glooMaxHP, state: wallIntact, placedAt: time.Now()}
-	s.walls = append(s.walls, w)
+	s.match.walls = append(s.match.walls, w)
 	out = append(out, outPkt{packet.CmdAddIcewall,
 		message.AddIcewall(w.iceWallState(), 0),
 		fmt.Sprintf("cmd=218 ADD_ICEWALL id=%d rep=%d hp=%d", w.id, w.repID, w.hp)})
@@ -269,8 +269,8 @@ func (s *session) handleIcewallDamage(p *packet.Packet) {
 func (s *session) sweepWalls() {
 	now := time.Now()
 	var out []outPkt
-	kept := s.walls[:0]
-	for _, w := range s.walls {
+	kept := s.match.walls[:0]
+	for _, w := range s.match.walls {
 		if now.Sub(w.placedAt) >= glooLifetime {
 			out = append(out, outPkt{packet.CmdRemoveIcewall, message.RemoveIcewall(w.id),
 				fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (lifetime)", w.id)})
@@ -278,7 +278,7 @@ func (s *session) sweepWalls() {
 			kept = append(kept, w)
 		}
 	}
-	s.walls = kept
+	s.match.walls = kept
 	s.flush(out)
 }
 
@@ -287,19 +287,19 @@ func (s *session) sweepWalls() {
 // wall doesn't survive the black-screen transition.
 func (s *session) clearWalls() {
 	var out []outPkt
-	for _, w := range s.walls {
+	for _, w := range s.match.walls {
 		out = append(out, outPkt{packet.CmdRemoveIcewall, message.RemoveIcewall(w.id),
 			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (round reset)", w.id)})
 	}
-	s.walls = nil
+	s.match.walls = nil
 	s.flush(out)
 }
 
 // resyncWalls re-adds every live wall in one cmd 220 RESYNC_ICEWALL — used on a mid-match
 // transport re-handshake (cmd 5) to redraw walls the fresh transport session lost.
 func (s *session) resyncWalls() {
-	states := make([]message.IceWallState, 0, len(s.walls))
-	for _, w := range s.walls {
+	states := make([]message.IceWallState, 0, len(s.match.walls))
+	for _, w := range s.match.walls {
 		states = append(states, w.iceWallState())
 	}
 	if len(states) == 0 {

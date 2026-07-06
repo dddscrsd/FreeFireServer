@@ -16,13 +16,13 @@ import (
 // initHP seeds every tracked entity to full HP. Called once when the CS sync loop
 // starts, before the PRI stream begins replicating HP.
 func (s *session) initHP() {
-	s.hp = map[uint32]uint16{playerEntityID: maxHP, s.botEntity: maxHP}
+	s.match.hp = map[uint32]uint16{playerEntityID: maxHP, s.match.botEntity: maxHP}
 	s.playerPos = s.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
 }
 
 // entityHP returns an entity's current HP (maxHP if untracked / not yet seeded).
 func (s *session) entityHP(entity uint32) uint16 {
-	if hp, ok := s.hp[entity]; ok {
+	if hp, ok := s.match.hp[entity]; ok {
 		return hp
 	}
 	return maxHP
@@ -59,7 +59,7 @@ func (s *session) handleTakeDamage(p *packet.Packet) {
 // transition to 0 HP it sends the death packet (once — a victim already at 0 is
 // ignored). Untracked entities are ignored.
 func (s *session) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8) {
-	cur, ok := s.hp[victim]
+	cur, ok := s.match.hp[victim]
 	if !ok || cur == 0 { // untracked, or already dead (don't re-kill)
 		return
 	}
@@ -68,7 +68,7 @@ func (s *session) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint
 	} else {
 		cur -= dmg
 	}
-	s.hp[victim] = cur
+	s.match.hp[victim] = cur
 
 	log.Printf("[mm-udp] TAKE_DAMAGE victim=%#x dmg=%d -> HP=%d", victim, dmg, cur)
 	if cur == 0 {
@@ -89,7 +89,7 @@ const killCauseDamageZone = -20
 // kill). When the LOCAL player dies it also carries an ObserveID (a living entity to
 // spectate) so the client stays in the match instead of returning to the lobby.
 func (s *session) killEntity(victim, killer uint32, bodyPart uint8) {
-	if killer == playerEntityID && victim == s.botEntity {
+	if killer == playerEntityID && victim == s.match.botEntity {
 		s.roundKills.Add(1) // local player killed the bot — counts toward the round coin award
 	}
 	var weapon int32
@@ -129,11 +129,11 @@ func (s *session) killEntity(victim, killer uint32, bodyPart uint8) {
 // bails) when this death hands the enemy the DECIDING round, so the MatchEnd (cmd 103)
 // screen follows instead.
 func (s *session) spectateTarget() uint32 {
-	if int(s.teamScore[1])+1 >= roundsToWin { // this death makes the enemy reach the win target
+	if int(s.match.teamScore[1])+1 >= roundsToWin { // this death makes the enemy reach the win target
 		return 0
 	}
-	if s.entityHP(s.botEntity) > 0 {
-		return s.botEntity // bot is alive, spectate it
+	if s.entityHP(s.match.botEntity) > 0 {
+		return s.match.botEntity // bot is alive, spectate it
 	}
 	return playerEntityID // watch own corpse; the round-transition cmd 388 revive un-spectates it
 }
@@ -170,8 +170,8 @@ func (s *session) heldWeaponData() uint32 {
 // the bot's static spawn.
 func (s *session) deathPos(entity uint32) message.Vec3 {
 	switch entity {
-	case s.botEntity:
-		return s.bot.SpawnPos
+	case s.match.botEntity:
+		return s.match.bot.SpawnPos
 	case playerEntityID:
 		pos := s.playerPos
 		if pos != (message.Vec3{}) {

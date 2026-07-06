@@ -93,11 +93,11 @@ func (s *session) snapPlayerPos() message.Vec3 {
 // ensureLoot lazily initialises the container map + id allocator (the session is
 // created bare).
 func (s *session) ensureLoot() {
-	if s.containers == nil {
-		s.containers = map[uint16]*container{}
+	if s.match.containers == nil {
+		s.match.containers = map[uint16]*container{}
 	}
-	if s.nextContainerID < runtimeContainerBase || s.nextContainerID > runtimeContainerMax {
-		s.nextContainerID = runtimeContainerBase
+	if s.match.nextContainerID < runtimeContainerBase || s.match.nextContainerID > runtimeContainerMax {
+		s.match.nextContainerID = runtimeContainerBase
 	}
 }
 
@@ -105,12 +105,12 @@ func (s *session) ensureLoot() {
 // INSIDE the band.
 func (s *session) allocContainerID() uint16 {
 	s.ensureLoot()
-	id := s.nextContainerID
+	id := s.match.nextContainerID
 	next := id + 1
 	if next > runtimeContainerMax || next < runtimeContainerBase { // wrap inside the band
 		next = runtimeContainerBase
 	}
-	s.nextContainerID = next
+	s.match.nextContainerID = next
 	return id
 }
 
@@ -186,7 +186,7 @@ func (s *session) dropToGround(it lootItem, pos message.Vec3, out []outPkt) []ou
 	// Find the nearest existing container within the merge radius (squared distance, no sqrt).
 	var box *container
 	best := mergeDistM * mergeDistM
-	for _, c := range s.containers {
+	for _, c := range s.match.containers {
 		dx := c.pos.X - pos.X
 		dy := c.pos.Y - pos.Y
 		dz := c.pos.Z - pos.Z
@@ -205,7 +205,7 @@ func (s *session) dropToGround(it lootItem, pos message.Vec3, out []outPkt) []ou
 		id := s.allocContainerID()
 		box = &container{id: id, pos: pos, ctype: message.ContainerDynamic}
 		box.items = append(box.items, it)
-		s.containers[id] = box
+		s.match.containers[id] = box
 		out = append(out,
 			outPkt{packet.CmdAddPickup,
 				message.AddPickup(it.pickupItem(id), box.pos, box.ctype),
@@ -223,7 +223,7 @@ func (s *session) dropToGround(it lootItem, pos message.Vec3, out []outPkt) []ou
 
 // findLoot locates a ground loot item (and its container) by inventory unique.
 func (s *session) findLoot(unique uint32) (*container, lootItem, bool) {
-	for _, c := range s.containers {
+	for _, c := range s.match.containers {
 		for _, it := range c.items {
 			if it.unique == unique {
 				return c, it, true
@@ -386,7 +386,7 @@ func (s *session) handlePickup(p *packet.Packet) {
 	// Delete the container if it is now empty (a displaced weapon may have re-merged into it,
 	// in which case it survives).
 	if len(box.items) == 0 {
-		delete(s.containers, box.id)
+		delete(s.match.containers, box.id)
 		out = append(out, outPkt{packet.CmdDelContainer,
 			message.DelContainer(box.id, box.ctype),
 			fmt.Sprintf("cmd=228 DelContainer box=%d (empty)", box.id)})

@@ -28,13 +28,13 @@ func (s *session) priPayload() []byte {
 
 	// CS round-win score (field 28), packed from each entity's OWN team perspective so
 	// the client resolves my/oppo consistently whichever player's score changes.
-	localScore := message.PackScore(s.teamScore[0], s.teamScore[1])
-	botScore := message.PackScore(s.teamScore[1], s.teamScore[0])
+	localScore := message.PackScore(s.match.teamScore[0], s.match.teamScore[1])
+	botScore := message.PackScore(s.match.teamScore[1], s.match.teamScore[0])
 	ents := []message.PRIEntity{
 		{RepID: playerRepID, Block: message.PRIHPBlock(s.entityHP(playerEntityID), maxHP, coins, award, localScore, localFaction)},
 	}
-	if s.entityHP(s.botEntity) > 0 {
-		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(s.entityHP(s.botEntity), maxHP, 0, 0, botScore, botFaction)})
+	if s.entityHP(s.match.botEntity) > 0 {
+		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(s.entityHP(s.match.botEntity), maxHP, 0, 0, botScore, botFaction)})
 	}
 	return message.SyncPRI(ents)
 }
@@ -46,8 +46,8 @@ func (s *session) resyncWallsPri() []byte {
 		rep   uint32
 		state byte
 	}
-	walls := make([]wallSnap, 0, len(s.walls))
-	for _, w := range s.walls {
+	walls := make([]wallSnap, 0, len(s.match.walls))
+	for _, w := range s.match.walls {
 		walls = append(walls, wallSnap{rep: w.id, state: w.state})
 	}
 	ents := []message.PRIEntity{}
@@ -87,10 +87,10 @@ func (s *session) giveLoadout(resetCoins bool) {
 	// Snapshot + clear any ground-loot boxes so a respawn/round-reset wipes stale containers
 	// (the round world resets); each id gets a cmd 228 DelContainer below.
 	var staleBoxes []uint16
-	for id := range s.containers {
+	for id := range s.match.containers {
 		staleBoxes = append(staleBoxes, id)
 	}
-	s.containers = map[uint16]*container{}
+	s.match.containers = map[uint16]*container{}
 	uspUID := s.nextUID()
 	medkitID := s.nextUID()
 	uspMag := loadedMagFor(uspData, SkinForWeapon(uspData, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
@@ -179,8 +179,8 @@ func (s *session) sendCSShop() {
 func (s *session) bindPRIs() {
 	bind := message.BindPRI([]message.BindEntry{
 		{RepID: playerRepID, EntityType: message.BindEntityPlayer, EntityGameID: playerEntityID},
-		{RepID: botRepID, EntityType: message.BindEntityPlayer, EntityGameID: s.botEntity},
+		{RepID: botRepID, EntityType: message.BindEntityPlayer, EntityGameID: s.match.botEntity},
 	})
 	s.sendDataLog(packet.CmdBindPRI, bind,
-		fmt.Sprintf("cmd=118 BindPRI local ent=%#x + bot ent=%#x", uint32(playerEntityID), s.botEntity))
+		fmt.Sprintf("cmd=118 BindPRI local ent=%#x + bot ent=%#x", uint32(playerEntityID), s.match.botEntity))
 }

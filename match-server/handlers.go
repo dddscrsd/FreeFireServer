@@ -69,7 +69,7 @@ func (s *session) handleHello(p *packet.Packet) {
 		s.joined = true
 		log.Printf("[mm-udp] reconnect mid-match -> resuming CS match loop (no re-join) %v", s.remote)
 		s.startCSMatch()
-		s.enqueue(s.resyncWalls) // redraw lost gloo walls on run()'s goroutine (cmd 220) — it owns s.walls now
+		s.enqueue(s.resyncWalls) // redraw lost gloo walls on run()'s goroutine (cmd 220) — it owns s.match.walls now
 	}
 }
 
@@ -87,7 +87,7 @@ func (s *session) handlePing(p *packet.Packet) {
 // driver; the authoritative spawn is the position in cmd 101 (see choosePlayerSpawn).
 func (s *session) handleJoinMatchPost(p *packet.Packet) {
 	pl := resolvePlayer(s.prepareToken(p.Payload))
-	s.arena = choosePlayerSpawn(&pl)
+	s.match.arena = choosePlayerSpawn(&pl)
 	s.player = pl
 	s.joined = true
 
@@ -98,13 +98,13 @@ func (s *session) handleJoinMatchPost(p *packet.Packet) {
 	// Spawn the enemy bot: a second PLAYER_JOIN for a fake remote player whose team is
 	// the hibyte of its (fixed) entity id, spawned near us. The SAME entity is reused
 	// every round (revived/respawned on the round transition), never a new one.
-	s.round = 1
-	s.botEntity = botEntityID
-	s.bot = botPlayer(pl, s.botEntity)
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.bot),
+	s.match.round = 1
+	s.match.botEntity = botEntityID
+	s.match.bot = botPlayer(pl, s.match.botEntity)
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.match.bot),
 		fmt.Sprintf("cmd=101 BOT acc=%d ent=%#x %q pos=(%.1f,%.1f,%.1f)",
-			s.bot.AccountID, s.bot.EntityID, s.bot.Name,
-			s.bot.SpawnPos.X, s.bot.SpawnPos.Y, s.bot.SpawnPos.Z))
+			s.match.bot.AccountID, s.match.bot.EntityID, s.match.bot.Name,
+			s.match.bot.SpawnPos.X, s.match.bot.SpawnPos.Y, s.match.bot.SpawnPos.Z))
 
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
 	s.broadcastZone() // draw the safe zone at the NEW city now that the player joined

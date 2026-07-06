@@ -41,8 +41,8 @@ func (s *session) zoneGeometry() (center message.Vec3, outerR float64) {
 		c.X += 100
 		return c, 40
 	}
-	if s.arena.City != "" {
-		return s.arena.center(), s.arena.gateSpan()/2 + zoneMargin
+	if s.match.arena.City != "" {
+		return s.match.arena.center(), s.match.arena.gateSpan()/2 + zoneMargin
 	}
 	return s.player.SpawnPos, zoneDefaultR
 }
@@ -55,13 +55,13 @@ func (s *session) zoneGeometry() (center message.Vec3, outerR float64) {
 func (s *session) broadcastZone() {
 	center, outerR := s.zoneGeometry()
 	innerR := outerR * zoneInnerRatio
-	s.sendZone(byte(s.round), center, outerR, center, innerR, message.ZoneWaiting, zoneWaitDur)
+	s.sendZone(byte(s.match.round), center, outerR, center, innerR, message.ZoneWaiting, zoneWaitDur)
 }
 
 // sendZone emits one cmd 117 zone update, StartMs=now and EndMs=now+dur on the match
 // clock (our approximation of the client GameTime).
 func (s *session) sendZone(stage byte, outer message.Vec3, outerR float64, inner message.Vec3, innerR float64, timeSpan byte, dur time.Duration) {
-	nowMs := uint32(time.Since(s.matchStart).Milliseconds())
+	nowMs := uint32(time.Since(s.match.matchStart).Milliseconds())
 	endMs := nowMs + uint32(dur.Milliseconds())
 	body := message.SafeZoneChange(stage, outer, outerR, inner, innerR, timeSpan, nowMs, endMs)
 	s.sendDataLog(packet.CmdSafeZoneChange, body,

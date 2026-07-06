@@ -71,7 +71,7 @@ func (s *session) stepHeal(now time.Time) {
 	if !s.healActive {
 		return
 	}
-	hp := s.hp[playerEntityID]
+	hp := s.match.hp[playerEntityID]
 	if hp == 0 {
 		s.healActive = false
 		return
@@ -85,7 +85,7 @@ func (s *session) stepHeal(now time.Time) {
 		if hp > maxHP {
 			hp = maxHP
 		}
-		s.hp[playerEntityID] = hp
+		s.match.hp[playerEntityID] = hp
 		s.healApplied = want
 		s.sendVar(packet.CmdPRISync, message.PRIHealHP(playerRepID, hp), 1)
 	}

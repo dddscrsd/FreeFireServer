@@ -35,11 +35,9 @@ type session struct {
 
 	joined      bool
 	syncStarted bool        // match loop already running (guard); once true, dispatch routes handlers to the mailbox
-	mailbox     chan func() // match-loop inbox: gameplay handlers execute here so run() is the single state owner
+	match       *Match      // the match this player belongs to (created with the session, Step 4); its run() owns the shared world + the mailbox
 	stopped     atomic.Bool // set on player quit (cmd 191); the match loop exits when true
 	player      joinPlayer  // resolved from the prepare_token (cmd 439/440)
-	bot         joinPlayer  // the current-round enemy bot
-	arena       csArena     // CS spawn city for the current round (re-picked each round)
 
 	// prepare_token reassembly: a large token (many cosmetics) is split across cmd 439
 	// (JOIN_MATCH_PREPARE, [u32 chunkLen][chunk], the bigger half) and cmd 440
@@ -47,17 +45,9 @@ type session struct {
 	// appends the 440 tail to reassemble the full JWT.
 	prep439 []byte
 
-	// Round state. round is 1-based; botEntity is the (fixed) enemy bot entity id,
-	// revived+repositioned each round rather than replaced; tpSeq sequences the
-	// force-teleports used to reposition entities between rounds. matchStart marks the
-	// CS clock origin used to compute phase-countdown deadlines (client shows
-	// param - GameTime, so param = secondsSinceMatchStart + phaseSeconds).
-	round      int
-	botEntity  uint32
-	teamScore  [2]uint8 // rounds won: [0]=local (faction 0), [1]=bot (faction 1)
-	tpSeq      uint32
-	matchStart time.Time
-	roundKills atomic.Uint32 // local player's kills this round (reset each round; drives the coin award)
+	// roundKills is this player's kills this round (reset each round; drives the coin award).
+	// The shared round / score / clock / teleport-seq / arena / bot now live on the Match (4a).
+	roundKills atomic.Uint32
 
 	// Contra Squad economy/loadout state, owned by the match loop (run()). The buy-phase money
 	// and the current equipment slot map so purchases (cmd 408) can deduct and add items.
@@ -69,24 +59,9 @@ type session struct {
 	clientUIDs map[uint32]lootItem // uid -> item the client holds; source of truth for the cmd-327 respawn clear AND for dropping ANY item (cmd 112) by unique (consumables/throwables have no weapon slot)
 	itemOnHand uint32              // unique of the currently held item
 
-	// Ground loot, owned by the match loop (run()) — it flows to/from the loadout above.
-	// containers holds the live ground pickup boxes keyed by their wire ContainerObjectID;
-	// nextContainerID is the runtime id allocator.
-	containers      map[uint16]*container // live ground boxes keyed by ContainerObjectID
-	nextContainerID uint16                // runtime container-id allocator (runtimeContainerBase..Max)
-
-	// Placed gloo (ice) walls, owned by the match loop (run()) — the PLACE path reads the gloo
-	// inventory count, deducts it, mutates the wall list and computes the FIFO cap in one step.
-	// walls is FIFO-ordered: walls[0] is the oldest placed. wallSeq is a monotonic allocator
-	// (never reused) for wall entity ids and per-wall PRI RepIDs. See gloo.go.
-	walls   []*iceWall
-	wallSeq uint32
-
-	// Per-entity current HP (entity game id -> HP), owned by the match loop (run()). Damage
-	// reports (cmd 106) decrement it; the PRI stream replicates it so the client sees kills.
-	// playerPos is the local player's last-reported world position (cmd 1001), used by the
-	// SafeZone to decide who is outside the circle.
-	hp        map[uint32]uint16
+	// playerPos is this player's last-reported world position (cmd 1001), used by the SafeZone
+	// out-of-zone check. (The per-entity HP map is shared world state on the Match now — 4a; it
+	// splits to per-player in 4c.)
 	playerPos message.Vec3
 
 	// Medkit heal-over-time (run()-driven): cmd 113 arms it, stepHeal applies the accrued HP

@@ -35,7 +35,7 @@ const (
 func (s *session) roundResult(winnerTeam byte) {
 	s.sendDataLog(packet.CmdCSRoundResult, message.CSRoundResult(winnerTeam, playerEntityID),
 		fmt.Sprintf("cmd=409 round result: team %d wins round %d (score %d-%d)",
-			winnerTeam, s.round, s.teamScore[0], s.teamScore[1]))
+			winnerTeam, s.match.round, s.match.teamScore[0], s.match.teamScore[1]))
 }
 
 // matchEnd ends the match with cmd 103 (MatchEnd): rank 1 when the local team won, 2
@@ -49,7 +49,7 @@ func (s *session) matchEnd(localWon bool) {
 	}
 	s.sendDataLog(packet.CmdMatchEnd, message.MatchEnd(rank),
 		fmt.Sprintf("cmd=103 MatchEnd rank=%d local=%s final=%d-%d",
-			rank, result, s.teamScore[0], s.teamScore[1]))
+			rank, result, s.match.teamScore[0], s.match.teamScore[1]))
 }
 
 // respawnLocalPlayer respawns the dead local player via cmd 388 (NOTIFYREVIVE) at the new
@@ -78,9 +78,9 @@ func yawByte(face message.Vec3) byte {
 // at the new position (re-materialising the pawn the death packet removed) and teleport
 // it — the entity id and RepID stay stable (no per-round new entity).
 func (s *session) respawnBot() {
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.bot),
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.match.bot),
 		fmt.Sprintf("cmd=101 BOT respawn (same ent=%#x) pos=(%.1f,%.1f,%.1f)",
-			s.botEntity, s.bot.SpawnPos.X, s.bot.SpawnPos.Y, s.bot.SpawnPos.Z))
-	s.tpSeq++
-	s.sendData(packet.CmdTeleport, message.ForceTeleport(s.botEntity, s.tpSeq, s.bot.SpawnPos, s.bot.SpawnFace, 0))
+			s.match.botEntity, s.match.bot.SpawnPos.X, s.match.bot.SpawnPos.Y, s.match.bot.SpawnPos.Z))
+	s.match.tpSeq++
+	s.sendData(packet.CmdTeleport, message.ForceTeleport(s.match.botEntity, s.match.tpSeq, s.match.bot.SpawnPos, s.match.bot.SpawnFace, 0))
 }
