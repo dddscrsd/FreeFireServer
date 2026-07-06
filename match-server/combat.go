@@ -20,9 +20,10 @@ func (s *session) initHP() {
 	s.playerPos = s.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
 }
 
-// entityHP returns an entity's current HP (maxHP if untracked / not yet seeded).
-func (s *session) entityHP(entity uint32) uint16 {
-	if hp, ok := s.match.hp[entity]; ok {
+// entityHP returns an entity's current HP (maxHP if untracked / not yet seeded). It reads the
+// match's shared HP map, so it is a Match method — any entity, human or bot, keyed by id.
+func (m *Match) entityHP(entity uint32) uint16 {
+	if hp, ok := m.hp[entity]; ok {
 		return hp
 	}
 	return maxHP
@@ -132,7 +133,7 @@ func (s *session) spectateTarget() uint32 {
 	if int(s.match.teamScore[1])+1 >= roundsToWin { // this death makes the enemy reach the win target
 		return 0
 	}
-	if s.entityHP(s.match.botEntity) > 0 {
+	if s.match.entityHP(s.match.botEntity) > 0 {
 		return s.match.botEntity // bot is alive, spectate it
 	}
 	return playerEntityID // watch own corpse; the round-transition cmd 388 revive un-spectates it

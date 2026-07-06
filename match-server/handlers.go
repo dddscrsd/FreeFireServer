@@ -67,6 +67,7 @@ func (s *session) handleHello(p *packet.Packet) {
 			s.player = resolvePlayer("") // fallback player (EntityID=1, RepID 1000) — matches the original join
 		}
 		s.joined = true
+		s.match.addPlayer(s) // roster slot for the reconnected human (Step 4b)
 		log.Printf("[mm-udp] reconnect mid-match -> resuming CS match loop (no re-join) %v", s.remote)
 		s.startCSMatch()
 		s.enqueue(s.resyncWalls) // redraw lost gloo walls on run()'s goroutine (cmd 220) — it owns s.match.walls now
@@ -90,6 +91,7 @@ func (s *session) handleJoinMatchPost(p *packet.Packet) {
 	s.match.arena = choosePlayerSpawn(&pl)
 	s.player = pl
 	s.joined = true
+	s.match.addPlayer(s) // allocate this human's roster slot + ids (Step 4b)
 
 	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(pl),

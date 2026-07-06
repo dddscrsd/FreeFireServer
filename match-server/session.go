@@ -39,6 +39,16 @@ type session struct {
 	stopped     atomic.Bool // set on player quit (cmd 191); the match loop exits when true
 	player      joinPlayer  // resolved from the prepare_token (cmd 439/440)
 
+	// Allocated per-participant ids (Step 4b, via Match.allocSlot): entity id = team<<24 | slot,
+	// PRI RepID, CS faction, team (the entity hibyte), and roster slot. For the first human these
+	// equal the playerEntityID / playerRepID / localFaction constants the game logic still reads;
+	// a later step swaps those constants for these per-session ids so a second player has its own.
+	entityID uint32
+	repID    uint32
+	faction  byte
+	team     byte
+	slot     byte
+
 	// prepare_token reassembly: a large token (many cosmetics) is split across cmd 439
 	// (JOIN_MATCH_PREPARE, [u32 chunkLen][chunk], the bigger half) and cmd 440
 	// (JOIN_MATCH_POST, the tail). prep439 buffers the 439 chunk; handleJoinMatchPost
@@ -113,16 +123,16 @@ func (s *session) sendDataLog(cmd uint16, payload []byte, what string) {
 }
 
 // sendVar frames an unreliable VAR replication packet (send_option=4 — the channel the client
-// consumes cmd 900 PRI / 901 GRI on) ONCE, then fans it to every recipient `repeat` times to
-// survive drops. Encode-once is safe because VAR framing carries no per-connection state, so the
-// bytes are identical for all players — the primitive the multiplayer broadcast is built on. For
-// now the recipient list is just this session's Writer; Step 4 swaps it for the match's players.
+// consumes cmd 900 PRI / 901 GRI on) ONCE, then fans it to every human in the match roster
+// `repeat` times to survive drops. Encode-once is safe because VAR framing carries no
+// per-connection state, so the bytes are identical for all players — this is the multiplayer
+// broadcast primitive. With a single human the roster is just this session (Step 4b/R2).
 func (s *session) sendVar(cmd uint16, payload []byte, repeat int) {
 	if repeat < 1 {
 		repeat = 1
 	}
 	wire := frameVar(cmd, payload, s.key)
-	outs := []*Writer{s.out}
+	outs := s.match.rosterWriters()
 	for i := 0; i < repeat; i++ {
 		broadcast(wire, outs)
 	}

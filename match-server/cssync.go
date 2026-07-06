@@ -14,27 +14,26 @@ const (
 	roundsToWin = (maxRound + 1) / 2 // 4
 )
 
-// priPayload builds the PRI (cmd 900) block for the local player (HP + live coins +
-// faction) and, while alive, the current-round bot (HP + opposite faction). A dead bot
-// is dropped from the stream so its death (cmd 107) is not undone by a fresh HP update.
-func (s *session) priPayload() []byte {
-	var coins uint16
-	if cfg.unlimitedMoneyTest {
-		coins = 9999
-	} else {
-		coins = uint16(s.coins)
+// priPayload builds the PRI (cmd 900) block stream for the WHOLE match: one block per human in
+// the roster (HP + live coins/award + round score from that player's own team perspective +
+// faction) plus the current-round bot (HP + opposite faction) while it is alive. A dead bot is
+// dropped so its death (cmd 107) is not undone by a fresh HP update. Broadcast identically to
+// every human — each client reads its OWN entity's block by RepID, so one encode serves all.
+func (m *Match) priPayload() []byte {
+	ents := make([]message.PRIEntity, 0, len(m.players)+1)
+	for _, p := range m.players {
+		coins := uint16(p.coins)
+		if cfg.unlimitedMoneyTest {
+			coins = 9999
+		}
+		// score from THIS player's team perspective (my wins, opp wins) so the client resolves
+		// my/oppo consistently whoever's score changed.
+		score := message.PackScore(m.teamScore[p.team-1], m.teamScore[2-p.team])
+		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(m.entityHP(p.entityID), maxHP, coins, uint16(p.award), score, p.faction)})
 	}
-	award := uint16(s.award)
-
-	// CS round-win score (field 28), packed from each entity's OWN team perspective so
-	// the client resolves my/oppo consistently whichever player's score changes.
-	localScore := message.PackScore(s.match.teamScore[0], s.match.teamScore[1])
-	botScore := message.PackScore(s.match.teamScore[1], s.match.teamScore[0])
-	ents := []message.PRIEntity{
-		{RepID: playerRepID, Block: message.PRIHPBlock(s.entityHP(playerEntityID), maxHP, coins, award, localScore, localFaction)},
-	}
-	if s.entityHP(s.match.botEntity) > 0 {
-		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(s.entityHP(s.match.botEntity), maxHP, 0, 0, botScore, botFaction)})
+	if m.entityHP(m.botEntity) > 0 {
+		botScore := message.PackScore(m.teamScore[1], m.teamScore[0]) // the bot is team 2
+		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(m.entityHP(m.botEntity), maxHP, 0, 0, botScore, botFaction)})
 	}
 	return message.SyncPRI(ents)
 }

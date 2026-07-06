@@ -15,7 +15,9 @@ import (
 // unchanged) — 3b routes handlers through a mailbox and drops the mutexes, Step 4 splits this
 // into Match + Player + a real roster.
 type Match struct {
-	s        *session
+	s        *session   // the primary (first) human, == players[0]; single-client paths still read it
+	players  []*session // the match roster (humans), filled at join by addPlayer; broadcasts fan over it
+	nextSlot byte       // monotonic participant-slot allocator (allocSlot): slot 1 = 1st human, 2 = bot
 	phase    csPhase
 	deadline time.Time     // when the current phase transitions; a holdDur (far-future) deadline = condition-based (Fight) / hold
 	pull     *message.Vec3 // teleport target streamed on a phase entry (frozen-player pin), or nil
@@ -107,7 +109,35 @@ func griPhase(ph csPhase) (uint16, bool) {
 func newMatch(s *session) *Match {
 	m := &Match{s: s, mailbox: make(chan func(), 256), done: make(chan struct{})}
 	s.match = m
+	matchManager.register(m)
 	return m
+}
+
+// allocSlot hands out the next participant's ids from the match's monotonic slot counter, so no
+// two players collide. Odd slot -> team 1 (faction 0, the "local"/left-gate side), even slot ->
+// team 2 (faction 1, right gate). It reproduces the old constants exactly: slot 1 = entity
+// 0x01000001 / RepID 1000 / faction 0 (the first human), slot 2 = entity 0x02000002 / RepID 1001 /
+// faction 1 (the bot). entity id = team<<24 | slot; RepID = playerRepID + slot - 1.
+func (m *Match) allocSlot() (entityID, repID uint32, faction, team, slot byte) {
+	m.nextSlot++
+	slot = m.nextSlot
+	team = 2 - slot%2
+	faction = team - 1
+	entityID = uint32(team)<<24 | uint32(slot)
+	repID = playerRepID + uint32(slot) - 1
+	return
+}
+
+// addPlayer allocates a roster slot for a joining human session — its entity / RepID / faction /
+// team from allocSlot — records the ids on the session, and adds it to the match roster. For the
+// first human these ids equal the playerEntityID / playerRepID / localFaction constants the game
+// logic still reads (the switch to per-session ids is a later step); m.s stays the primary human.
+func (m *Match) addPlayer(s *session) {
+	s.entityID, s.repID, s.faction, s.team, s.slot = m.allocSlot()
+	s.player.EntityID = s.entityID
+	m.players = append(m.players, s)
+	log.Printf("[mm-udp] roster+ slot=%d entity=%#08x rep=%d faction=%d team=%d (roster=%d) %v",
+		s.slot, s.entityID, s.repID, s.faction, s.team, len(m.players), s.remote)
 }
 
 // startCSMatch launches the match's tick loop once per session. Safe to call from both the
@@ -191,7 +221,7 @@ func (m *Match) stream() {
 	if m.phase == phSetupWait {
 		param = 0 // the Waiting hold shows no countdown (matches the old shopWarmup)
 	}
-	s.sendVar(packet.CmdPRISync, s.priPayload(), 1)
+	s.sendVar(packet.CmdPRISync, m.priPayload(), 1)
 	s.sendVar(packet.CmdGRISync, message.CSGRIInit(maxRound, uint8(m.round-1)), 1)
 	s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
 	point := 0
@@ -201,10 +231,29 @@ func (m *Match) stream() {
 	s.sendVar(packet.CmdGRISync, message.CSGRIMatchPoint(uint8(point)), 1)
 }
 
-// streamClock streams cmd 1000 (server clock) so the CS countdowns tick. Replaces serverTimeLoop.
+// streamClock streams cmd 1000 (server clock) to every human in the roster so the CS countdowns
+// tick. It is SendUnreliable + plaintext (no per-connection seq), so the same packet fans to all.
+// Replaces serverTimeLoop.
 func (m *Match) streamClock() {
 	tick := uint32(time.Since(m.matchStart).Seconds() * 30)
-	m.s.write(&packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdSyncServerTime, Flags: 0, Payload: message.SyncServerTime(tick)})
+	pkt := &packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdSyncServerTime, Flags: 0, Payload: message.SyncServerTime(tick)}
+	for _, p := range m.players {
+		if p.out != nil {
+			p.out.send(pkt, "")
+		}
+	}
+}
+
+// rosterWriters returns the Writer of every human in the roster (bots have out==nil, skipped) —
+// the fan-out target for the VAR streaming broadcasts (see sendVar).
+func (m *Match) rosterWriters() []*Writer {
+	outs := make([]*Writer, 0, len(m.players))
+	for _, p := range m.players {
+		if p.out != nil {
+			outs = append(outs, p.out)
+		}
+	}
+	return outs
 }
 
 // phaseParam is the GRI phase-field value: the match-clock second at which the current phase
@@ -273,7 +322,7 @@ func (m *Match) startFight(now time.Time) {
 func (m *Match) advancePhase(now time.Time) {
 	s := m.s
 	if m.phase == phFight { // condition-based, not a deadline
-		if s.entityHP(m.botEntity) == 0 || s.entityHP(playerEntityID) == 0 {
+		if m.entityHP(m.botEntity) == 0 || m.entityHP(playerEntityID) == 0 {
 			m.endFight(now)
 		}
 		return
@@ -323,7 +372,7 @@ func (m *Match) advancePhase(now time.Time) {
 func (m *Match) endFight(now time.Time) {
 	s := m.s
 	m.stopZone()
-	localWon := s.entityHP(playerEntityID) > 0
+	localWon := m.entityHP(playerEntityID) > 0
 	winnerTeam := byte(localTeamID)
 	if localWon {
 		m.teamScore[0]++

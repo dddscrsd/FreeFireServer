@@ -171,7 +171,7 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	// but an eager unreliable burst updates the UI without the ~300ms wait.
 	s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseOK, coins),
 		fmt.Sprintf("cmd=408 buy OK item=%d price=%d -> coins=%d", itemID, price, coins))
-	s.sendVar(packet.CmdPRISync, s.priPayload(), 2)
+	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 2)
 	body := message.SyncInventory(s.player.EntityID, inv, attach, equip, onHand)
 	s.sendDataLog(packet.CmdSyncInventory, body, fmt.Sprintf("cmd=174 SyncInventory (+item %d x%d, +%d attach)", itemID, qty, len(attach)))
 	// Force-equip the maxed attachments onto the bought weapon (cmd 124). The cmd 174 above
