@@ -147,9 +147,19 @@ func (s *session) prepareToken(payload440 []byte) string {
 	return ""
 }
 
-// handleClientPos parses the client's per-tick position update (cmd 1001) and stores
-// the local player's world position for the SafeZone out-of-zone check. Payload leads
-// with [id u32][X i32][Y i32][Z i32], each coord ×1000 (mm); the rest is rotation/state.
+// The cmd-1001 movement state. The client's upstream is id(4) + a 36-byte CORE (pos(12)+moveDir(6)+
+// targetDir(4)+velocity(6)+moveState(1)+flag(1)+aimDir(6)); a platform byte may or may not follow.
+// The downstream relay entry is [u8 slot] ++ a 37-byte body (the core + a platform byte). See
+// cs-movement-sync.
+const (
+	moveCoreLen = 36
+	moveBodyLen = 37
+)
+
+// handleClientPos parses the client's per-tick position update (cmd 1001): it stores the local
+// player's world position for the SafeZone out-of-zone check AND the full state body for the
+// movement relay (Step 6). Payload leads with [id u32][X i32][Y i32][Z i32] (coords ×1000 mm),
+// then dirs/velocity/state — 45 bytes on foot.
 func (s *session) handleClientPos(p *packet.Packet) {
 	if len(p.Payload) < 16 {
 		return
@@ -159,6 +169,25 @@ func (s *session) handleClientPos(p *packet.Packet) {
 	z := int32(binary.LittleEndian.Uint32(p.Payload[12:]))
 	pos := message.Vec3{X: float64(x) / 1000, Y: float64(y) / 1000, Z: float64(z) / 1000}
 	s.playerPos = pos
+	// Keep the state body for the relay batch. Upstream = id(4) + 36-byte core (pos..aim); the
+	// platform byte may or may not follow. Take the core from [4:40] and the platform from [40] if
+	// present (else 0); the downstream entry is [slot] ++ this 37-byte body.
+	if len(p.Payload) >= 4+moveCoreLen {
+		if len(s.moveBody) != moveBodyLen {
+			s.moveBody = make([]byte, moveBodyLen)
+		}
+		copy(s.moveBody, p.Payload[4:4+moveCoreLen])
+		if len(p.Payload) > 4+moveCoreLen {
+			s.moveBody[moveCoreLen] = p.Payload[4+moveCoreLen] // platform byte, if the client sent it
+		} else {
+			s.moveBody[moveCoreLen] = 0
+		}
+	}
+	// The client's own send-seq rides in the wrapper's trailing u32 [41:45]; the FIRST one anchors
+	// the relay seq (moveBase) — large enough to clear the client's per-pawn seq gate.
+	if len(p.Payload) >= 45 && s.moveBase == 0 {
+		s.moveBase = binary.LittleEndian.Uint32(p.Payload[41:45])
+	}
 	if cfg.debugPos {
 		log.Printf("[mm-udp] POS cmd=1001 -> (%.1f,%.1f,%.1f)", pos.X, pos.Y, pos.Z)
 	}

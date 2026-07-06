@@ -74,6 +74,19 @@ type session struct {
 	// splits to per-player in 4c.)
 	playerPos message.Vec3
 
+	// moveBody is this player's latest cmd-1001 state body (upstream [4:41] — pos+dirs+velocity+
+	// state+aim+platform), re-framed verbatim into the movement relay batch (Step 6).
+	moveBody []byte
+
+	// moveBase / moveBaseTick anchor the relayed movement seq. The client's per-pawn seq gate
+	// (PlayerNetwork::PushPlayerSyncedStateData: KINJCKMOGIM < seq) needs a LARGE seq — the pawn's
+	// stored seq inits ~1.78e9 — but the pawn then interpolates over (newSeq-oldSeq) FRAMES with no
+	// clamp for remotes, so the per-update DELTA must stay small or the pawn coasts. So the FIRST
+	// upstream send-seq (captured in handleClientPos) becomes the large base, advanced only by the
+	// 30Hz match-tick delta — the interpolation window stays ≈ the relay interval.
+	moveBase     uint32
+	moveBaseTick int32
+
 	// Medkit heal-over-time (run()-driven): cmd 113 arms it, stepHeal applies the accrued HP
 	// each tick until full HP / death / all steps done. See medkit.go.
 	healActive  bool

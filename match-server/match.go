@@ -271,7 +271,8 @@ func (m *Match) run() {
 				lastStream = now
 			}
 			m.stepZone(now)
-			s.stepHeal(now) // medkit heal-over-time (run()-driven; was the healMedkit goroutine)
+			m.streamMovement() // Step 6: relay each human's latest cmd-1001 state to the others
+			s.stepHeal(now)    // medkit heal-over-time (run()-driven; was the healMedkit goroutine)
 			if now.Sub(lastClock) >= clockTick {
 				m.streamClock()
 				lastClock = now
@@ -311,6 +312,33 @@ func (m *Match) streamClock() {
 	for _, p := range m.players {
 		if p.out != nil {
 			p.out.send(pkt, "")
+		}
+	}
+}
+
+// streamMovement relays each human's latest cmd-1001 state to the OTHER players (Step 6): one batch
+// per sender, sent only to the others (no self-echo, so no skip-own is needed). The bot is static
+// and isn't relayed — the client keeps it at its cmd-101 spawn. The seq is the subtle part (below).
+func (m *Match) streamMovement() {
+	matchTime := int32(time.Since(m.matchStart).Seconds() * 30)
+	for _, sender := range m.players {
+		if len(sender.moveBody) != moveBodyLen || sender.moveBase == 0 {
+			continue
+		}
+		if sender.moveBaseTick == 0 {
+			sender.moveBaseTick = matchTime // capture on the first relay so the first relayed seq == moveBase
+		}
+		// Seq = a LARGE per-player base (the first send-seq, clears the per-pawn gate whose stored seq
+		// inits ~1.78e9) advanced only by the 30Hz match-tick DELTA. The client interpolates over
+		// (newSeq-oldSeq) FRAMES with no clamp for remotes, so the delta must be small (~3 per 10Hz
+		// relay = the relay interval); the raw send-seq's ~99/update delta was the coast-after-stop.
+		seq := sender.moveBase + uint32(matchTime-sender.moveBaseTick)
+		payload := message.MoveBatch(matchTime, seq, []message.MoveEntry{{Slot: sender.slot, Body: sender.moveBody}})
+		pkt := &packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdClientPos, Flags: 0, Payload: payload}
+		for _, recv := range m.players {
+			if recv != sender && recv.out != nil {
+				recv.out.send(pkt, "")
+			}
 		}
 	}
 }
