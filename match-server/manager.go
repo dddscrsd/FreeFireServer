@@ -24,10 +24,43 @@ type MatchManager struct {
 // matchManager is the process-wide registry.
 var matchManager = &MatchManager{}
 
-// register adds a newly created match to the registry.
+// join routes a joining human to a match — an existing one with a free slot, else a fresh one — and
+// admits them. m.reserved (manager-owned under mu) is the race-safe roster-size view; run() owns
+// m.players. The first player of a fresh match runs admitFirst inline (which starts run()); a later
+// player's admit is enqueued onto the already-running match loop, and its inbound handlers are routed
+// to that mailbox from now on (syncStarted).
+func (mgr *MatchManager) join(s *session) {
+	mgr.mu.Lock()
+	var m *Match
+	for _, cand := range mgr.matches {
+		if cand.reserved < maxPlayers {
+			m = cand
+			break
+		}
+	}
+	fresh := m == nil
+	if fresh {
+		m = newMatch(s)
+		mgr.matches = append(mgr.matches, m)
+	}
+	m.reserved++
+	mgr.mu.Unlock()
+
+	s.match = m
+	if fresh {
+		m.admitFirst(s) // sets up the world + starts run()
+		return
+	}
+	s.syncStarted = true // route THIS player's inbound handlers to the shared run() mailbox
+	s.enqueue(func() { m.admitLater(s) })
+}
+
+// register adds a match to the registry and reserves a slot — used by the reconnect resume, which
+// creates its own solo match outside join().
 func (mgr *MatchManager) register(m *Match) {
 	mgr.mu.Lock()
 	mgr.matches = append(mgr.matches, m)
+	m.reserved++
 	mgr.mu.Unlock()
 }
 

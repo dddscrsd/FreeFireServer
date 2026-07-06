@@ -62,15 +62,17 @@ func (s *session) handleHello(p *packet.Packet) {
 	res := packet.BuildHelloRes("libmadoka", 0, 0, false)
 	s.sendHelloRes(res)
 	log.Printf("[mm-udp] HELLO(cmd=%d) %v -> S2C_Hello_Res (%dB)", p.Cmd, s.remote, len(res))
-	if p.Cmd == packet.CmdReconnect && !s.syncStarted {
+	if p.Cmd == packet.CmdReconnect && s.match == nil {
 		if s.player.AccountID == 0 {
 			s.player = resolvePlayer("") // fallback player (EntityID=1, RepID 1000) — matches the original join
 		}
 		s.joined = true
-		s.match.addPlayer(s) // roster slot for the reconnected human (Step 4b)
-		log.Printf("[mm-udp] reconnect mid-match -> resuming CS match loop (no re-join) %v", s.remote)
+		m := newMatch(s)
+		matchManager.register(m)
+		m.setupMatch(s) // arena / roster / round / bot — no re-join packets (client is already in-match)
+		log.Printf("[mm-udp] reconnect mid-match -> solo resume (no re-join) %v", s.remote)
 		s.startCSMatch()
-		s.enqueue(s.resyncWalls) // redraw lost gloo walls on run()'s goroutine (cmd 220) — it owns s.match.walls now
+		s.enqueue(s.resyncWalls) // redraw lost gloo walls on run()'s goroutine (cmd 220)
 	}
 }
 
@@ -89,7 +91,7 @@ func (s *session) handlePing(p *packet.Packet) {
 func (s *session) handleJoinMatchPost(p *packet.Packet) {
 	s.player = resolvePlayer(s.prepareToken(p.Payload))
 	s.joined = true
-	s.match.admitFirst(s) // Step 5a: the join handshake now lives on the match (the admit path)
+	matchManager.join(s) // Step 5b: route to a match (existing with room, else new) + admit
 }
 
 // handleJoinMatchPrepare handles cmd 439 (JOIN_MATCH_PREPARE): the client sends the

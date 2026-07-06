@@ -172,14 +172,28 @@ func (s *session) sendCSShop() {
 		fmt.Sprintf("cmd=407 CSShop (%d items, %q)", len(csShopItems), csShopTitle))
 }
 
-// bindPRIs sends the cmd 118 BindPRI that maps RepIDs to entities so subsequent cmd 900
-// PRI syncs land on them: the local player FIRST (the client adopts the first
-// EntityType=1 binding as its own), then the current-round enemy bot.
+// bindPRIs sends the cmd 118 BindPRI to THIS player, mapping RepIDs to entities so subsequent cmd
+// 900 PRI syncs land on the right pawns: its OWN entity FIRST (the client adopts the first
+// EntityType=1 binding as its local player), then every other human in the roster, then the enemy
+// bot. Re-sent to all humans (bindAll) whenever the roster changes.
 func (s *session) bindPRIs() {
-	bind := message.BindPRI([]message.BindEntry{
-		{RepID: playerRepID, EntityType: message.BindEntityPlayer, EntityGameID: playerEntityID},
-		{RepID: botRepID, EntityType: message.BindEntityPlayer, EntityGameID: s.match.botEntity},
-	})
-	s.sendDataLog(packet.CmdBindPRI, bind,
-		fmt.Sprintf("cmd=118 BindPRI local ent=%#x + bot ent=%#x", uint32(playerEntityID), s.match.botEntity))
+	m := s.match
+	entries := make([]message.BindEntry, 0, len(m.players)+1)
+	entries = append(entries, message.BindEntry{RepID: s.repID, EntityType: message.BindEntityPlayer, EntityGameID: s.entityID})
+	for _, p := range m.players {
+		if p != s {
+			entries = append(entries, message.BindEntry{RepID: p.repID, EntityType: message.BindEntityPlayer, EntityGameID: p.entityID})
+		}
+	}
+	entries = append(entries, message.BindEntry{RepID: botRepID, EntityType: message.BindEntityPlayer, EntityGameID: m.botEntity})
+	s.sendDataLog(packet.CmdBindPRI, message.BindPRI(entries),
+		fmt.Sprintf("cmd=118 BindPRI self ent=%#x (+%d humans + bot ent=%#x)", s.entityID, len(m.players)-1, m.botEntity))
+}
+
+// bindAll re-sends every human's BindPRI (each self-first) — used when the roster changes on a join
+// and on the round-transition rebind, so each client's cmd 900 PRI stream routes the current set.
+func (m *Match) bindAll() {
+	for _, p := range m.players {
+		p.bindPRIs()
+	}
 }

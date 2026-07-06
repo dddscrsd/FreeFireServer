@@ -19,6 +19,7 @@ type Match struct {
 	s        *session   // the primary (first) human, == players[0]; single-client paths still read it
 	players  []*session // the match roster (humans), filled at join by addPlayer; broadcasts fan over it
 	nextSlot byte       // monotonic participant-slot allocator (allocSlot): slot 1 = 1st human, 2 = bot
+	reserved int        // slots handed out (manager-owned under matchManager.mu) — race-safe routing view
 	phase    csPhase
 	deadline time.Time     // when the current phase transitions; a holdDur (far-future) deadline = condition-based (Fight) / hold
 	pull     *message.Vec3 // teleport target streamed on a phase entry (frozen-player pin), or nil
@@ -117,7 +118,6 @@ func griPhase(ph csPhase) (uint16, bool) {
 func newMatch(s *session) *Match {
 	m := &Match{s: s, mailbox: make(chan func(), 256), done: make(chan struct{})}
 	s.match = m
-	matchManager.register(m)
 	return m
 }
 
@@ -153,24 +153,66 @@ func (m *Match) addPlayer(s *session) {
 // draw the zone, and start the match loop. m.arena/round/bot are the match's — set once here. Later
 // players (Step 5b) are admitted onto the already-running loop instead of running this.
 func (m *Match) admitFirst(s *session) {
-	m.arena = choosePlayerSpawn(&s.player)
-	m.addPlayer(s)
+	m.setupMatch(s)
 	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player),
 		fmt.Sprintf("cmd=101 GKBDLJFGGMI acc=%d ent=%d %q", s.player.AccountID, s.player.EntityID, s.player.Name))
-
-	// Spawn the enemy bot: a second PLAYER_JOIN for a fake remote player whose team is the hibyte
-	// of its (fixed) entity id, spawned near the player. The SAME entity is reused every round.
-	m.round = 1
-	m.botEntity = botEntityID
-	m.bot = botPlayer(s.player, m.botEntity)
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot),
 		fmt.Sprintf("cmd=101 BOT acc=%d ent=%#x %q pos=(%.1f,%.1f,%.1f)",
 			m.bot.AccountID, m.bot.EntityID, m.bot.Name, m.bot.SpawnPos.X, m.bot.SpawnPos.Y, m.bot.SpawnPos.Z))
-
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
 	s.broadcastZone() // draw the safe zone at the NEW city now that the player joined
 	s.startCSMatch()
+}
+
+// setupMatch initialises a fresh match's world for its first player: pick the arena/spawn, add the
+// player to the roster, seed round 1, and create the enemy bot (consuming slot 2 so later humans get
+// slot 3+). Shared by admitFirst and the reconnect resume (which skips the join packets).
+func (m *Match) setupMatch(s *session) {
+	m.arena = choosePlayerSpawn(&s.player)
+	m.addPlayer(s)
+	m.round = 1
+	beid, _, _, _, _ := m.allocSlot() // reserve the bot's slot (2) so a 2nd human gets slot 3
+	m.botEntity = beid
+	m.bot = botPlayer(s.player, m.botEntity)
+}
+
+// admitLater admits a 2nd+ human onto the ALREADY-RUNNING match loop (called via run()'s mailbox, so
+// it mutates the roster on the single owner). It allocates the player's slot, spawns them at the
+// match arena, gives the starting loadout + shop, and does the join handshake: the joiner gets a cmd
+// 101 for every existing entity (roster incl. self + bot) + cmd 130; each already-present human gets
+// a cmd 101 for the joiner; then everyone re-binds and the joiner sees the zone.
+func (m *Match) admitLater(s *session) {
+	m.addPlayer(s)
+	s.player.SpawnPos, s.player.SpawnFace = m.arena.spawnFor(s.faction)
+	s.playerPos = s.player.SpawnPos
+	m.hp[s.entityID] = maxHP
+	m.life[s.entityID] = lifeAlive
+
+	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 join res (2nd+ player)")
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player), // the joiner's OWN entity FIRST (client adopts the first as its local player)
+		fmt.Sprintf("cmd=101 self ent=%d %q", s.player.EntityID, s.player.Name))
+	for _, p := range m.players {
+		if p != s { // then the already-present humans
+			s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(p.player),
+				fmt.Sprintf("cmd=101 other ent=%d %q", p.player.EntityID, p.player.Name))
+		}
+	}
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot), fmt.Sprintf("cmd=101 BOT ent=%#x", m.bot.EntityID))
+	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
+
+	for _, p := range m.players { // every already-present human learns the joiner
+		if p != s {
+			p.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player),
+				fmt.Sprintf("cmd=101 new player ent=%d %q -> %v", s.player.EntityID, s.player.Name, p.remote))
+		}
+	}
+
+	m.bindAll()         // everyone re-binds so the cmd 900 PRI routes the new RepID
+	s.giveLoadout(true) // the joiner's starting loadout (USP + medkits + attachments + coins)
+	s.sendCSShop()      // and the shop, so they can buy
+	s.broadcastZone()   // draw the current safe zone for the joiner
+	log.Printf("[mm-udp] admitted player slot=%d ent=%#08x (roster=%d) %v", s.slot, s.entityID, len(m.players), s.remote)
 }
 
 // startCSMatch launches the match's tick loop once per session. Safe to call from both the
@@ -197,11 +239,7 @@ func (m *Match) run() {
 	s.coins = coins
 
 	m.matchStart = time.Now()
-	if m.round == 0 { // reconnect path skips the join handler that seeds round 1
-		m.round = 1
-		m.botEntity = botEntityID
-	}
-	s.initHP()
+	m.initHP()
 
 	m.enter(time.Now(), phSetupBind, bindDelay)
 	m.streamClock() // seed the client clock at t=0 (the old serverTimeLoop sent one immediately)
@@ -365,7 +403,7 @@ func (m *Match) advancePhase(now time.Time) {
 	}
 	switch m.phase {
 	case phSetupBind:
-		s.bindPRIs()
+		m.bindAll()
 		m.enter(now, phSetupGap, setupGapDur)
 	case phSetupGap:
 		m.enter(now, phSetupWait, setupWaitDur)
@@ -381,7 +419,7 @@ func (m *Match) advancePhase(now time.Time) {
 	case phPostBanner:
 		m.postBannerEdge(now)
 	case phPostReviveBind:
-		s.bindPRIs()         // rebind after the revive so the streamed PRI HP lands on the pawn
+		m.bindAll()          // rebind everyone after the revive so the streamed PRI HP lands on the pawns
 		s.giveLoadout(false) // death dropped the weapon to fists — re-give, keep coins
 		m.enter(now, phPostBlack, postBlackHold)
 		m.sendPull() // m.pull is nil on the revive path (cmd 388 repositioned)

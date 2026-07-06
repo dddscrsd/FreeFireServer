@@ -13,11 +13,19 @@ import (
 // reports (cmd 106) decrement and the PRI stream (cmd 900) replicates, so the client
 // sees an enemy's HP drop toward a kill. Death (cmd 107) is not sent yet.
 
-// initHP seeds every tracked entity to full HP. Called once when the CS sync loop
-// starts, before the PRI stream begins replicating HP.
-func (s *session) initHP() {
-	s.match.hp = map[uint32]uint16{playerEntityID: maxHP, s.match.botEntity: maxHP}
-	s.playerPos = s.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
+// initHP seeds every roster human + the bot to full HP and ALIVE and (re)initialises the life /
+// knock maps. Called at match start, before the PRI stream begins replicating HP.
+func (m *Match) initHP() {
+	m.hp = map[uint32]uint16{}
+	m.life = map[uint32]lifeState{}
+	m.knock = map[uint32]*knockState{}
+	for _, p := range m.players {
+		m.hp[p.entityID] = maxHP
+		m.life[p.entityID] = lifeAlive
+		p.playerPos = p.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
+	}
+	m.hp[m.botEntity] = maxHP
+	m.life[m.botEntity] = lifeAlive
 }
 
 // entityHP returns an entity's current HP (maxHP if untracked / not yet seeded). It reads the

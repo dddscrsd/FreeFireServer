@@ -33,7 +33,11 @@ const (
 // server-driven (bots run no client AI); this first stage is a static dummy standing
 // at the opposing gate. See [[bot-networkaipawn]].
 const (
-	botAccountID = 10000002
+	// botAccountID must NOT equal any human/guest account id: the client's IsLocalPlayer picks its
+	// own pawn by ACCOUNT match, so a bot sharing a player's account makes that player's client
+	// adopt the BOT as its local entity. Hit live — guest "matheus" = 10000002 = the old bot id —
+	// so it is kept far above the sequential guest range (10000001, 10000002, ...).
+	botAccountID = 900000002
 	botName      = "BOT"
 	botEntityID  = 0x02000002 // hibyte 2 (team 2), slot 2 -> different team from local (hibyte 1) = enemy
 	botRepID     = 1001       // bot's PRI RepID (second EntityType=1 BindPRI entry, after the local player)
