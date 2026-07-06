@@ -22,6 +22,7 @@ type PlayerInfo struct {
 	EntityID  uint32
 	Name      string
 	Role      uint32
+
 	// Selected cosmetics, sourced from the JWT `show` claim / account
 	// selected_items. Wire these into the fields below as their meanings are
 	// confirmed; use w.U32List for the list<u32> cosmetic slots.
@@ -32,6 +33,8 @@ type PlayerInfo struct {
 	Clothes []uint32 // clothes item ids
 	Slots   []uint32 // loadout slot item ids
 	Emotes  []uint32 // emote item ids
+	TeamIdx uint8    // the player's index on the team
+
 	// Spawn transform, written into the OGJKHJAFNHB sub-object of cmd 101
 	// (CCIKDFGDBAM position ×1000 / CCDDHEBKMGD facing ×100). This is the
 	// AUTHORITATIVE spawn — the client places the local player here, so no
@@ -57,7 +60,7 @@ func (w *Writer) ogjkhjafnhb(pi PlayerInfo) {
 	w.U8(0)                                                                   // GHGCGGOLKIP
 	w.U8(0)                                                                   // KIFHHPBIOHK
 	w.I16(0)                                                                  // BPGLMCIMGJG  : List<JOLBCNEHKLJ> (count=0)
-	w.U8(0)                                                                   // CPDNBJNLAIM
+	w.U8(pi.TeamIdx)                                                          // CPDNBJNLAIM
 	w.U32(0)                                                                  // PJBNKKBLEBB
 	w.U32(0)                                                                  // ELLLMKJCGCD
 	w.U8(0)                                                                   // AAEJAPCDKFG

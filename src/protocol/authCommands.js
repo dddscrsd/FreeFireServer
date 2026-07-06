@@ -8,7 +8,8 @@ const AUTH_COMMANDS = new Set([
   'MajorRegister',
   'Login',
   'PlatformLogin',
-  'PlatformRegister'
+  'PlatformRegister',
+  'ChooseRegion'
 ]);
 
 module.exports = { AUTH_COMMANDS };

@@ -30,7 +30,7 @@ function handler(reqObj, ctx) {
     game_mode: mode.game_mode,
     difficulty: mode.difficulty,
     match_mode: mode.match_mode,
-    avg_wait_time_sec: 10
+    avg_wait_time_sec: 15
   };
 }
 

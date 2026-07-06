@@ -46,7 +46,7 @@ function handleMajorLogin(reqObj, ctx) {
     lock_region: region,
     noti_region: region,
     ip_region: region || DEFAULT_REGION,
-    agora_environment: '',
+    agora_environment: 'live',
     new_active_region: region,
     recommend_regions: [DEFAULT_REGION],
     token,

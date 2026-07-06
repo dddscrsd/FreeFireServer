@@ -29,14 +29,15 @@ type Match struct {
 	done     chan struct{}
 
 	// Shared world state (moved off the session in Step 4a — the whole match sees ONE of each).
-	round      int               // 1-based CS round
-	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
-	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
-	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
-	arena      csArena           // spawn city for the current round (re-picked each round)
-	bot        joinPlayer        // the current-round enemy bot (becomes a roster *player in 4c)
-	botEntity  uint32            // the (fixed) enemy bot entity id
-	hp         map[uint32]uint16 // entity id -> current HP (player + bot); splits to per-player in 4c
+	round          int                   // 1-based CS round
+	teamGenerators [2]teamIndexGenerator // monotonic team-index allocators (faction 0/1) for the round
+	teamScore      [2]uint8              // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
+	matchStart     time.Time             // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
+	tpSeq          uint32                // force-teleport token sequence (round-transition repositions)
+	arena          csArena               // spawn city for the current round (re-picked each round)
+	bot            joinPlayer            // the current-round enemy bot (becomes a roster *player in 4c)
+	botEntity      uint32                // the (fixed) enemy bot entity id
+	hp             map[uint32]uint16     // entity id -> current HP (player + bot); splits to per-player in 4c
 
 	// Shared world objects: placed gloo walls (FIFO, walls[0] oldest) + ground-loot boxes.
 	walls           []*iceWall
@@ -65,6 +66,10 @@ type Match struct {
 // csPhase is a state in the match loop. Each maps to a client GRI phase (griPhase) and has a
 // deadline; advancePhase fires the edge when the deadline passes (or "enemy dead" for Fight).
 type csPhase int
+
+type teamIndexGenerator struct {
+	cur byte
+}
 
 const (
 	phSetupBind      csPhase = iota // +bindDelay -> bindPRIs
@@ -116,7 +121,11 @@ func griPhase(ph csPhase) (uint16, bool) {
 // it is created 1:1 with the session (from main.go); Step 4b hands match creation to the
 // MatchManager so multiple players can share one match.
 func newMatch(s *session) *Match {
-	m := &Match{s: s, mailbox: make(chan func(), 256), done: make(chan struct{})}
+	gens := [2]teamIndexGenerator{
+		{cur: 0}, // team 0 (local) starts at 0
+		{cur: 0}, // team 1 (enemy) starts at 0
+	}
+	m := &Match{s: s, mailbox: make(chan func(), 256), done: make(chan struct{}, 2), teamGenerators: gens}
 	s.match = m
 	return m
 }
@@ -126,11 +135,13 @@ func newMatch(s *session) *Match {
 // team 2 (faction 1, right gate). It reproduces the old constants exactly: slot 1 = entity
 // 0x01000001 / RepID 1000 / faction 0 (the first human), slot 2 = entity 0x02000002 / RepID 1001 /
 // faction 1 (the bot). entity id = team<<24 | slot; RepID = playerRepID + slot - 1.
-func (m *Match) allocSlot() (entityID, repID uint32, faction, team, slot byte) {
+func (m *Match) allocSlot() (entityID, repID uint32, faction, team, idx, slot byte) {
 	m.nextSlot++
 	slot = m.nextSlot
 	team = 2 - slot%2
 	faction = team - 1
+	idx = m.teamGenerators[faction].cur
+	m.teamGenerators[faction].cur++
 	entityID = uint32(team)<<24 | uint32(slot)
 	repID = playerRepID + uint32(slot) - 1
 	return
@@ -141,7 +152,7 @@ func (m *Match) allocSlot() (entityID, repID uint32, faction, team, slot byte) {
 // first human these ids equal the playerEntityID / playerRepID / localFaction constants the game
 // logic still reads (the switch to per-session ids is a later step); m.s stays the primary human.
 func (m *Match) addPlayer(s *session) {
-	s.entityID, s.repID, s.faction, s.team, s.slot = m.allocSlot()
+	s.entityID, s.repID, s.faction, s.team, s.player.TeamIdx, s.slot = m.allocSlot()
 	s.player.EntityID = s.entityID
 	m.players = append(m.players, s)
 	log.Printf("[mm-udp] roster+ slot=%d entity=%#08x rep=%d faction=%d team=%d (roster=%d) %v",
@@ -172,7 +183,7 @@ func (m *Match) setupMatch(s *session) {
 	m.arena = choosePlayerSpawn(&s.player)
 	m.addPlayer(s)
 	m.round = 1
-	beid, _, _, _, _ := m.allocSlot() // reserve the bot's slot (2) so a 2nd human gets slot 3
+	beid, _, _, _, _, _ := m.allocSlot() // reserve the bot's slot (2) so a 2nd human gets slot 3
 	m.botEntity = beid
 	m.bot = botPlayer(s.player, m.botEntity)
 }
