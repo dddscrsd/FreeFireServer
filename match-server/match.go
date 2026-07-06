@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -51,6 +52,13 @@ type Match struct {
 	zoneShrink      bool
 	zoneShrinkStart time.Time
 	zoneLastDmg     time.Time // last out-of-zone damage tick (2s cadence)
+
+	// Multiplayer death rules (Step 5): per-entity lifecycle + live knock records, keyed like
+	// m.hp so humans and the bot are handled uniformly. lastTeamFell / roundOver drive round-end.
+	life         map[uint32]lifeState   // entity id -> ALIVE|KNOCKED|DEAD (absent == ALIVE)
+	knock        map[uint32]*knockState // entity id -> live knockdown record (only while KNOCKED)
+	lastTeamFell byte                   // team whose alive-count most recently hit 0 (both-0 tiebreak)
+	roundOver    bool                   // set when a team hits 0 alive; gates further damage this round
 }
 
 // csPhase is a state in the match loop. Each maps to a client GRI phase (griPhase) and has a
@@ -138,6 +146,31 @@ func (m *Match) addPlayer(s *session) {
 	m.players = append(m.players, s)
 	log.Printf("[mm-udp] roster+ slot=%d entity=%#08x rep=%d faction=%d team=%d (roster=%d) %v",
 		s.slot, s.entityID, s.repID, s.faction, s.team, len(m.players), s.remote)
+}
+
+// admitFirst runs the join handshake for the FIRST player of a fresh match: pick the arena/spawn,
+// seed the round + enemy bot, answer the join (cmd 100 + cmd 101 self + cmd 101 bot + cmd 130),
+// draw the zone, and start the match loop. m.arena/round/bot are the match's — set once here. Later
+// players (Step 5b) are admitted onto the already-running loop instead of running this.
+func (m *Match) admitFirst(s *session) {
+	m.arena = choosePlayerSpawn(&s.player)
+	m.addPlayer(s)
+	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player),
+		fmt.Sprintf("cmd=101 GKBDLJFGGMI acc=%d ent=%d %q", s.player.AccountID, s.player.EntityID, s.player.Name))
+
+	// Spawn the enemy bot: a second PLAYER_JOIN for a fake remote player whose team is the hibyte
+	// of its (fixed) entity id, spawned near the player. The SAME entity is reused every round.
+	m.round = 1
+	m.botEntity = botEntityID
+	m.bot = botPlayer(s.player, m.botEntity)
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot),
+		fmt.Sprintf("cmd=101 BOT acc=%d ent=%#x %q pos=(%.1f,%.1f,%.1f)",
+			m.bot.AccountID, m.bot.EntityID, m.bot.Name, m.bot.SpawnPos.X, m.bot.SpawnPos.Y, m.bot.SpawnPos.Z))
+
+	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
+	s.broadcastZone() // draw the safe zone at the NEW city now that the player joined
+	s.startCSMatch()
 }
 
 // startCSMatch launches the match's tick loop once per session. Safe to call from both the

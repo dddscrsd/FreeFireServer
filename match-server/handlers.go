@@ -87,30 +87,9 @@ func (s *session) handlePing(p *packet.Packet) {
 // client reconnect without unlocking movement. The GRI (cmd 901) is the movement
 // driver; the authoritative spawn is the position in cmd 101 (see choosePlayerSpawn).
 func (s *session) handleJoinMatchPost(p *packet.Packet) {
-	pl := resolvePlayer(s.prepareToken(p.Payload))
-	s.match.arena = choosePlayerSpawn(&pl)
-	s.player = pl
+	s.player = resolvePlayer(s.prepareToken(p.Payload))
 	s.joined = true
-	s.match.addPlayer(s) // allocate this human's roster slot + ids (Step 4b)
-
-	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(pl),
-		fmt.Sprintf("cmd=101 GKBDLJFGGMI acc=%d ent=%d %q", pl.AccountID, pl.EntityID, pl.Name))
-
-	// Spawn the enemy bot: a second PLAYER_JOIN for a fake remote player whose team is
-	// the hibyte of its (fixed) entity id, spawned near us. The SAME entity is reused
-	// every round (revived/respawned on the round transition), never a new one.
-	s.match.round = 1
-	s.match.botEntity = botEntityID
-	s.match.bot = botPlayer(pl, s.match.botEntity)
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.match.bot),
-		fmt.Sprintf("cmd=101 BOT acc=%d ent=%#x %q pos=(%.1f,%.1f,%.1f)",
-			s.match.bot.AccountID, s.match.bot.EntityID, s.match.bot.Name,
-			s.match.bot.SpawnPos.X, s.match.bot.SpawnPos.Y, s.match.bot.SpawnPos.Z))
-
-	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
-	s.broadcastZone() // draw the safe zone at the NEW city now that the player joined
-	s.startCSMatch()
+	s.match.admitFirst(s) // Step 5a: the join handshake now lives on the match (the admit path)
 }
 
 // handleJoinMatchPrepare handles cmd 439 (JOIN_MATCH_PREPARE): the client sends the
