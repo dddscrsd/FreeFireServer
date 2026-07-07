@@ -37,6 +37,8 @@ func (s *session) route(p *packet.Packet) {
 		s.handleStopFire(p)
 	case packet.CmdReloadStart, packet.CmdReloadFinish: // 133 / 134 — relay the reload animation
 		s.handleReloadRelay(p)
+	case packet.CmdProjectileThrow, packet.CmdProjectileExplode, packet.CmdStartGrenade, packet.CmdStopGrenade: // 160-163 — relay grenade throw/explode/windup
+		s.handleProjectileRelay(p)
 	case packet.CmdChangeHeldItem: // 108
 		s.handleChangeHeldItem(p)
 	case packet.CmdPickupInventory: // 111 — pick up a ground-loot item

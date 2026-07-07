@@ -121,13 +121,16 @@ func loadedMagFor(weaponID, skinID uint32) uint32 {
 	return ClipSize(weaponID, skinID)
 }
 
-// sendAttachEquips fires a cmd 124 force-equip for each maxed attachment. The weapon and its
-// attachment items must already have been registered via a preceding cmd 174.
+// sendAttachEquips fires a cmd 124 force-equip for each maxed attachment, BROADCAST to every client.
+// The client's cmd-124 handler mounts on remote pawns too (SyncAttachmentChanged remote branch ->
+// LNKILJFKAPN), so this is what makes attachments show on OTHER players' guns — the base weapon build
+// never mounts them on its own. The weapon + attachment items must already be registered via the
+// preceding (also broadcast) cmd 174. See cs-attachments.
 func (s *session) sendAttachEquips(equips []attachEquip) {
 	for _, ae := range equips {
-		s.sendDataLog(packet.CmdAttachmentChanged,
+		s.match.broadcastData(packet.CmdAttachmentChanged,
 			message.AttachmentChanged(s.player.EntityID, ae.slot, ae.weaponUnique, ae.data, ae.unique),
-			fmt.Sprintf("cmd=124 equip attach data=%d slot=%d -> weapon uid=%d", ae.data, ae.slot, ae.weaponUnique))
+			fmt.Sprintf("cmd=124 equip attach data=%d slot=%d -> weapon uid=%d (all)", ae.data, ae.slot, ae.weaponUnique))
 	}
 }
 

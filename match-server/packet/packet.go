@@ -62,6 +62,10 @@ const (
 	CmdStopFire            = 105 // client -> server: FCHFNBNCJLB — stop firing (u32 pid, u32 weapon, ...); relay to others
 	CmdReloadStart         = 133 // client -> server: DAGDONBPDDC — reload started (u32 pid, f32 time, bool, u32 weapon); relay to others
 	CmdReloadFinish        = 134 // client -> server: GKPFCFLPBNE — reload finished (u32 pid, u32, u32 weapon); relay to others
+	CmdProjectileThrow     = 160 // client -> server: RUDP_PROJECTILE_THROW (FEPGIAHJGHC) — spawns a thrown grenade on remotes; relay
+	CmdProjectileExplode   = 161 // client -> server: RUDP_PROJECTILE_EXPLODE (FMMCDAENDPG) — grenade explosion FX; relay
+	CmdStartGrenade        = 162 // client -> server: RUDP_START_GRENADE — pull-pin/cook windup cue; relay
+	CmdStopGrenade         = 163 // client -> server: RUDP_STOP_GRENADE — windup end; relay
 	CmdDead                = 107 // server -> client: OGCHKCGKGKN — entity died (victim, killer, position, ...)
 	CmdKnockDown           = 139 // server -> client: NKDBFGLPCCF — RUDP_KNOCK_DOWN (DBNO: downed+bleeding, still alive; distinct from cmd 107)
 	CmdKnockRevive         = 140 // server -> client: DJOOMNBJMOG — RUDP_KNOCK_REVIVE (teammate revive done: revivedId, rescuerId)
