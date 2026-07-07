@@ -244,25 +244,40 @@ func PRIRescuing(repID uint32, rescuing uint8) []byte {
 // top-HUD myWinNum/oppoWinNum (the client re-resolves my/oppo from the entity's team).
 // SetData is a no-op when unchanged, so the number only moves when the value actually
 // changes. See PackScore + [[bot-networkaipawn]].
-func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction, kills, deaths, fireState byte, damage uint32, itemOnHand uint64) []byte {
+// PRIState is the per-player state a cmd-900 PRI block carries. Grouping the fields (this block grew
+// to 14+ positional args) into a struct keeps the PRIHPBlock call readable and misorder-proof.
+type PRIState struct {
+	CurHP, MaxHP       uint16
+	Coins, EarnedCoin  uint16
+	Score              uint16 // packed own|oppo<<8 (PackScore)
+	VestDur, HelmetDur uint16 // armor durability (fields 2/3)
+	ItemOnHand         uint64 // (uniqueID<<32)|weaponDataID (field 4) — remote pawn's held weapon
+	Faction            byte
+	Kills, Deaths      byte
+	FireState          byte // START_FIRE_STATE (field 21) — remote muzzle/tracer
+	CurEP              byte
+	Damage             uint32
+}
+
+func PRIHPBlock(st PRIState) []byte {
 	return ReplicationBlock([]RepEntry{
-		{RepU16, 0, uint64(curHP)},     // CUR_HP
-		{RepU16, 1, uint64(maxHP)},     // MAX_HP
-		{RepU64, 2, 0},                 // VEST_DURABILITY
-		{RepU64, 3, 0},                 // HELMET_DURABILITY
-		{RepU64, 4, itemOnHand},        // ITEM_ON_HAND = (uniqueID<<32)|weaponDataID — remote pawn's held weapon
-		{RepU8, 5, 0},                  // IS_RESCURING
-		{RepU8, 21, uint64(fireState)}, // START_FIRE_STATE (0 idle / 1 firing) — drives remote muzzle+tracer
-		{RepU8, 6, 0},                  // CUR_EP
-		{RepU8, 7, 200},                // MAX_EP
-		{RepU32, 8, 0},                 // STATUS
-		{RepU16, 39, 0},                // (unknown, new)
-		{RepU32, 9, 0},                 // SIGHTING_ID
-		{RepU8, 10, uint64(kills)},     // KILL_COUNT
-		{RepU8, 11, 0},                 // OB_COUNT
-		{RepU32, 12, 0},                // BUFF
-		{RepU8, 13, 0},                 // CAMOUFLAGE_HP
-		{RepU8, 14, 0},                 // LIKED_COUNT
+		{RepU16, 0, uint64(st.CurHP)},     // CUR_HP
+		{RepU16, 1, uint64(st.MaxHP)},     // MAX_HP
+		{RepU64, 2, uint64(st.VestDur)},   // VEST_DURABILITY
+		{RepU64, 3, uint64(st.HelmetDur)}, // HELMET_DURABILITY
+		{RepU64, 4, st.ItemOnHand},        // ITEM_ON_HAND = (uniqueID<<32)|weaponDataID
+		{RepU8, 5, 0},                     // IS_RESCURING
+		{RepU8, 21, uint64(st.FireState)}, // START_FIRE_STATE (0 idle / 1 firing) — remote muzzle+tracer
+		{RepU8, 6, uint64(st.CurEP)},      // CUR_EP
+		{RepU8, 7, 200},                   // MAX_EP
+		{RepU32, 8, 0},                    // STATUS
+		{RepU16, 39, 0},                   // (unknown, new)
+		{RepU32, 9, 0},                    // SIGHTING_ID
+		{RepU8, 10, uint64(st.Kills)},     // KILL_COUNT
+		{RepU8, 11, 0},                    // OB_COUNT
+		{RepU32, 12, 0},                   // BUFF
+		{RepU8, 13, 0},                    // CAMOUFLAGE_HP
+		{RepU8, 14, 0},                    // LIKED_COUNT
 		{RepU16, 15, 0},
 		{RepU64, 16, 0},
 		{RepU8, 17, 0},
@@ -275,15 +290,15 @@ func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction, kills, d
 		{RepU16, 22, 0}, // MAX_HYPE
 		{RepU32, 26, 0},
 		{RepU64, 27, 0},
-		{RepU16, 28, uint64(score)},      // SCORE (CS round wins, packed own|oppo<<8)
-		{RepU8, 29, uint64(deaths)},      // DEAD_COUNT
-		{RepU8, 30, 0},                   // ASSIST_COUNT
-		{RepU32, 31, uint64(damage)},     // TOTAL_DAMAGE
-		{RepU16, 32, uint64(coins)},      // CUR_COIN (buy-phase money shown in the shop)
-		{RepU16, 33, uint64(earnedCoin)}, // EARNED_COIN
-		{RepU8, 34, uint64(faction)},     // FACTION_ID (0/1 = which gate team)
-		{RepU32, 36, 0},                  // THROW_KNIFE_PHASE
-		{RepU8, 37, 0},                   // TRAINING_ZONE_TYPE
+		{RepU16, 28, uint64(st.Score)},      // SCORE (CS round wins, packed own|oppo<<8)
+		{RepU8, 29, uint64(st.Deaths)},      // DEAD_COUNT
+		{RepU8, 30, 0},                      // ASSIST_COUNT
+		{RepU32, 31, uint64(st.Damage)},     // TOTAL_DAMAGE
+		{RepU16, 32, uint64(st.Coins)},      // CUR_COIN (buy-phase money shown in the shop)
+		{RepU16, 33, uint64(st.EarnedCoin)}, // EARNED_COIN
+		{RepU8, 34, uint64(st.Faction)},     // FACTION_ID (0/1 = which gate team)
+		{RepU32, 36, 0},                     // THROW_KNIFE_PHASE
+		{RepU8, 37, 0},                      // TRAINING_ZONE_TYPE
 		{RepU8, 38, 0},
 	})
 }

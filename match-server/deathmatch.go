@@ -60,6 +60,9 @@ func (m *Match) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8)
 	if attacker != 0 && m.teamOf(attacker) != m.teamOf(victim) {
 		m.damage[attacker] += uint32(dmg) // scoreboard total damage (PRI field 31)
 	}
+	if vs := m.sessionByEntity(victim); vs != nil {
+		vs.wearArmor(bodyPart, dmg) // client already reduced HP; we only track + stream the armor wear
+	}
 	log.Printf("[mm-udp] TAKE_DAMAGE victim=%#x dmg=%d -> HP=%d", victim, dmg, cur)
 	if cur == 0 {
 		m.downOrKill(victim, attacker, bodyPart)

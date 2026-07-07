@@ -351,6 +351,7 @@ func (m *Match) run() {
 			m.streamMovement() // Step 6: relay each human's latest cmd-1001 state to the others
 			for _, p := range m.players {
 				p.stepHeal(now) // medkit heal-over-time, per player (run()-driven)
+				p.stepEP(now)   // mushroom EP -> HP regen, per player
 			}
 			if now.Sub(lastClock) >= clockTick {
 				m.streamClock()
@@ -617,6 +618,7 @@ func (m *Match) postBannerEdge(now time.Time) {
 	m.reviveAll()          // reset EVERY roster human + the bot to full HP + ALIVE, clear all knocks
 	for _, p := range m.players {
 		p.playerPos = p.player.SpawnPos // reset so the shrinking zone can't damage a stale position
+		p.resetEP()                     // fresh round: clear the mushroom EP buffer + per-round count
 	}
 	s.clearWalls() // gloo walls are per-round world state
 	if m.botEntity != 0 {

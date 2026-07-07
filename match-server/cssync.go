@@ -34,11 +34,19 @@ func (m *Match) priPayload() []byte {
 			fireState = 2 // READY: remote clients render the muzzle flash / tracer
 		}
 		onHand := uint64(p.itemOnHand)<<32 | uint64(p.heldWeaponData()) // remote pawn's held gun (PRIHPBlock field 4)
-		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(m.entityHP(p.entityID), maxHP, coins, uint16(p.award), score, p.faction, capByte(m.kills[p.entityID]), capByte(m.deaths[p.entityID]), fireState, m.damage[p.entityID], onHand)})
+		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(message.PRIState{
+			CurHP: m.entityHP(p.entityID), MaxHP: maxHP, Coins: coins, EarnedCoin: uint16(p.award), Score: score,
+			VestDur: p.vestDur, HelmetDur: p.helmetDur, ItemOnHand: onHand, Faction: p.faction,
+			Kills: capByte(m.kills[p.entityID]), Deaths: capByte(m.deaths[p.entityID]),
+			FireState: fireState, CurEP: byte(p.ep), Damage: m.damage[p.entityID],
+		})})
 	}
 	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {
 		botScore := message.PackScore(m.teamScore[1], m.teamScore[0]) // the bot is team 2
-		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(m.entityHP(m.botEntity), maxHP, 0, 0, botScore, botFaction, capByte(m.kills[m.botEntity]), capByte(m.deaths[m.botEntity]), 0, m.damage[m.botEntity], 0)})
+		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(message.PRIState{
+			CurHP: m.entityHP(m.botEntity), MaxHP: maxHP, Score: botScore, Faction: botFaction,
+			Kills: capByte(m.kills[m.botEntity]), Deaths: capByte(m.deaths[m.botEntity]), Damage: m.damage[m.botEntity],
+		})})
 	}
 	return message.SyncPRI(ents)
 }
@@ -118,6 +126,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 		medkitID: {unique: medkitID, data: medkitData, count: 2, runtime: 2},
 	}
 	s.itemOnHand = uspUID
+	s.clearArmor() // the loadout wipe (cmd 327) drops the client's armor too — clear the durability bars
 	// Max the starter USP's attachments too (magazine/muzzle) so its ammo is full and it
 	// matches bought guns; the attachment items ride the cmd 174 below, then cmd 124 mounts them.
 	uspAttach, uspEquips := s.buildWeaponAttachments(uspUID, uspData)

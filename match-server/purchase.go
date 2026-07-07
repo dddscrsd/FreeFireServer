@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"time"
 
 	"libmadoka/match-server/message"
 	"libmadoka/match-server/packet"
@@ -150,6 +151,12 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	}
 	price := item.Price * qty
 
+	if itemID == itemMushroom && s.mushrooms >= mushroomsPerRound { // round limit -> deny before charging
+		s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseNoMoney, s.coins),
+			fmt.Sprintf("cmd=408 mushroom DENIED — round limit %d reached", mushroomsPerRound))
+		return
+	}
+
 	if s.coins < price && !cfg.unlimitedMoneyTest {
 		coins := s.coins
 		s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseNoMoney, coins),
@@ -162,7 +169,19 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	}
 
 	coins := s.coins
+
+	if itemID == itemMushroom { // instant EP grant, not an inventory item (ep.go); round limit pre-checked above
+		s.grantMushroom(time.Now())
+		s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseOK, coins),
+			fmt.Sprintf("cmd=408 buy OK mushroom -> ep=%d (%d/%d this round) coins=%d", s.ep, s.mushrooms, mushroomsPerRound, coins))
+		s.sendVar(packet.CmdPRISync, s.match.priPayload(), 2) // eager: push the new EP + coins now
+		return
+	}
+
 	inv, attach, equip, outgoing, attachEquips := s.addPurchasedItem(item, qty)
+	if slot, isArmor := armorSlot[itemID]; isArmor {
+		s.equipArmor(itemID, slot) // seed durability so the PRI armor bar (fields 2/3) shows full
+	}
 	onHand := s.itemOnHand
 
 	// The purchase result drives the "purchase success" popup, but the shop money

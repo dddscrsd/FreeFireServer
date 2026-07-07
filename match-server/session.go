@@ -96,6 +96,19 @@ type session struct {
 	healActive  bool
 	healStart   time.Time
 	healApplied int
+
+	// Shop-mushroom EP (energy): buying a mushroom grants EP; stepEP drains it back into HP over
+	// time. mushrooms counts buys this round (capped at mushroomsPerRound); both reset each round.
+	// See ep.go.
+	ep        uint16
+	mushrooms int
+	epLast    time.Time
+
+	// Armor durability (helmet + vest): the client applies the damage reduction to its own HP; the
+	// server only tracks the wear for the PRI armor bars (fields 2/3). Set on purchase, dropped on
+	// hits, broken (piece cleared) at 0. See durability.go.
+	vestData, helmetData uint32
+	vestDur, helmetDur   uint16
 }
 
 // write queues one packet to this session's remote through its Writer, which owns the
