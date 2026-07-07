@@ -26,8 +26,10 @@ func (m *Match) initHP() {
 		m.life[p.entityID] = lifeAlive
 		p.playerPos = p.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
 	}
-	m.hp[m.botEntity] = maxHP
-	m.life[m.botEntity] = lifeAlive
+	if m.botEntity != 0 {
+		m.hp[m.botEntity] = maxHP
+		m.life[m.botEntity] = lifeAlive
+	}
 }
 
 // entityHP returns an entity's current HP (maxHP if untracked / not yet seeded). It reads the

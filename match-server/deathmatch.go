@@ -134,7 +134,7 @@ func (m *Match) finalizeKnock(entity uint32, ks *knockState) {
 	if pendingRevive {
 		observe = m.spectateFor(entity) // watch a live teammate (or an enemy at round-end), not own corpse
 	}
-	m.emitDeath(entity, ks.killer, uint32(ks.weapon), uint32(ks.weaponSkin), observe, ks.bodyPart, ks.pos, pendingRevive)
+	m.emitDeath(entity, ks.killer, uint32(ks.weapon), uint32(ks.weaponSkin), observe, ks.bodyPart, ks.pos, false, pendingRevive)
 }
 
 // creditDeath records a death for the scoreboard: +1 death for the victim, and +1 kill (plus the
@@ -175,14 +175,14 @@ func (m *Match) killEntity(victim, killer uint32, bodyPart uint8) {
 	} else {
 		observe = 0 // the bot or a match-ending death -> no spectate focus
 	}
-	m.emitDeath(victim, killer, uint32(weapon), uint32(skin), observe, bodyPart, m.deathPos(victim), pendingRevive)
+	m.emitDeath(victim, killer, uint32(weapon), uint32(skin), observe, bodyPart, m.deathPos(victim), false, pendingRevive)
 }
 
 // emitDeath broadcasts one cmd 107 (entity died) to the whole match. pendingRevive keeps a human's
 // pawn (down) for the round-transition revive; observe is the dead client's spectate focus (0 = none,
 // e.g. the bot or a match-ending death).
-func (m *Match) emitDeath(victim, killer, weapon, weaponSkin, observe uint32, bodyPart uint8, pos message.Vec3, pendingRevive bool) {
-	body := message.PlayerDead(victim, killer, weapon, weaponSkin, observe, bodyPart, pos, pendingRevive)
+func (m *Match) emitDeath(victim, killer, weapon, weaponSkin, observe uint32, bodyPart uint8, pos message.Vec3, system, pendingRevive bool) {
+	body := message.PlayerDead(victim, killer, weapon, weaponSkin, observe, bodyPart, pos, system, pendingRevive)
 	m.broadcastData(packet.CmdDead, body,
 		fmt.Sprintf("cmd=107 DEAD victim=%#x killer=%#x weapon=%d observe=%#x pending=%v", victim, killer, weapon, observe, pendingRevive))
 }
