@@ -39,6 +39,10 @@ func (s *session) route(p *packet.Packet) {
 		s.handleReloadRelay(p)
 	case packet.CmdProjectileThrow, packet.CmdProjectileExplode, packet.CmdStartGrenade, packet.CmdStopGrenade: // 160-163 — relay grenade throw/explode/windup
 		s.handleProjectileRelay(p)
+	case packet.CmdStartSniper: // 137 — scope open: set the ADS pose (PRI field 12) + relay
+		s.handleStartSniper(p)
+	case packet.CmdStopSniper: // 138 — scope close
+		s.handleStopSniper(p)
 	case packet.CmdChangeHeldItem: // 108
 		s.handleChangeHeldItem(p)
 	case packet.CmdPickupInventory: // 111 — pick up a ground-loot item

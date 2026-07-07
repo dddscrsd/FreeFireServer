@@ -57,3 +57,20 @@ func (s *session) handleStopFire(p *packet.Packet) {
 func (s *session) handleReloadRelay(p *packet.Packet) {
 	s.match.broadcastToOthers(s, p.Cmd, p.Payload)
 }
+
+// handleStartSniper handles cmd 137 (scope open / aim-down-sights): mark this player sighting + push
+// an eager PRI so field 12 IS_SIGHTING lands before the relay, then relay the event to the others.
+// The remote pawn's scoped pose is driven by replicated field 12; the relayed edge invokes the
+// stop/start RPC too. Not echoed to the sender (it posed itself from local input).
+func (s *session) handleStartSniper(p *packet.Packet) {
+	s.sighting = true
+	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1)
+	s.match.broadcastToOthers(s, packet.CmdStartSniper, p.Payload)
+}
+
+// handleStopSniper handles cmd 138 (scope close): clear sighting + eager PRI (field 12 -> 0) + relay.
+func (s *session) handleStopSniper(p *packet.Packet) {
+	s.sighting = false
+	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1)
+	s.match.broadcastToOthers(s, packet.CmdStopSniper, p.Payload)
+}

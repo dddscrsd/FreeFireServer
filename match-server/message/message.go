@@ -14,6 +14,10 @@ import (
 type Writer struct{ B []byte }
 
 func (w *Writer) U8(v byte) { w.B = append(w.B, v) }
+func (w *Writer) I8(v int8) {
+	w.U8(byte(v))
+}
+
 func (w *Writer) Bool(v bool) {
 	if v {
 		w.U8(1)

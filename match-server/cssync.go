@@ -33,12 +33,16 @@ func (m *Match) priPayload() []byte {
 		if p.firing {
 			fireState = 2 // READY: remote clients render the muzzle flash / tracer
 		}
+		sighting := byte(0)
+		if p.sighting {
+			sighting = 1 // ADS: remote clients strike the scoped/aiming pose (PRI field 12)
+		}
 		onHand := uint64(p.itemOnHand)<<32 | uint64(p.heldWeaponData()) // remote pawn's held gun (PRIHPBlock field 4)
 		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(message.PRIState{
 			CurHP: m.entityHP(p.entityID), MaxHP: maxHP, Coins: coins, EarnedCoin: uint16(p.award), Score: score,
 			VestDur: p.vestDur, HelmetDur: p.helmetDur, ItemOnHand: onHand, Faction: p.faction,
 			Kills: capByte(m.kills[p.entityID]), Deaths: capByte(m.deaths[p.entityID]),
-			FireState: fireState, CurEP: byte(p.ep), Damage: m.damage[p.entityID],
+			FireState: fireState, Sighting: sighting, CurEP: byte(p.ep), Damage: m.damage[p.entityID],
 		})})
 	}
 	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {

@@ -62,7 +62,21 @@ func (m *Match) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8)
 	}
 	if vs := m.sessionByEntity(victim); vs != nil {
 		vs.wearArmor(bodyPart, dmg) // client already reduced HP; we only track + stream the armor wear
+		// Forward a cmd-106 TakeDamage to the VICTIM so its client renders the hit-direction indicator
+		// (which way the shot came from). Sent only to the victim — the direction UI is theirs.
+		weapon, _ := m.resolveKillWeapon(attacker)
+		vs.sendData(packet.CmdTakeDamage, message.TakeDamage(victim, attacker, uint32(weapon), dmg, int8(bodyPart)))
+		vs.sendVar(packet.CmdPRISync, vs.match.priPayload(), 1)
 	}
+	// Hit-reaction: tell EVERYONE to play the victim's flinch (cmd 1010) on this hit — the client
+	// self-throttles + gates it out when the victim is dying. No-attacker (zone) damage passes the
+	// victim as the source, which the client renders as the default blood + flinch (no weapon lookup).
+	src := attacker
+	if src == 0 {
+		src = victim
+	}
+	m.broadcastData(packet.CmdHurtAnim, message.HurtAnim(victim, src),
+		fmt.Sprintf("cmd=1010 hurt victim=%#x src=%#x", victim, src))
 	log.Printf("[mm-udp] TAKE_DAMAGE victim=%#x dmg=%d -> HP=%d", victim, dmg, cur)
 	if cur == 0 {
 		m.downOrKill(victim, attacker, bodyPart)
@@ -158,6 +172,8 @@ func (m *Match) killEntity(victim, killer uint32, bodyPart uint8) {
 	var observe uint32
 	if pendingRevive {
 		observe = m.spectateFor(victim)
+	} else {
+		observe = 0 // the bot or a match-ending death -> no spectate focus
 	}
 	m.emitDeath(victim, killer, uint32(weapon), uint32(skin), observe, bodyPart, m.deathPos(victim), pendingRevive)
 }
@@ -204,23 +220,15 @@ func (m *Match) reviveAll() {
 	m.roundOver = false
 }
 
-// spectateFor picks a dead player's spectate focus: a live TEAMMATE if any (4v4 keeps following the
-// squad until it is wiped). If the team has been wiped, the OTHER team wins the round — normally we
-// follow that winning enemy so the dead client keeps a valid camera through the round-transition
-// revive, BUT if this win DECIDES the match (a team hits match point / it is the last round) we
-// return 0: the last-dying player spectates no one and the client falls back to exiting the match.
-// A 1v1 loser (no teammate) hits this directly; in 4v4 the earlier-dead teammates are swept out by
-// the cmd 103 match-end that follows this final elimination.
+// spectateFor picks a dead player's spectate focus: a live TEAMMATE if any, else a live enemy (the
+// team was wiped — round end), else 0. Keeps the dead client in the match with a valid camera until
+// the round-transition revive.
 func (m *Match) spectateFor(victim uint32) uint32 {
 	team := m.teamOf(victim)
 	if e := m.firstAlive(team, victim); e != 0 {
 		return e
 	}
-	winner := otherTeam(team)
-	if m.teamScore[winner-1]+1 >= roundsToWin || m.round >= maxRound {
-		return 0 // match-deciding elimination: no spectate target, let the client leave
-	}
-	return m.firstAlive(winner, victim)
+	return m.firstAlive(otherTeam(team), victim)
 }
 
 // firstAlive returns any ALIVE participant of `team` other than `except` (a roster human, or the bot

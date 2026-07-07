@@ -255,6 +255,7 @@ type PRIState struct {
 	Faction            byte
 	Kills, Deaths      byte
 	FireState          byte // START_FIRE_STATE (field 21) — remote muzzle/tracer
+	Sighting           byte // IS_SIGHTING (field 12) — remote ADS/scoped pose
 	CurEP              byte
 	Damage             uint32
 }
@@ -275,7 +276,7 @@ func PRIHPBlock(st PRIState) []byte {
 		{RepU32, 9, 0},                    // SIGHTING_ID
 		{RepU8, 10, uint64(st.Kills)},     // KILL_COUNT
 		{RepU8, 11, 0},                    // OB_COUNT
-		{RepU32, 12, 0},                   // BUFF
+		{RepU32, 12, uint64(st.Sighting)}, // IS_SIGHTING (remote ADS/scoped pose; the old "BUFF" label was wrong)
 		{RepU8, 13, 0},                    // CAMOUFLAGE_HP
 		{RepU8, 14, 0},                    // LIKED_COUNT
 		{RepU16, 15, 0},

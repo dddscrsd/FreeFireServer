@@ -91,6 +91,10 @@ type session struct {
 	// as PRI field 21 START_FIRE_STATE so remote clients render its muzzle flash / tracer.
 	firing bool
 
+	// sighting is true while this player is aiming down sights / scoped (cmd 137 -> cmd 138); streamed
+	// as PRI field 12 IS_SIGHTING so remote clients strike the scoped/aiming pose. See fire.go.
+	sighting bool
+
 	// Medkit heal-over-time (run()-driven): cmd 113 arms it, stepHeal applies the accrued HP
 	// each tick until full HP / death / all steps done. See medkit.go.
 	healActive  bool
