@@ -2,10 +2,8 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"log"
 
-	"libmadoka/match-server/message"
 	"libmadoka/match-server/packet"
 )
 
@@ -19,6 +17,10 @@ func (m *Match) initHP() {
 	m.hp = map[uint32]uint16{}
 	m.life = map[uint32]lifeState{}
 	m.knock = map[uint32]*knockState{}
+	m.kills = map[uint32]uint16{}
+	m.deaths = map[uint32]uint16{}
+	m.damage = map[uint32]uint32{}
+	m.rescues = map[uint32]*rescueState{}
 	for _, p := range m.players {
 		m.hp[p.entityID] = maxHP
 		m.life[p.entityID] = lifeAlive
@@ -61,28 +63,7 @@ func (s *session) handleTakeDamage(p *packet.Packet) {
 	bodyPart := uint8(p.Payload[9])
 	attacker := binary.LittleEndian.Uint32(p.Payload[10:])
 
-	s.applyDamage(victim, attacker, dmg, bodyPart)
-}
-
-// applyDamage subtracts dmg from the victim's HP (clamped at 0) and logs it. On the
-// transition to 0 HP it sends the death packet (once — a victim already at 0 is
-// ignored). Untracked entities are ignored.
-func (s *session) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8) {
-	cur, ok := s.match.hp[victim]
-	if !ok || cur == 0 { // untracked, or already dead (don't re-kill)
-		return
-	}
-	if dmg >= cur {
-		cur = 0
-	} else {
-		cur -= dmg
-	}
-	s.match.hp[victim] = cur
-
-	log.Printf("[mm-udp] TAKE_DAMAGE victim=%#x dmg=%d -> HP=%d", victim, dmg, cur)
-	if cur == 0 {
-		s.killEntity(victim, attacker, bodyPart)
-	}
+	s.match.applyDamage(victim, attacker, dmg, bodyPart)
 }
 
 // killCauseDamageZone is the cmd 107 weaponDataID for an out-of-zone environment death
@@ -92,61 +73,6 @@ func (s *session) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint
 // [[bot-networkaipawn]].
 const killCauseDamageZone = -20
 
-// killEntity sends the death packet (cmd 107) marking victim eliminated. A player kill
-// (killer=local player) is tagged with the held weapon for the kill feed; killer=0 is
-// an out-of-zone environment death (no killer, cause KILL_BY_DAMAGEZONE, not a system
-// kill). When the LOCAL player dies it also carries an ObserveID (a living entity to
-// spectate) so the client stays in the match instead of returning to the lobby.
-func (s *session) killEntity(victim, killer uint32, bodyPart uint8) {
-	if killer == playerEntityID && victim == s.match.botEntity {
-		s.roundKills.Add(1) // local player killed the bot — counts toward the round coin award
-	}
-	var weapon int32
-	var weaponSkin int32
-	switch killer {
-	case playerEntityID: // only the local player's loadout is tracked so far
-		if (s.heldWeaponData()) == 0 {
-			weapon = 1 // fists
-		} else {
-			weapon = int32(s.heldWeaponData()) // the held weapon's ID
-		}
-		weaponSkin = int32(SkinForWeapon(uint32(weapon), []uint32(s.player.Slots)))
-	case 0: // out-of-zone environment death
-		weapon = killCauseDamageZone
-		weaponSkin = 0
-	}
-	var observe uint32
-	if victim == playerEntityID { // the dead local client must be given something to spectate
-		observe = s.spectateTarget()
-	}
-	// Mark the LOCAL player's non-deciding death as PENDING REVIVE so the client keeps the
-	// pawn (down, not removed) — otherwise a full death destroys it and the round-start
-	// cmd 388 revive has nothing to resurrect. The bot (and the deciding death, observe=0)
-	// stay full deaths.
-	pendingRevive := victim == playerEntityID
-	body := message.PlayerDead(victim, killer, uint32(weapon), uint32(weaponSkin), observe, bodyPart, s.deathPos(victim), pendingRevive)
-	s.sendDataLog(packet.CmdDead, body,
-		fmt.Sprintf("cmd=107 DEAD victim=%#x killer=%#x weapon=%d weaponSkin=%d observe=%#x bodyPart=%d pending=%v", victim, killer, weapon, weaponSkin, observe, bodyPart, pendingRevive))
-}
-
-// spectateTarget returns the ObserveID (spectate focus) for a dead local player. It is
-// the player's OWN id — the client watches its own corpse (the normal CS post-death
-// state). This is REQUIRED for the cmd 388 revive to un-spectate cleanly: the client's
-// full spectator teardown (camera to self, IsObserver=0) only fires when the observer was
-// targeting the revived id, i.e. the player itself. Pointing it at the bot instead left
-// the player stuck spectating after the revive. It returns 0 (no spectate -> client
-// bails) when this death hands the enemy the DECIDING round, so the MatchEnd (cmd 103)
-// screen follows instead.
-func (s *session) spectateTarget() uint32 {
-	if int(s.match.teamScore[1])+1 >= roundsToWin { // this death makes the enemy reach the win target
-		return 0
-	}
-	if s.match.entityHP(s.match.botEntity) > 0 {
-		return s.match.botEntity // bot is alive, spectate it
-	}
-	return playerEntityID // watch own corpse; the round-transition cmd 388 revive un-spectates it
-}
-
 // handleChangeHeldItem handles cmd 108 (RUDP_CHANGE_INVENTORY_ON_HAND): the client
 // reports which item its player now holds, as [entity u32][itemUnique u32]. Tracking
 // the local player's in-hand item keeps heldWeaponData (and thus the kill-feed weapon)
@@ -155,11 +81,7 @@ func (s *session) handleChangeHeldItem(p *packet.Packet) {
 	if len(p.Payload) < 8 {
 		return
 	}
-	entity := binary.LittleEndian.Uint32(p.Payload[0:])
 	unique := binary.LittleEndian.Uint32(p.Payload[4:])
-	if entity != playerEntityID {
-		return // only track our local player's held item
-	}
 	s.itemOnHand = unique
 }
 
@@ -172,21 +94,4 @@ func (s *session) heldWeaponData() uint32 {
 		}
 	}
 	return 0
-}
-
-// deathPos returns the world position to report an entity died at: the local player's
-// last-reported position (it moves — e.g. a zone death happens where it wandered), or
-// the bot's static spawn.
-func (s *session) deathPos(entity uint32) message.Vec3 {
-	switch entity {
-	case s.match.botEntity:
-		return s.match.bot.SpawnPos
-	case playerEntityID:
-		pos := s.playerPos
-		if pos != (message.Vec3{}) {
-			return pos
-		}
-		return s.player.SpawnPos
-	}
-	return message.Vec3{}
 }

@@ -78,6 +78,13 @@ type outPkt struct {
 }
 
 // flush sends every queued packet in order.
+func (m *Match) flushBroadcast(out []outPkt) {
+	for _, o := range out {
+		m.broadcastData(o.cmd, o.payload, o.label)
+	}
+}
+
+// flush sends every queued packet in order.
 func (s *session) flush(out []outPkt) {
 	for _, o := range out {
 		s.sendDataLog(o.cmd, o.payload, o.label)

@@ -33,7 +33,7 @@ func (mgr *MatchManager) join(s *session) {
 	mgr.mu.Lock()
 	var m *Match
 	for _, cand := range mgr.matches {
-		if cand.reserved < maxPlayers {
+		if !cand.ended && cand.reserved < maxPlayers {
 			m = cand
 			break
 		}
@@ -62,6 +62,20 @@ func (mgr *MatchManager) register(m *Match) {
 	mgr.matches = append(mgr.matches, m)
 	m.reserved++
 	mgr.mu.Unlock()
+}
+
+// reap removes a finished match from the registry — called from its run() goroutine on exit. It's a
+// brief, once-per-match lock, so it doesn't contend with the hot single-owner path inside a match.
+func (mgr *MatchManager) reap(m *Match) {
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+	kept := mgr.matches[:0]
+	for _, cand := range mgr.matches {
+		if cand != m {
+			kept = append(kept, cand)
+		}
+	}
+	mgr.matches = kept
 }
 
 // count returns the number of live matches (diagnostics / future reaping).

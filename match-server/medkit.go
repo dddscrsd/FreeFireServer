@@ -71,11 +71,12 @@ func (s *session) stepHeal(now time.Time) {
 	if !s.healActive {
 		return
 	}
-	hp := s.match.hp[playerEntityID]
-	if hp == 0 {
+	m := s.match
+	if m.lifeOf(s.entityID) != lifeAlive { // dead or KNOCKED (bleed pool != 0) -> the heal is interrupted
 		s.healActive = false
 		return
 	}
+	hp := m.hp[s.entityID]
 	want := int(now.Sub(s.healStart) / medkitInterval)
 	if want > medkitSteps {
 		want = medkitSteps
@@ -85,9 +86,9 @@ func (s *session) stepHeal(now time.Time) {
 		if hp > maxHP {
 			hp = maxHP
 		}
-		s.match.hp[playerEntityID] = hp
+		m.hp[s.entityID] = hp
 		s.healApplied = want
-		s.sendVar(packet.CmdPRISync, message.PRIHealHP(playerRepID, hp), 1)
+		s.sendVar(packet.CmdPRISync, message.PRIHealHP(s.repID, hp), 1)
 	}
 	if s.healApplied >= medkitSteps || hp >= maxHP {
 		s.healActive = false

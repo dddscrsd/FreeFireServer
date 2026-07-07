@@ -49,6 +49,10 @@ func (s *session) route(p *packet.Packet) {
 		s.handleClientPos(p)
 	case packet.CmdPlayerQuitReq: // 191
 		s.handlePlayerQuit(p)
+	case packet.CmdStartRescue: // 142 — teammate began reviving a knocked player
+		s.handleStartRescue(p)
+	case packet.CmdStopRescue: // 143 — teammate stopped reviving
+		s.handleStopRescue(p)
 	default:
 		s.handleUnknown(p)
 	}
@@ -199,6 +203,27 @@ func (s *session) handleClientPos(p *packet.Packet) {
 func (s *session) handlePlayerQuit(p *packet.Packet) {
 	s.stopped.Store(true)
 	s.sendDataLog(packet.CmdPlayerQuitRes, message.PlayerQuit(1), fmt.Sprintf("cmd=192 PlayerQuit payload=%x", p.Payload))
+	s.match.removePlayer(s) // drop from the roster; the match keeps running for the others
+}
+
+// handleStartRescue handles cmd 142 (RUDP_START_RESCURE): a teammate began reviving a knocked player.
+// Payload (LE): [target u32][startMs u64].
+func (s *session) handleStartRescue(p *packet.Packet) {
+	if len(p.Payload) < 12 {
+		return
+	}
+	target := binary.LittleEndian.Uint32(p.Payload[0:])
+	startMs := binary.LittleEndian.Uint64(p.Payload[4:])
+	s.match.startRescue(s.entityID, target, startMs)
+}
+
+// handleStopRescue handles cmd 143 (RUDP_STOP_RESCURE): the teammate stopped reviving. Payload: [target u32].
+func (s *session) handleStopRescue(p *packet.Packet) {
+	if len(p.Payload) < 4 {
+		return
+	}
+	target := binary.LittleEndian.Uint32(p.Payload[0:])
+	s.match.stopRescue(s.entityID, target)
 }
 
 // handleUnknown logs an unrecognised packet with its full payload for RE.

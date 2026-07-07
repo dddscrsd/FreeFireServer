@@ -59,6 +59,10 @@ const (
 	CmdDelContainer        = 228 // server -> client: OPNFJLJGPFC — RUDP_DEL_CONTAINER ([u16 containerID][u8 containerType])
 	CmdTakeDamage          = 106 // client -> server: hit report (victim u32, damage u16, attacker u32, ...); server applies HP
 	CmdDead                = 107 // server -> client: OGCHKCGKGKN — entity died (victim, killer, position, ...)
+	CmdKnockDown           = 139 // server -> client: NKDBFGLPCCF — RUDP_KNOCK_DOWN (DBNO: downed+bleeding, still alive; distinct from cmd 107)
+	CmdKnockRevive         = 140 // server -> client: DJOOMNBJMOG — RUDP_KNOCK_REVIVE (teammate revive done: revivedId, rescuerId)
+	CmdStartRescue         = 142 // bidirectional: client EMOBCDJEOLN START_RESCURE (u32 target, u64 startMs); server DCBAMPDIHIG rescue-ack/progress (bool ok, u32 RESCUER, u32 RESCUED, u64 start, u64 end, u32 result) — same opcode; 2nd u32 (rescued) drives the downed player's being-revived indicator
+	CmdStopRescue          = 143 // client -> server: CNCBPOJGNGK — RUDP_STOP_RESCURE (u32 targetId)
 	CmdBindPRI             = 118 // server -> client: S2C_RUDP_BindPRI (reliable) — maps RepIDs to entities; local player FIRST
 	CmdSyncInventory       = 174 // server -> client: BGKCMKNDAGA (typed) — player inventory/equipment sync (additive; send once)
 	CmdRemoveInventoryList = 327 // server -> client: ABJFDIFIILN (typed) — REMOVE items by unique from a player's inventory (the only remove path)

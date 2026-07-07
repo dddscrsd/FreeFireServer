@@ -33,7 +33,7 @@ const (
 // roundResult sends the cmd 409 round-result crediting winnerTeam — this raises the
 // VICTORY/DEFEAT banner and (with the field-28 PRI score) the scoreboard.
 func (s *session) roundResult(winnerTeam byte) {
-	s.sendDataLog(packet.CmdCSRoundResult, message.CSRoundResult(winnerTeam, playerEntityID),
+	s.match.broadcastData(packet.CmdCSRoundResult, message.CSRoundResult(winnerTeam, playerEntityID),
 		fmt.Sprintf("cmd=409 round result: team %d wins round %d (score %d-%d)",
 			winnerTeam, s.match.round, s.match.teamScore[0], s.match.teamScore[1]))
 }
@@ -47,21 +47,9 @@ func (s *session) matchEnd(localWon bool) {
 	if localWon {
 		rank, result = 1, "WIN"
 	}
-	s.sendDataLog(packet.CmdMatchEnd, message.MatchEnd(rank),
+	s.match.broadcastData(packet.CmdMatchEnd, message.MatchEnd(rank),
 		fmt.Sprintf("cmd=103 MatchEnd rank=%d local=%s final=%d-%d",
 			rank, result, s.match.teamScore[0], s.match.teamScore[1]))
-}
-
-// respawnLocalPlayer respawns the dead local player via cmd 388 (NOTIFYREVIVE) at the new
-// gate. It is the ONLY packet that clears a Player's dead flag; it reuses the existing
-// player object (no team re-add, unlike cmd 101), repositions it, and returns the camera
-// to first person. The un-spectate requires the death to have left the observer on the
-// player itself (see spectateTarget). HP comes from the still-bound PRI stream.
-func (s *session) respawnLocalPlayer() {
-	yaw := yawByte(s.player.SpawnFace)
-	s.sendDataLog(packet.CmdNotifyRevive, message.NotifyRevive(playerEntityID, s.player.SpawnPos, yaw),
-		fmt.Sprintf("cmd=388 local player revive ent=%#x pos=(%.1f,%.1f,%.1f) yaw=%d",
-			uint32(playerEntityID), s.player.SpawnPos.X, s.player.SpawnPos.Y, s.player.SpawnPos.Z, yaw))
 }
 
 // yawByte encodes a horizontal facing vector as the cmd 388 yaw byte (0..255 = 0..360°,
@@ -78,9 +66,10 @@ func yawByte(face message.Vec3) byte {
 // at the new position (re-materialising the pawn the death packet removed) and teleport
 // it — the entity id and RepID stay stable (no per-round new entity).
 func (s *session) respawnBot() {
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.match.bot),
+	m := s.match
+	m.broadcastData(packet.CmdPlayerJoin, message.PlayerJoin(m.bot),
 		fmt.Sprintf("cmd=101 BOT respawn (same ent=%#x) pos=(%.1f,%.1f,%.1f)",
-			s.match.botEntity, s.match.bot.SpawnPos.X, s.match.bot.SpawnPos.Y, s.match.bot.SpawnPos.Z))
-	s.match.tpSeq++
-	s.sendData(packet.CmdTeleport, message.ForceTeleport(s.match.botEntity, s.match.tpSeq, s.match.bot.SpawnPos, s.match.bot.SpawnFace, 0))
+			m.botEntity, m.bot.SpawnPos.X, m.bot.SpawnPos.Y, m.bot.SpawnPos.Z))
+	m.tpSeq++
+	m.broadcastData(packet.CmdTeleport, message.ForceTeleport(m.botEntity, m.tpSeq, m.bot.SpawnPos, m.bot.SpawnFace, 0), "")
 }

@@ -28,6 +28,7 @@ type config struct {
 	unlimitedMoneyTest bool // MATCH_UNLIMITED_MONEY=1: all purchases succeed regardless of the player's money (self-testing only)
 	infiniteGloo       bool // MATCH_INFINITE_GLOO=1: placing a gloo wall does NOT deduct from inventory (active walls still capped at the inventory count via FIFO evict-oldest)
 	noZone             bool // MATCH_NO_ZONE=1: skip the Fight-phase SafeZone so the passive test player doesn't die to it (self-testing only)
+	zoneStatic         bool // MATCH_ZONE_STATIC=1: the Fight zone never shrinks — a fixed damaging circle so a test player can walk out on demand to trigger a knockdown
 }
 
 var cfg config
@@ -43,6 +44,7 @@ func loadConfig() config {
 		zoneTest:           os.Getenv("MATCH_ZONE_TEST") == "1",
 		infiniteGloo:       os.Getenv("MATCH_INFINITE_GLOO") == "1",
 		noZone:             os.Getenv("MATCH_NO_ZONE") == "1",
+		zoneStatic:         os.Getenv("MATCH_ZONE_STATIC") == "1",
 		unlimitedMoneyTest: os.Getenv("MATCH_UNLIMITED_MONEY") == "1",
 	}
 	if sp, ok := parseVec3(os.Getenv("MATCH_SPAWN")); ok {

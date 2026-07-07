@@ -29,13 +29,21 @@ func (m *Match) priPayload() []byte {
 		// score from THIS player's team perspective (my wins, opp wins) so the client resolves
 		// my/oppo consistently whoever's score changed.
 		score := message.PackScore(m.teamScore[p.team-1], m.teamScore[2-p.team])
-		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(m.entityHP(p.entityID), maxHP, coins, uint16(p.award), score, p.faction)})
+		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(m.entityHP(p.entityID), maxHP, coins, uint16(p.award), score, p.faction, capByte(m.kills[p.entityID]), capByte(m.deaths[p.entityID]), m.damage[p.entityID])})
 	}
 	if m.entityHP(m.botEntity) > 0 {
 		botScore := message.PackScore(m.teamScore[1], m.teamScore[0]) // the bot is team 2
-		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(m.entityHP(m.botEntity), maxHP, 0, 0, botScore, botFaction)})
+		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(m.entityHP(m.botEntity), maxHP, 0, 0, botScore, botFaction, capByte(m.kills[m.botEntity]), capByte(m.deaths[m.botEntity]), m.damage[m.botEntity])})
 	}
 	return message.SyncPRI(ents)
+}
+
+// capByte clamps a match stat count to the u8 PRI scoreboard fields (KILL_COUNT / DEAD_COUNT).
+func capByte(v uint16) byte {
+	if v > 255 {
+		return 255
+	}
+	return byte(v)
 }
 
 func (s *session) resyncWallsPri() []byte {

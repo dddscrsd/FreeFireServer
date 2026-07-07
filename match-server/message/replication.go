@@ -223,6 +223,12 @@ func PRIHealHP(repID uint32, hp uint16) []byte {
 	})
 }
 
+func PRIRescuing(repID uint32, rescuing uint8) []byte {
+	return SyncPRI([]PRIEntity{
+		{RepID: repID, Block: ReplicationBlock([]RepEntry{{RepU8, 5, uint64(rescuing)}})},
+	})
+}
+
 // PRIHPBlock builds a full alive-player PRI block. The field ids/types/order match
 // the reference's build_pri_hp_block exactly (derived from the client's
 // OnUserDefineReplicationInfo @0x190676c AddData registration). SetData is keyed by
@@ -238,7 +244,7 @@ func PRIHealHP(repID uint32, hp uint16) []byte {
 // top-HUD myWinNum/oppoWinNum (the client re-resolves my/oppo from the entity's team).
 // SetData is a no-op when unchanged, so the number only moves when the value actually
 // changes. See PackScore + [[bot-networkaipawn]].
-func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction byte) []byte {
+func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction, kills, deaths byte, damage uint32) []byte {
 	return ReplicationBlock([]RepEntry{
 		{RepU16, 0, uint64(curHP)}, // CUR_HP
 		{RepU16, 1, uint64(maxHP)}, // MAX_HP
@@ -252,7 +258,7 @@ func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction byte) []b
 		{RepU32, 8, 0},             // STATUS
 		{RepU16, 39, 0},            // (unknown, new)
 		{RepU32, 9, 0},             // SIGHTING_ID
-		{RepU8, 10, 0},             // KILL_COUNT
+		{RepU8, 10, uint64(kills)}, // KILL_COUNT
 		{RepU8, 11, 0},             // OB_COUNT
 		{RepU32, 12, 0},            // BUFF
 		{RepU8, 13, 0},             // CAMOUFLAGE_HP
@@ -270,9 +276,9 @@ func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction byte) []b
 		{RepU32, 26, 0},
 		{RepU64, 27, 0},
 		{RepU16, 28, uint64(score)},      // SCORE (CS round wins, packed own|oppo<<8)
-		{RepU8, 29, 0},                   // DEAD_COUNT
+		{RepU8, 29, uint64(deaths)},      // DEAD_COUNT
 		{RepU8, 30, 0},                   // ASSIST_COUNT
-		{RepU32, 31, 0},                  // TOTAL_DAMAGE
+		{RepU32, 31, uint64(damage)},     // TOTAL_DAMAGE
 		{RepU16, 32, uint64(coins)},      // CUR_COIN (buy-phase money shown in the shop)
 		{RepU16, 33, uint64(earnedCoin)}, // EARNED_COIN
 		{RepU8, 34, uint64(faction)},     // FACTION_ID (0/1 = which gate team)

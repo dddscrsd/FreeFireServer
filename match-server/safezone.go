@@ -64,7 +64,7 @@ func (s *session) sendZone(stage byte, outer message.Vec3, outerR float64, inner
 	nowMs := uint32(time.Since(s.match.matchStart).Milliseconds())
 	endMs := nowMs + uint32(dur.Milliseconds())
 	body := message.SafeZoneChange(stage, outer, outerR, inner, innerR, timeSpan, nowMs, endMs)
-	s.sendDataLog(packet.CmdSafeZoneChange, body,
+	s.match.broadcastData(packet.CmdSafeZoneChange, body,
 		fmt.Sprintf("cmd=117 SafeZone stage=%d span=%d r=%.0f->%.0f center=(%.0f,%.0f) end=%dms",
 			stage, timeSpan, outerR, innerR, outer.X, outer.Z, endMs))
 }

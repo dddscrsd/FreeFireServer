@@ -38,6 +38,9 @@ type Match struct {
 	bot            joinPlayer            // the current-round enemy bot (becomes a roster *player in 4c)
 	botEntity      uint32                // the (fixed) enemy bot entity id
 	hp             map[uint32]uint16     // entity id -> current HP (player + bot); splits to per-player in 4c
+	kills          map[uint32]uint16     // entity id -> match kill count (scoreboard, PRI field 10)
+	deaths         map[uint32]uint16     // entity id -> match death count (PRI field 29)
+	damage         map[uint32]uint32     // entity id -> total damage dealt (PRI field 31)
 
 	// Shared world objects: placed gloo walls (FIFO, walls[0] oldest) + ground-loot boxes.
 	walls           []*iceWall
@@ -57,10 +60,16 @@ type Match struct {
 
 	// Multiplayer death rules (Step 5): per-entity lifecycle + live knock records, keyed like
 	// m.hp so humans and the bot are handled uniformly. lastTeamFell / roundOver drive round-end.
-	life         map[uint32]lifeState   // entity id -> ALIVE|KNOCKED|DEAD (absent == ALIVE)
-	knock        map[uint32]*knockState // entity id -> live knockdown record (only while KNOCKED)
-	lastTeamFell byte                   // team whose alive-count most recently hit 0 (both-0 tiebreak)
-	roundOver    bool                   // set when a team hits 0 alive; gates further damage this round
+	life         map[uint32]lifeState    // entity id -> ALIVE|KNOCKED|DEAD (absent == ALIVE)
+	knock        map[uint32]*knockState  // entity id -> live knockdown record (only while KNOCKED)
+	rescues      map[uint32]*rescueState // target entity id -> in-progress teammate revive (cmd 142..140)
+	lastTeamFell byte                    // team whose alive-count most recently hit 0 (both-0 tiebreak)
+	roundOver    bool                    // set when a team hits 0 alive; gates further damage this round
+
+	// Match lifecycle: ended is set when the deciding round finishes so join() skips this match (a
+	// rejoin gets a fresh one); after a stats-hold the loop closes done, returns, and reap()s itself.
+	ended       bool
+	tearingDown bool
 }
 
 // csPhase is a state in the match loop. Each maps to a client GRI phase (griPhase) and has a
@@ -96,6 +105,8 @@ const (
 	matchEndPause = 500 * time.Millisecond  // pause on the final kill before cmd 103
 	introSettle   = 1000 * time.Millisecond // extra Intro hold (folded in from the post-transition sleep)
 	holdDur       = 6 * time.Hour           // Fight/MatchEnd/held-Prepare: a fixed far-future deadline so phaseParam stays CONSTANT across the phase (a drifting param makes the client re-fire the round-start each tick)
+
+	matchStatsHold = 20 * time.Second // hold on the end-of-match stats screen before tearing the match down (so a rejoin gets a fresh match)
 )
 
 // griPhase maps a csPhase to the client GRI phase to stream, or ok=false to stream nothing
@@ -157,6 +168,31 @@ func (m *Match) addPlayer(s *session) {
 	m.players = append(m.players, s)
 	log.Printf("[mm-udp] roster+ slot=%d entity=%#08x rep=%d faction=%d team=%d (roster=%d) %v",
 		s.slot, s.entityID, s.repID, s.faction, s.team, len(m.players), s.remote)
+}
+
+// removePlayer drops a quitting human from the roster (runs on run()'s mailbox, so it may mutate
+// m.players). The match keeps going for the rest; if the roster empties, run() stops on its next tick
+// and reaps itself. The leaver's pawn is removed on the other clients via a cmd-107 (no killer / no
+// revive), and the primary is reassigned if the one that left was it.
+func (m *Match) removePlayer(s *session) {
+	if m.sessionByEntity(s.entityID) == nil {
+		return // already gone
+	}
+	m.emitDeath(s.entityID, 0, 0, 0, 0, 0, m.deathPos(s.entityID), false)
+	kept := m.players[:0]
+	for _, p := range m.players {
+		if p != s {
+			kept = append(kept, p)
+		}
+	}
+	m.players = kept
+	delete(m.hp, s.entityID)
+	delete(m.life, s.entityID)
+	delete(m.knock, s.entityID)
+	if m.s == s && len(m.players) > 0 {
+		m.s = m.players[0] // promote a survivor so run()'s primary reads stay valid
+	}
+	log.Printf("[mm-udp] roster- slot=%d ent=%#x (roster=%d) %v", s.slot, s.entityID, len(m.players), s.remote)
 }
 
 // admitFirst runs the join handshake for the FIRST player of a fresh match: pick the arena/spawn,
@@ -242,6 +278,7 @@ func (s *session) startCSMatch() {
 // transition forces the stream so the new phase's first GRI lands same-tick. Replaces
 // csSyncLoop + streamPhase + serverTimeLoop + runSafeZone.
 func (m *Match) run() {
+	defer matchManager.reap(m) // remove this match from the registry when the loop exits
 	s := m.s
 	coins := uint32(startingCoins)
 	if cfg.unlimitedMoneyTest {
@@ -267,8 +304,8 @@ func (m *Match) run() {
 		case fn := <-m.mailbox: // an inbound gameplay handler — runs here so run() owns all match state
 			fn()
 		case now := <-t.C:
-			if s.stopped.Load() {
-				log.Printf("[mm-udp] CS match loop stopped (player quit) %v", s.remote)
+			if len(m.players) == 0 { // every human left -> stop the loop (the defer reaps the match)
+				log.Printf("[mm-udp] CS match loop stopped: roster empty")
 				return
 			}
 			// Advance the phase machine every base tick so a transition lands within ~baseTick
@@ -278,12 +315,16 @@ func (m *Match) run() {
 			m.advancePhase(now)
 			if m.phase != before || now.Sub(lastStream) >= priTick {
 				m.stream()
-				s.sweepWalls() // force-break any gloo wall past its lifetime
+				m.s.sweepWalls() // force-break any gloo wall past its lifetime
 				lastStream = now
 			}
 			m.stepZone(now)
+			m.stepKnock(now)   // bleed any downed players; a bleed-out finalizes a cmd-107 death
+			m.stepRescue(now)  // complete / cancel in-progress teammate revives
 			m.streamMovement() // Step 6: relay each human's latest cmd-1001 state to the others
-			s.stepHeal(now)    // medkit heal-over-time (run()-driven; was the healMedkit goroutine)
+			for _, p := range m.players {
+				p.stepHeal(now) // medkit heal-over-time, per player (run()-driven)
+			}
 			if now.Sub(lastClock) >= clockTick {
 				m.streamClock()
 				lastClock = now
@@ -404,9 +445,10 @@ func (m *Match) sendPull() {
 	if m.pull == nil {
 		return
 	}
-	s := m.s
-	m.tpSeq++
-	s.sendData(packet.CmdTeleport, message.ForceTeleport(playerEntityID, m.tpSeq, *m.pull, s.player.SpawnFace, 0))
+	for _, p := range m.players {
+		m.tpSeq++
+		m.broadcastData(packet.CmdTeleport, message.ForceTeleport(p.entityID, m.tpSeq, p.player.SpawnPos, p.player.SpawnFace, 0), "")
+	}
 }
 
 // enterPrepare opens a buy phase (or holds it forever in the dev holdPrepare mode).
@@ -432,8 +474,8 @@ func (m *Match) startFight(now time.Time) {
 func (m *Match) advancePhase(now time.Time) {
 	s := m.s
 	if m.phase == phFight { // condition-based, not a deadline
-		if m.entityHP(m.botEntity) == 0 || m.entityHP(playerEntityID) == 0 {
-			m.endFight(now)
+		if m.teamAlive(localTeamID) == 0 || m.teamAlive(enemyTeamID) == 0 {
+			m.endFight(now) // a whole team is down (dead / knocked-then-swept) -> round over
 		}
 		return
 	}
@@ -454,14 +496,17 @@ func (m *Match) advancePhase(now time.Time) {
 		m.startFight(now)
 	case phMatchEndPause:
 		s.matchEnd(m.matchWon)
-		m.enter(now, phMatchEnd, holdDur) // hold
+		m.ended = true                           // join() now skips this match; a rejoin starts a fresh one
+		m.enter(now, phMatchEnd, matchStatsHold) // hold on the stats screen, then tear down
 	case phPostBanner:
 		m.postBannerEdge(now)
 	case phPostReviveBind:
-		m.bindAll()          // rebind everyone after the revive so the streamed PRI HP lands on the pawns
-		s.giveLoadout(false) // death dropped the weapon to fists — re-give, keep coins
+		m.bindAll() // rebind everyone after the revives so the streamed PRI HP lands on the pawns
+		for _, p := range m.players {
+			p.giveLoadout(false) // death dropped the weapon to fists — re-give each player, keep coins
+		}
 		m.enter(now, phPostBlack, postBlackHold)
-		m.sendPull() // m.pull is nil on the revive path (cmd 388 repositioned)
+		m.sendPull() // reposition every player to its new-round spawn
 	case phPostBlack:
 		m.round++
 		s.broadcastZone() // draw the NEW city's safe zone now the player teleported
@@ -472,7 +517,10 @@ func (m *Match) advancePhase(now time.Time) {
 	case phIntro:
 		m.enterPrepare(now) // next round's buy phase
 	case phMatchEnd:
-		// hold forever
+		if !m.tearingDown { // stats-hold elapsed -> stop the loop; run()'s defer reaps the match
+			m.tearingDown = true
+			close(m.done)
+		}
 	}
 }
 
@@ -482,7 +530,8 @@ func (m *Match) advancePhase(now time.Time) {
 func (m *Match) endFight(now time.Time) {
 	s := m.s
 	m.stopZone()
-	localWon := m.entityHP(playerEntityID) > 0
+	m.roundOver = true
+	localWon := m.teamAlive(localTeamID) > 0 // the surviving team won (sequential falls => first-to-fall loses)
 	winnerTeam := byte(localTeamID)
 	if localWon {
 		m.teamScore[0]++
@@ -510,8 +559,10 @@ func (m *Match) endFight(now time.Time) {
 	m.revive = !localWon
 	// Transition setup (was roundTransition step 1): pick the next arena + spawns + a fresh bot.
 	m.arena = pickArena()
-	s.player.SpawnPos, s.player.SpawnFace = m.arena.spawnFor(localFaction)
-	m.bot = botPlayer(s.player, m.botEntity) // same entity, new spot near the player
+	for _, p := range m.players {
+		p.player.SpawnPos, p.player.SpawnFace = m.arena.spawnFor(p.faction)
+	}
+	m.bot = botPlayer(s.player, m.botEntity) // same entity, new spot near the primary player
 	log.Printf("[mm-udp] round transition -> arena=%q revivePlayer=%v %v", m.arena.City, m.revive, s.remote)
 	m.enter(now, phPostBanner, postToBlack)
 }
@@ -521,19 +572,25 @@ func (m *Match) endFight(now time.Time) {
 // teleport the surviving player + refill its ammo (won path). Was roundTransition steps 3-5.
 func (m *Match) postBannerEdge(now time.Time) {
 	s := m.s
-	m.hp = map[uint32]uint16{playerEntityID: maxHP, m.botEntity: maxHP}
-	s.playerPos = s.player.SpawnPos // reset so the shrinking zone can't damage a stale position
-	s.clearWalls()                  // gloo walls are per-round world state
+	dead := m.deadHumans() // capture BEFORE reviveAll flips everyone back to ALIVE
+	m.reviveAll()          // reset EVERY roster human + the bot to full HP + ALIVE, clear all knocks
+	for _, p := range m.players {
+		p.playerPos = p.player.SpawnPos // reset so the shrinking zone can't damage a stale position
+	}
+	s.clearWalls() // gloo walls are per-round world state
 	s.respawnBot()
-	if m.revive {
-		s.respawnLocalPlayer() // cmd 388: clear the dead flag + reposition + un-spectate
-		m.pull = nil           // the revive repositioned; no teleport pull
-		m.enter(now, phPostReviveBind, bindDelay)
+	for _, p := range dead {
+		m.respawnPlayer(p) // cmd 388: revive each dead human at its new spawn (broadcast)
+	}
+	spawn := s.player.SpawnPos
+	m.pull = &spawn // set = "reposition active"; sendPull teleports EVERY player to its own new gate
+	if len(dead) > 0 {
+		m.enter(now, phPostReviveBind, bindDelay) // rebind + reload + reposition everyone after the revives
 		return
 	}
-	s.reissueLoadout() // alive: refill every kept weapon's magazine + reserve
-	spawn := s.player.SpawnPos
-	m.pull = &spawn // pin the frozen survivor to the new gate through the black window + intro
+	for _, p := range m.players {
+		p.reissueLoadout() // nobody died: refill every survivor's magazine + reserve
+	}
 	m.enter(now, phPostBlack, postBlackHold)
 	m.sendPull()
 }
@@ -552,6 +609,9 @@ func (m *Match) startZone() {
 	waitDur := zoneWaitDur
 	if cfg.zoneTest {
 		waitDur = 3 * time.Second
+	}
+	if cfg.zoneStatic {
+		waitDur = holdDur // never shrinks: a fixed damaging circle (walk out of it to trigger a knockdown)
 	}
 	now := time.Now()
 	m.zoneWaitEnd = now.Add(waitDur)
@@ -585,10 +645,15 @@ func (m *Match) stepZone(now time.Time) {
 	if m.zoneShrink { // the radius the client is STILL rendering (a touch in the past)
 		curR = lerpRadius(m.zoneOuterR, m.zoneInnerR, now.Sub(m.zoneShrinkStart)-zoneClientLag)
 	}
-	pos := s.playerPos
-	if d := dist2D(pos, m.zoneCenter); d > curR {
-		log.Printf("[mm-udp] ZONE damage: player %.0fm out (r=%.0f) at (%.0f,%.0f) -> -%d HP %v",
-			d-curR, curR, pos.X, pos.Z, zoneDamage, s.remote)
-		s.applyDamage(playerEntityID, 0, zoneDamage, 0) // killer 0 -> environment zone death
+	for _, p := range m.players {
+		if m.lifeOf(p.entityID) != lifeAlive {
+			continue // dead / knocked players don't take zone damage
+		}
+		pos := p.playerPos
+		if d := dist2D(pos, m.zoneCenter); d > curR {
+			log.Printf("[mm-udp] ZONE damage: %#x %.0fm out (r=%.0f) at (%.0f,%.0f) -> -%d HP %v",
+				p.entityID, d-curR, curR, pos.X, pos.Z, zoneDamage, p.remote)
+			m.applyDamage(p.entityID, 0, zoneDamage, 0) // killer 0 -> environment zone death
+		}
 	}
 }

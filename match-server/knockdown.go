@@ -18,7 +18,8 @@ const (
 	knockdownHP     = 200                     // bleed pool a knocked player starts with
 	knockBleedAmt   = 10                      // HP lost per bleed tick
 	knockBleedEvery = 1500 * time.Millisecond // bleed cadence (knockdownHP/knockBleedAmt ticks ~= 30s window)
-	reviveHP        = 30                      // HP a mid-round teammate revive restores (round transition restores full)
+	reviveHP        = 20                      // fixed HP a mid-round teammate revive restores, regardless of pre-knock HP (needs medkits after; round transition restores full)
+	reviveDuration  = 4 * time.Second         // hold-to-revive time before a knocked teammate is picked up (cmd 140)
 )
 
 // lifeState is a participant's per-round lifecycle.

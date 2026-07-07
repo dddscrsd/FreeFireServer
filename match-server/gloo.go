@@ -222,7 +222,7 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (FIFO cap=%d)", oldest.id, glooWallCap)})
 	}
 
-	s.flush(out)                                          // flush the built batch (outPkt/flush pattern)
+	s.match.flushBroadcast(out)                           // flush the built batch (outPkt/flush pattern)
 	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1) // eager wall-state PRI (don't wait ~300ms)
 }
 
