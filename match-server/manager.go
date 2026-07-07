@@ -18,11 +18,13 @@ const maxPlayers = 8
 // contends with the lock-free single-owner model inside a match.
 type MatchManager struct {
 	mu      sync.Mutex
-	matches []*Match
+	matches []MatchHandle
+	factory MatchFactory
 }
 
-// matchManager is the process-wide registry.
-var matchManager = &MatchManager{}
+// matchManager is the process-wide registry. It mints matches through the factory (localFactory ships
+// in-process today) and only ever handles them as MatchHandle — the process seam (Step 8, matchhandle.go).
+var matchManager = &MatchManager{factory: localFactory{}}
 
 // join routes a joining human to a match — an existing one with a free slot, else a fresh one — and
 // admits them. m.reserved (manager-owned under mu) is the race-safe roster-size view; run() owns
@@ -31,32 +33,27 @@ var matchManager = &MatchManager{}
 // to that mailbox from now on (syncStarted).
 func (mgr *MatchManager) join(s *session) {
 	mgr.mu.Lock()
-	var m *Match
+	var h MatchHandle
 	for _, cand := range mgr.matches {
-		if !cand.ended && cand.reserved < maxPlayers {
-			m = cand
+		if cand.canAdmit() { // an existing match with a free slot that hasn't ended
+			h = cand
 			break
 		}
 	}
-	fresh := m == nil
+	fresh := h == nil
 	if fresh {
-		m = newMatch(s)
-		mgr.matches = append(mgr.matches, m)
+		h = mgr.factory.create(s) // no room anywhere -> mint a new match (localFactory: in-process)
+		mgr.matches = append(mgr.matches, h)
 	}
-	m.reserved++
+	h.reserve()
 	mgr.mu.Unlock()
 
-	s.match = m
-	if fresh {
-		m.admitFirst(s) // sets up the world + starts run()
-		return
-	}
-	s.syncStarted = true // route THIS player's inbound handlers to the shared run() mailbox
-	s.enqueue(func() { m.admitLater(s) })
+	h.admit(s, fresh) // wire the player in (fresh starts run(); a later player enqueues onto its loop)
 }
 
-// register adds a match to the registry and reserves a slot — used by the reconnect resume, which
-// creates its own solo match outside join().
+// register adds an already-built in-process match to the registry (the reconnect resume in
+// handleHello mints its own solo *Match outside join()). It bypasses the factory because a mid-match
+// resume is inherently in-process — the client is already connected to THIS process.
 func (mgr *MatchManager) register(m *Match) {
 	mgr.mu.Lock()
 	mgr.matches = append(mgr.matches, m)
@@ -66,7 +63,7 @@ func (mgr *MatchManager) register(m *Match) {
 
 // reap removes a finished match from the registry — called from its run() goroutine on exit. It's a
 // brief, once-per-match lock, so it doesn't contend with the hot single-owner path inside a match.
-func (mgr *MatchManager) reap(m *Match) {
+func (mgr *MatchManager) reap(m MatchHandle) {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
 	kept := mgr.matches[:0]
