@@ -112,11 +112,14 @@ func packPhase(enum, param uint16) uint64 {
 
 // CSGRIInit builds the CS GRI block: round config (max + current round, 0-based) +
 // NormalStart draw state. Streamed continuously; bump currentRound to advance rounds.
+// It deliberately does NOT touch field 4 (matchPoint) — CSGRIMatchPoint owns that.
+// Setting matchPoint=0 here and then =1 in CSGRIMatchPoint on the same tick flipped
+// the field 0->1 every stream, re-firing the client's match-point handler (and the
+// round-start panel) each tick.
 func CSGRIInit(maxRound, currentRound uint8) []byte {
 	return ReplicationBlock([]RepEntry{
 		{RepU8, CSFieldMaxRound, uint64(maxRound)},
 		{RepU8, CSFieldCurrentRound, uint64(currentRound)},
-		{RepU8, CSFieldMatchPoint, 0},
 		{RepU32, CSFieldDrawState, packPhase(CSDrawNormalStart, 0)},
 	})
 }
@@ -223,6 +226,12 @@ func PRIHealHP(repID uint32, hp uint16) []byte {
 	})
 }
 
+func PRIArmorDur(repID uint32, vest, helmet uint16) []byte {
+	return SyncPRI([]PRIEntity{
+		{RepID: repID, Block: ReplicationBlock([]RepEntry{{RepU64, 2, uint64(vest)}, {RepU64, 3, uint64(helmet)}})},
+	})
+}
+
 func PRIRescuing(repID uint32, rescuing uint8) []byte {
 	return SyncPRI([]PRIEntity{
 		{RepID: repID, Block: ReplicationBlock([]RepEntry{{RepU8, 5, uint64(rescuing)}})},
@@ -273,7 +282,7 @@ func PRIHPBlock(st PRIState) []byte {
 		{RepU8, 7, 200},                   // MAX_EP
 		{RepU32, 8, 0},                    // STATUS
 		{RepU16, 39, 0},                   // (unknown, new)
-		{RepU32, 9, 0},                    // SIGHTING_ID
+		{RepU32, 9, uint64(534)},          // SIGHTING_ID
 		{RepU8, 10, uint64(st.Kills)},     // KILL_COUNT
 		{RepU8, 11, 0},                    // OB_COUNT
 		{RepU32, 12, uint64(st.Sighting)}, // IS_SIGHTING (remote ADS/scoped pose; the old "BUFF" label was wrong)
@@ -284,11 +293,11 @@ func PRIHPBlock(st PRIState) []byte {
 		{RepU8, 17, 0},
 		{RepU64, 18, 0},
 		{RepBool, 19, 0},
-		{RepU32, 20, 0}, // PVE_KILL_COUNT
-		{RepU16, 23, 0}, // CUR_HYPE
-		{RepU8, 25, 0},  // HYPE_LEVEL
-		{RepU8, 24, 0},  // MAX_HYPE_LEVEL
-		{RepU16, 22, 0}, // MAX_HYPE
+		{RepU32, 20, uint64(st.Kills)}, // PVE_KILL_COUNT
+		{RepU16, 23, 0},                // CUR_HYPE
+		{RepU8, 25, 0},                 // HYPE_LEVEL
+		{RepU8, 24, 0},                 // MAX_HYPE_LEVEL
+		{RepU16, 22, 0},                // MAX_HYPE
 		{RepU32, 26, 0},
 		{RepU64, 27, 0},
 		{RepU16, 28, uint64(st.Score)},      // SCORE (CS round wins, packed own|oppo<<8)

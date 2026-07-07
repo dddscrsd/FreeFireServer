@@ -49,7 +49,8 @@ type csItemPlacement struct {
 	slot      byte   // equipment slot, or slotNone; for a primary weapon resolved live
 	ammo      uint32 // ammo DataID for a weapon (0 otherwise)
 	isWeapon  bool
-	isPrimary bool // non-pistol weapon: Primary1/Primary2 chosen against live loadout state
+	isPrimary bool // non-pistol weapon: Primary1/Primary2 chosen against live loadout state~
+	isArmor   bool
 }
 
 // placeItem resolves the item TYPE + fixed slot. A primary weapon's concrete slot
@@ -63,7 +64,7 @@ func placeItem(item *message.ShopItem) csItemPlacement {
 		return csItemPlacement{slot: slotNone, ammo: ammo, isWeapon: true, isPrimary: true}
 	}
 	if slot, ok := armorSlot[item.ItemID]; ok {
-		return csItemPlacement{slot: slot}
+		return csItemPlacement{slot: slot, isArmor: true}
 	}
 	if slot, ok := buildingSlot[item.ItemID]; ok { // gloo/ice wall -> its own Building slot (not the grenade slot)
 		return csItemPlacement{slot: slot}
@@ -180,8 +181,10 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 
 	inv, attach, equip, outgoing, attachEquips := s.addPurchasedItem(item, qty)
 	if slot, isArmor := armorSlot[itemID]; isArmor {
+		log.Printf("cmd=408 setting max durability for armor piece, id=%d", itemID)
 		s.equipArmor(itemID, slot) // seed durability so the PRI armor bar (fields 2/3) shows full
 	}
+
 	onHand := s.itemOnHand
 
 	// The purchase result drives the "purchase success" popup, but the shop money
@@ -190,9 +193,10 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	// but an eager unreliable burst updates the UI without the ~300ms wait.
 	s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseOK, coins),
 		fmt.Sprintf("cmd=408 buy OK item=%d price=%d -> coins=%d", itemID, price, coins))
-	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 2)
 	body := message.SyncInventory(s.player.EntityID, inv, attach, equip, onHand)
 	s.match.broadcastData(packet.CmdSyncInventory, body, fmt.Sprintf("cmd=174 SyncInventory (+item %d x%d, +%d attach) -> all", itemID, qty, len(attach)))
+	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1)
+
 	// Force-equip the maxed attachments onto the bought weapon (cmd 124). The cmd 174 above
 	// registered both the weapon and the attachment items in the client's inventory dict, so
 	// each cmd 124 can now resolve them by unique.
@@ -225,7 +229,13 @@ func (s *session) addPurchasedItem(item *message.ShopItem, qty uint32) (inv, att
 		place.slot = s.pickPrimarySlot()
 	}
 	uid := s.nextUID()
-	inv = []message.InvItem{{Unique: uid, Data: item.ItemID, Count: qty}}
+	var runtime uint32
+	if place.isArmor {
+		runtime = uint32(equipMaxDur[item.ItemID]) // seed durability so the PRI armor bar (fields 2/3) shows full
+	} else {
+		runtime = 0
+	}
+	inv = []message.InvItem{{Unique: uid, Data: item.ItemID, Count: qty, Runtime: runtime}}
 	if place.isWeapon {
 		mag := loadedMagFor(item.ItemID, SkinForWeapon(item.ItemID, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
 		inv[0].Runtime = mag
@@ -245,7 +255,7 @@ func (s *session) addPurchasedItem(item *message.ShopItem, qty uint32) (inv, att
 		s.itemOnHand = uid // switch to the newly bought weapon
 		s.weapons[place.slot] = csWeapon{slot: place.slot, data: item.ItemID, unique: uid, ammo: place.ammo}
 	} else {
-		s.trackItem(lootItem{unique: uid, data: item.ItemID, count: qty})
+		s.trackItem(lootItem{unique: uid, data: item.ItemID, count: qty, runtime: runtime})
 	}
 	if place.slot != slotNone {
 		s.setEquip(place.slot, item.ItemID, uid)

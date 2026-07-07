@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math/rand"
 
 	"libmadoka/match-server/message"
 	"libmadoka/match-server/token"
@@ -108,17 +109,35 @@ func resolvePlayer(tok string) joinPlayer {
 // OGJKHJAFNHB.CCIKDFGDBAM/CCDDHEBKMGD): a fixed MATCH_SPAWN position for testing, or
 // a random CS city's fence for the local faction, facing the opposing fence. Returns
 // the chosen arena (empty for the fixed override) so the session can remember it.
-func choosePlayerSpawn(pl *joinPlayer) csArena {
+func choosePlayerSpawn(pl *joinPlayer, used map[csArena]bool) csArena {
 	if cfg.spawn != nil {
 		pl.SpawnPos, pl.SpawnFace = *cfg.spawn, cfg.spawnFace
 		log.Printf("[mm-udp] SPAWN override: pos=(%.2f,%.2f,%.2f) face=(%.2f,%.2f,%.2f)",
-			pl.SpawnPos.X, pl.SpawnPos.Y, pl.SpawnPos.Z, pl.SpawnFace.X, pl.SpawnFace.Y, pl.SpawnFace.Z)
+			pl.SpawnPos.X, pl.SpawnPos.Y, pl.SpawnPos.Z,
+			pl.SpawnFace.X, pl.SpawnFace.Y, pl.SpawnFace.Z)
 		return csArena{}
 	}
-	arena := pickArena()
+
+	var available []csArena
+	for _, arena := range allArenas() {
+		if !used[arena] {
+			available = append(available, arena)
+		}
+	}
+
+	// Já utilizou todas as arenas.
+	if len(available) == 0 {
+		clear(used) // ou delete() em loop se Go < 1.21
+		available = append(available, allArenas()...)
+	}
+
+	arena := available[rand.Intn(len(available))]
+
 	pl.SpawnPos, pl.SpawnFace = arena.spawnFor(localFaction)
 	log.Printf("[mm-udp] CS spawn: city=%q faction=%d pos=(%.1f,%.1f,%.1f) face=(%.2f,%.2f,%.2f)",
-		arena.City, localFaction, pl.SpawnPos.X, pl.SpawnPos.Y, pl.SpawnPos.Z,
+		arena.City, localFaction,
+		pl.SpawnPos.X, pl.SpawnPos.Y, pl.SpawnPos.Z,
 		pl.SpawnFace.X, pl.SpawnFace.Y, pl.SpawnFace.Z)
+
 	return arena
 }

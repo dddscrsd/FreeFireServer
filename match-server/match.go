@@ -70,7 +70,8 @@ type Match struct {
 	// rejoin gets a fresh one); after a stats-hold the loop closes done, returns, and reap()s itself.
 	ended       bool
 	tearingDown bool
-	revived     []*session // players revived this round-transition — they get a fresh base loadout; survivors keep theirs
+	revived     []*session       // players revived this round-transition — they get a fresh base loadout; survivors keep theirs
+	arenasUsed  map[csArena]bool // arena -> true for arenas already used this match (avoid repeats)
 }
 
 // csPhase is a state in the match loop. Each maps to a client GRI phase (griPhase) and has a
@@ -161,8 +162,12 @@ func (m *Match) allocSlot() (entityID, repID uint32, faction, team, idx, slot by
 // the existing clients (cmd 107, no killer) and clear it from all match state so the humans face each
 // other on opposing teams. After this m.botEntity == 0 and every bot special-case gates off.
 func (m *Match) retireBot() {
+	if m.botEntity == 0 {
+		return
+	}
+
 	bot := m.botEntity
-	m.broadcastData(packet.CmdDead, message.PlayerDead(bot, 0, 0, 0, 0, 0, m.bot.SpawnPos, false),
+	m.broadcastData(packet.CmdDead, message.PlayerDead(bot, 0, 0, 0, 0, 0, m.bot.SpawnPos, true, false),
 		fmt.Sprintf("cmd=107 BOT retired ent=%#x (2nd human joined -> human vs human)", bot))
 	m.botEntity = 0
 	delete(m.hp, bot)
@@ -192,7 +197,9 @@ func (m *Match) removePlayer(s *session) {
 	if m.sessionByEntity(s.entityID) == nil {
 		return // already gone
 	}
-	m.emitDeath(s.entityID, 0, 0, 0, 0, 0, m.deathPos(s.entityID), false)
+	m.broadcastData(packet.CmdPlayerQuitRes, message.PlayerAlternateQuit(s.entityID),
+		fmt.Sprintf("cmd=191 PLAYER_QUIT ent=%#x %q", s.entityID, s.player.Name))
+	m.emitDeath(s.entityID, 0, 1, 0, 0, 2, m.deathPos(s.entityID), false, false)
 	kept := m.players[:0]
 	for _, p := range m.players {
 		if p != s {
@@ -218,24 +225,48 @@ func (m *Match) admitFirst(s *session) {
 	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player),
 		fmt.Sprintf("cmd=101 GKBDLJFGGMI acc=%d ent=%d %q", s.player.AccountID, s.player.EntityID, s.player.Name))
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot),
-		fmt.Sprintf("cmd=101 BOT acc=%d ent=%#x %q pos=(%.1f,%.1f,%.1f)",
-			m.bot.AccountID, m.bot.EntityID, m.bot.Name, m.bot.SpawnPos.X, m.bot.SpawnPos.Y, m.bot.SpawnPos.Z))
+
+	if m.botEntity != 0 {
+		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot),
+			fmt.Sprintf("cmd=101 BOT acc=%d ent=%#x %q pos=(%.1f,%.1f,%.1f)",
+				m.bot.AccountID, m.bot.EntityID, m.bot.Name, m.bot.SpawnPos.X, m.bot.SpawnPos.Y, m.bot.SpawnPos.Z))
+	}
+
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
-	s.broadcastZone() // draw the safe zone at the NEW city now that the player joined
+	s.broadcastZone()      // draw the safe zone at the NEW city now that the player joined
+	m.broadcastZoneIndex() // name that city in the round-intro UI (cmd 457 per-player zone index)
 	s.startCSMatch()
+}
+
+// broadcastZoneIndex pushes each player's per-round zone index (cmd 457) so the round-intro UI names the
+// SAME city the cmd-145 teleport drops them in. The client keys m_CSSOPlayerZoneIndexDict by the player
+// UID and the round-start UI resolves the LOCAL player's zone via GDADEBKBCOI -> the {MapID}_GameZoneInfo
+// CSV name (protocol/gamezoneinfodec.txt, ZoneID 0-11). The dict defaults to 99 (a miss) until this is
+// sent, so this is the actual city-name lever (the ShowCase cmd-294 path did nothing). See cs-round-city.
+func (m *Match) broadcastZoneIndex() {
+	zone := byte(m.arena.ZoneID)
+	entries := make([]message.ZoneEntry, 0, len(m.players))
+	for _, p := range m.players {
+		entries = append(entries, message.ZoneEntry{UID: p.entityID, Packed: message.PackZone(zone, p.faction)})
+	}
+	m.broadcastData(packet.CmdZoneIndex, message.CSZoneIndex(entries),
+		fmt.Sprintf("cmd=457 zone-index city=%q zone=%d", m.arena.City, m.arena.ZoneID))
 }
 
 // setupMatch initialises a fresh match's world for its first player: pick the arena/spawn, add the
 // player to the roster, seed round 1, and create the enemy bot (consuming slot 2 so later humans get
 // slot 3+). Shared by admitFirst and the reconnect resume (which skips the join packets).
 func (m *Match) setupMatch(s *session) {
-	m.arena = choosePlayerSpawn(&s.player)
+	if m.arenasUsed == nil {
+		m.arenasUsed = make(map[csArena]bool)
+	}
+
+	m.arena = choosePlayerSpawn(&s.player, m.arenasUsed)
+	m.arenasUsed[m.arena] = true
 	m.addPlayer(s)
 	m.round = 1
-	beid, _, _, _, _, _ := m.allocSlot() // reserve the bot's slot (2) so a 2nd human gets slot 3
-	m.botEntity = beid
-	m.bot = botPlayer(s.player, m.botEntity)
+	m.allocSlot()
+	m.botEntity = 0
 }
 
 // admitLater admits a 2nd+ human onto the ALREADY-RUNNING match loop (called via run()'s mailbox, so
@@ -546,7 +577,8 @@ func (m *Match) advancePhase(now time.Time) {
 		m.sendPull() // reposition every player to its new-round spawn
 	case phPostBlack:
 		m.round++
-		s.broadcastZone() // draw the NEW city's safe zone now the player teleported
+		s.broadcastZone()      // draw the NEW city's safe zone now the player teleported
+		m.broadcastZoneIndex() // name the NEW city in the round-intro UI (cmd 457)
 		m.enter(now, phIntroWait, bindDelay)
 	case phIntroWait:
 		m.enter(now, phIntro, introReveal+introSettle)

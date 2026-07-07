@@ -58,6 +58,8 @@ var csArenas = []csArena{
 
 var spawnRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
+func allArenas() []csArena { return csArenas } // returns the full list of spawn arenas (for testing / debug)
+
 // pickArena selects a random CS spawn city. Called at match start (and, once the
 // round loop exists, at each round start — see the ROUND SYSTEM TODO above).
 func pickArena() csArena { return csArenas[spawnRand.Intn(len(csArenas))] }

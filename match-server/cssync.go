@@ -130,6 +130,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 		medkitID: {unique: medkitID, data: medkitData, count: 2, runtime: 2},
 	}
 	s.itemOnHand = uspUID
+	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1)
 	s.clearArmor() // the loadout wipe (cmd 327) drops the client's armor too — clear the durability bars
 	// Max the starter USP's attachments too (magazine/muzzle) so its ammo is full and it
 	// matches bought guns; the attachment items ride the cmd 174 below, then cmd 124 mounts them.

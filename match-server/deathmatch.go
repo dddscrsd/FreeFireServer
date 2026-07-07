@@ -28,7 +28,7 @@ func (m *Match) broadcastData(cmd uint16, payload []byte, what string) {
 // deathPos returns the world position to report an entity died / was knocked at: a human's
 // last-known position (it moves — e.g. a zone death where it wandered), or the bot's static spawn.
 func (m *Match) deathPos(entity uint32) message.Vec3 {
-	if entity == m.botEntity {
+	if m.botEntity != 0 && entity == m.botEntity {
 		return m.bot.SpawnPos
 	}
 	if vs := m.sessionByEntity(entity); vs != nil {

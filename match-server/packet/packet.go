@@ -69,6 +69,7 @@ const (
 	CmdStartSniper         = 137  // client -> server: RUDP_START_SNIPER (HPAEFLDNDDG, 12B 3×u32) — scope open; set PRI field 12 + relay
 	CmdStopSniper          = 138  // client -> server: RUDP_STOP_SNIPER (JANBDNDCGFF, empty) — scope close; clear PRI field 12 + relay
 	CmdHurtAnim            = 1010 // server -> client: get-hurt / hit-reaction animation — broadcast on damage so the victim flinches (even with no attacker, e.g. zone)
+	CmdZoneIndex           = 457  // server -> client: GELOHPLLLHA — per-player CS zone index (round-intro CITY NAME); [i16 count][u32 uid][u8 packed(bits0-3=ZoneID)]×count
 	CmdDead                = 107  // server -> client: OGCHKCGKGKN — entity died (victim, killer, position, ...)
 	CmdKnockDown           = 139  // server -> client: NKDBFGLPCCF — RUDP_KNOCK_DOWN (DBNO: downed+bleeding, still alive; distinct from cmd 107)
 	CmdKnockRevive         = 140  // server -> client: DJOOMNBJMOG — RUDP_KNOCK_REVIVE (teammate revive done: revivedId, rescuerId)
