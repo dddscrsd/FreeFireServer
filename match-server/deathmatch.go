@@ -201,15 +201,23 @@ func (m *Match) reviveAll() {
 	m.roundOver = false
 }
 
-// spectateFor picks a dead player's spectate focus: a live TEAMMATE if any, else a live enemy (the
-// team was wiped — round end), else 0. Keeps the dead client in the match with a valid camera until
-// the round-transition revive.
+// spectateFor picks a dead player's spectate focus: a live TEAMMATE if any (4v4 keeps following the
+// squad until it is wiped). If the team has been wiped, the OTHER team wins the round — normally we
+// follow that winning enemy so the dead client keeps a valid camera through the round-transition
+// revive, BUT if this win DECIDES the match (a team hits match point / it is the last round) we
+// return 0: the last-dying player spectates no one and the client falls back to exiting the match.
+// A 1v1 loser (no teammate) hits this directly; in 4v4 the earlier-dead teammates are swept out by
+// the cmd 103 match-end that follows this final elimination.
 func (m *Match) spectateFor(victim uint32) uint32 {
 	team := m.teamOf(victim)
 	if e := m.firstAlive(team, victim); e != 0 {
 		return e
 	}
-	return m.firstAlive(otherTeam(team), victim)
+	winner := otherTeam(team)
+	if m.teamScore[winner-1]+1 >= roundsToWin || m.round >= maxRound {
+		return 0 // match-deciding elimination: no spectate target, let the client leave
+	}
+	return m.firstAlive(winner, victim)
 }
 
 // firstAlive returns any ALIVE participant of `team` other than `except` (a roster human, or the bot

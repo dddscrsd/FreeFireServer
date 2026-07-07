@@ -29,11 +29,16 @@ func (m *Match) priPayload() []byte {
 		// score from THIS player's team perspective (my wins, opp wins) so the client resolves
 		// my/oppo consistently whoever's score changed.
 		score := message.PackScore(m.teamScore[p.team-1], m.teamScore[2-p.team])
-		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(m.entityHP(p.entityID), maxHP, coins, uint16(p.award), score, p.faction, capByte(m.kills[p.entityID]), capByte(m.deaths[p.entityID]), m.damage[p.entityID])})
+		fireState := byte(0)
+		if p.firing {
+			fireState = 2 // READY: remote clients render the muzzle flash / tracer
+		}
+		onHand := uint64(p.itemOnHand)<<32 | uint64(p.heldWeaponData()) // remote pawn's held gun (PRIHPBlock field 4)
+		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(m.entityHP(p.entityID), maxHP, coins, uint16(p.award), score, p.faction, capByte(m.kills[p.entityID]), capByte(m.deaths[p.entityID]), fireState, m.damage[p.entityID], onHand)})
 	}
 	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {
 		botScore := message.PackScore(m.teamScore[1], m.teamScore[0]) // the bot is team 2
-		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(m.entityHP(m.botEntity), maxHP, 0, 0, botScore, botFaction, capByte(m.kills[m.botEntity]), capByte(m.deaths[m.botEntity]), m.damage[m.botEntity])})
+		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(m.entityHP(m.botEntity), maxHP, 0, 0, botScore, botFaction, capByte(m.kills[m.botEntity]), capByte(m.deaths[m.botEntity]), 0, m.damage[m.botEntity], 0)})
 	}
 	return message.SyncPRI(ents)
 }
@@ -138,8 +143,20 @@ func (s *session) giveLoadout(resetCoins bool) {
 			fmt.Sprintf("cmd=228 DelContainer box=%d (loadout reset)", id))
 	}
 	body := message.SyncInventory(s.player.EntityID, inv, uspAttach, equip, onHand)
-	s.sendDataLog(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (USP + ammo)")
+	s.match.broadcastData(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (USP + ammo) -> all (remotes render the held weapon + skin)")
 	s.sendAttachEquips(uspEquips) // mount the starter USP's maxed attachments
+}
+
+// currentInventorySync builds a cmd 174 from a player's CURRENT tracked inventory + equipment, so a
+// late joiner learns an existing player's items — the held-weapon model (PRI field 4) plus its skin,
+// which rides in each item's Runtime (loadedMagFor(data, SkinForWeapon(data, Slots))).
+func (s *session) currentInventorySync() []byte {
+	inv := make([]message.InvItem, 0, len(s.clientUIDs))
+	for _, it := range s.clientUIDs {
+		inv = append(inv, message.InvItem{Unique: it.unique, Data: it.data, Count: it.count, Runtime: it.runtime})
+	}
+	equip := append([]message.Equipment(nil), s.equipment...)
+	return message.SyncInventory(s.player.EntityID, inv, nil, equip, s.itemOnHand)
 }
 
 // reissueLoadout refills every weapon currently in the loadout to a full magazine (and

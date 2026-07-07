@@ -173,7 +173,7 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 		fmt.Sprintf("cmd=408 buy OK item=%d price=%d -> coins=%d", itemID, price, coins))
 	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 2)
 	body := message.SyncInventory(s.player.EntityID, inv, attach, equip, onHand)
-	s.sendDataLog(packet.CmdSyncInventory, body, fmt.Sprintf("cmd=174 SyncInventory (+item %d x%d, +%d attach)", itemID, qty, len(attach)))
+	s.match.broadcastData(packet.CmdSyncInventory, body, fmt.Sprintf("cmd=174 SyncInventory (+item %d x%d, +%d attach) -> all", itemID, qty, len(attach)))
 	// Force-equip the maxed attachments onto the bought weapon (cmd 124). The cmd 174 above
 	// registered both the weapon and the attachment items in the client's inventory dict, so
 	// each cmd 124 can now resolve them by unique.

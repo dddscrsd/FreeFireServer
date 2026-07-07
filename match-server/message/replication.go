@@ -244,25 +244,25 @@ func PRIRescuing(repID uint32, rescuing uint8) []byte {
 // top-HUD myWinNum/oppoWinNum (the client re-resolves my/oppo from the entity's team).
 // SetData is a no-op when unchanged, so the number only moves when the value actually
 // changes. See PackScore + [[bot-networkaipawn]].
-func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction, kills, deaths byte, damage uint32) []byte {
+func PRIHPBlock(curHP, maxHP, coins, earnedCoin, score uint16, faction, kills, deaths, fireState byte, damage uint32, itemOnHand uint64) []byte {
 	return ReplicationBlock([]RepEntry{
-		{RepU16, 0, uint64(curHP)}, // CUR_HP
-		{RepU16, 1, uint64(maxHP)}, // MAX_HP
-		{RepU64, 2, 0},             // VEST_DURABILITY
-		{RepU64, 3, 0},             // HELMET_DURABILITY
-		{RepU64, 4, 0},             // ITEM_ON_HAND
-		{RepU8, 5, 0},              // IS_RESCURING
-		{RepU8, 21, 0},             // START_FIRE_STATE
-		{RepU8, 6, 0},              // CUR_EP
-		{RepU8, 7, 200},            // MAX_EP
-		{RepU32, 8, 0},             // STATUS
-		{RepU16, 39, 0},            // (unknown, new)
-		{RepU32, 9, 0},             // SIGHTING_ID
-		{RepU8, 10, uint64(kills)}, // KILL_COUNT
-		{RepU8, 11, 0},             // OB_COUNT
-		{RepU32, 12, 0},            // BUFF
-		{RepU8, 13, 0},             // CAMOUFLAGE_HP
-		{RepU8, 14, 0},             // LIKED_COUNT
+		{RepU16, 0, uint64(curHP)},     // CUR_HP
+		{RepU16, 1, uint64(maxHP)},     // MAX_HP
+		{RepU64, 2, 0},                 // VEST_DURABILITY
+		{RepU64, 3, 0},                 // HELMET_DURABILITY
+		{RepU64, 4, itemOnHand},        // ITEM_ON_HAND = (uniqueID<<32)|weaponDataID — remote pawn's held weapon
+		{RepU8, 5, 0},                  // IS_RESCURING
+		{RepU8, 21, uint64(fireState)}, // START_FIRE_STATE (0 idle / 1 firing) — drives remote muzzle+tracer
+		{RepU8, 6, 0},                  // CUR_EP
+		{RepU8, 7, 200},                // MAX_EP
+		{RepU32, 8, 0},                 // STATUS
+		{RepU16, 39, 0},                // (unknown, new)
+		{RepU32, 9, 0},                 // SIGHTING_ID
+		{RepU8, 10, uint64(kills)},     // KILL_COUNT
+		{RepU8, 11, 0},                 // OB_COUNT
+		{RepU32, 12, 0},                // BUFF
+		{RepU8, 13, 0},                 // CAMOUFLAGE_HP
+		{RepU8, 14, 0},                 // LIKED_COUNT
 		{RepU16, 15, 0},
 		{RepU64, 16, 0},
 		{RepU8, 17, 0},

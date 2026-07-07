@@ -38,18 +38,22 @@ func (s *session) roundResult(winnerTeam byte) {
 			winnerTeam, s.match.round, s.match.teamScore[0], s.match.teamScore[1]))
 }
 
-// matchEnd ends the match with cmd 103 (MatchEnd): rank 1 when the local team won, 2
-// when it lost. This shows the CS result screen and makes the client tear down and leave
-// the match. Sent on the deciding round INSTEAD of the round-result (cmd 409); the
-// win/lose banner comes from the streamed scores + this rank.
-func (s *session) matchEnd(localWon bool) {
-	rank, result := uint16(2), "LOSE"
-	if localWon {
-		rank, result = 1, "WIN"
+// matchEnd ends the match with cmd 103 (MatchEnd), sent PER PLAYER: rank 1 to the WINNING
+// team's members, 2 to the losers. This shows the CS result screen and makes each client tear
+// down and leave. Sent on the deciding round INSTEAD of the round-result (cmd 409); the win/lose
+// banner comes from the streamed scores + this rank. A single broadcast rank was the bug — it
+// gave the LOCAL team's perspective to everyone, so when the local team lost BOTH sides saw
+// rank=2 (LOSE) even though the other team had won.
+func (m *Match) matchEnd() {
+	for _, p := range m.players {
+		rank, result := uint16(2), "LOSE"
+		if p.team == m.winnerTeam {
+			rank, result = 1, "WIN"
+		}
+		p.sendDataLog(packet.CmdMatchEnd, message.MatchEnd(rank),
+			fmt.Sprintf("cmd=103 MatchEnd rank=%d %s ent=%#x final=%d-%d",
+				rank, result, p.entityID, m.teamScore[0], m.teamScore[1]))
 	}
-	s.match.broadcastData(packet.CmdMatchEnd, message.MatchEnd(rank),
-		fmt.Sprintf("cmd=103 MatchEnd rank=%d local=%s final=%d-%d",
-			rank, result, s.match.teamScore[0], s.match.teamScore[1]))
 }
 
 // yawByte encodes a horizontal facing vector as the cmd 388 yaw byte (0..255 = 0..360°,

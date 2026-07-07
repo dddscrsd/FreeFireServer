@@ -31,6 +31,12 @@ func (s *session) route(p *packet.Packet) {
 		s.handleIcewallDamage(p)
 	case packet.CmdTakeDamage: // 106
 		s.handleTakeDamage(p)
+	case packet.CmdWeaponAction: // 104 — start-fire / weapon-lift: relay + set the fire-state
+		s.handleWeaponAction(p)
+	case packet.CmdStopFire: // 105 — stop firing
+		s.handleStopFire(p)
+	case packet.CmdReloadStart, packet.CmdReloadFinish: // 133 / 134 — relay the reload animation
+		s.handleReloadRelay(p)
 	case packet.CmdChangeHeldItem: // 108
 		s.handleChangeHeldItem(p)
 	case packet.CmdPickupInventory: // 111 — pick up a ground-loot item

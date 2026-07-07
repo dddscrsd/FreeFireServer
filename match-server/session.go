@@ -87,6 +87,10 @@ type session struct {
 	moveBase     uint32
 	moveBaseTick int32
 
+	// firing is true while this player holds the trigger (cmd 104 actionType=2 -> cmd 105); streamed
+	// as PRI field 21 START_FIRE_STATE so remote clients render its muzzle flash / tracer.
+	firing bool
+
 	// Medkit heal-over-time (run()-driven): cmd 113 arms it, stepHeal applies the accrued HP
 	// each tick until full HP / death / all steps done. See medkit.go.
 	healActive  bool

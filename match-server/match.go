@@ -16,17 +16,18 @@ import (
 // unchanged) — 3b routes handlers through a mailbox and drops the mutexes, Step 4 splits this
 // into Match + Player + a real roster.
 type Match struct {
-	s        *session   // the primary (first) human, == players[0]; single-client paths still read it
-	players  []*session // the match roster (humans), filled at join by addPlayer; broadcasts fan over it
-	nextSlot byte       // monotonic participant-slot allocator (allocSlot): slot 1 = 1st human, 2 = bot
-	reserved int        // slots handed out (manager-owned under matchManager.mu) — race-safe routing view
-	phase    csPhase
-	deadline time.Time     // when the current phase transitions; a holdDur (far-future) deadline = condition-based (Fight) / hold
-	pull     *message.Vec3 // teleport target streamed on a phase entry (frozen-player pin), or nil
-	revive   bool          // set at the Fight edge: the local player died -> revive path in the transition
-	matchWon bool          // set at the Fight edge when the match ends: local team won
-	mailbox  chan func()   // inbound gameplay handlers run here (Step 3b); one inbox per match (Step 4)
-	done     chan struct{}
+	s          *session   // the primary (first) human, == players[0]; single-client paths still read it
+	players    []*session // the match roster (humans), filled at join by addPlayer; broadcasts fan over it
+	nextSlot   byte       // monotonic participant-slot allocator (allocSlot): slot 1 = 1st human, 2 = bot
+	reserved   int        // slots handed out (manager-owned under matchManager.mu) — race-safe routing view
+	phase      csPhase
+	deadline   time.Time     // when the current phase transitions; a holdDur (far-future) deadline = condition-based (Fight) / hold
+	pull       *message.Vec3 // teleport target streamed on a phase entry (frozen-player pin), or nil
+	revive     bool          // set at the Fight edge: the local player died -> revive path in the transition
+	matchWon   bool          // set at the Fight edge when the match ends: local team won
+	winnerTeam byte          // team that won the match — drives the PER-PLAYER cmd 103 rank (each side gets its own win/lose)
+	mailbox    chan func()   // inbound gameplay handlers run here (Step 3b); one inbox per match (Step 4)
+	done       chan struct{}
 
 	// Shared world state (moved off the session in Step 4a — the whole match sees ONE of each).
 	round      int               // 1-based CS round
@@ -69,6 +70,7 @@ type Match struct {
 	// rejoin gets a fresh one); after a stats-hold the loop closes done, returns, and reap()s itself.
 	ended       bool
 	tearingDown bool
+	revived     []*session // players revived this round-transition — they get a fresh base loadout; survivors keep theirs
 }
 
 // csPhase is a state in the match loop. Each maps to a client GRI phase (griPhase) and has a
@@ -264,6 +266,12 @@ func (m *Match) admitLater(s *session) {
 	}
 	if m.botEntity != 0 { // only if the bot is still around (1-human match); retired once a 2nd human joins
 		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot), fmt.Sprintf("cmd=101 BOT ent=%#x", m.bot.EntityID))
+	}
+	for _, p := range m.players { // the joiner learns each existing player's inventory (held weapon + skin)
+		if p != s {
+			s.sendDataLog(packet.CmdSyncInventory, p.currentInventorySync(),
+				fmt.Sprintf("cmd=174 existing ent=%#x inventory -> joiner", p.entityID))
+		}
 	}
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
 
@@ -514,16 +522,25 @@ func (m *Match) advancePhase(now time.Time) {
 	case phPrepare:
 		m.startFight(now)
 	case phMatchEndPause:
-		s.matchEnd(m.matchWon)
+		m.matchEnd()
 		m.ended = true                           // join() now skips this match; a rejoin starts a fresh one
 		m.enter(now, phMatchEnd, matchStatsHold) // hold on the stats screen, then tear down
 	case phPostBanner:
 		m.postBannerEdge(now)
 	case phPostReviveBind:
 		m.bindAll() // rebind everyone after the revives so the streamed PRI HP lands on the pawns
-		for _, p := range m.players {
-			p.giveLoadout(false) // death dropped the weapon to fists — re-give each player, keep coins
+		reset := map[*session]bool{}
+		for _, p := range m.revived {
+			reset[p] = true
 		}
+		for _, p := range m.players {
+			if reset[p] {
+				p.giveLoadout(false) // died -> lost its loadout; re-give the base USP (keeps coins)
+			} else {
+				p.reissueLoadout() // survived -> KEEP the loadout, just refill magazines
+			}
+		}
+		m.revived = nil
 		m.enter(now, phPostBlack, postBlackHold)
 		m.sendPull() // reposition every player to its new-round spawn
 	case phPostBlack:
@@ -573,6 +590,7 @@ func (m *Match) endFight(now time.Time) {
 
 	if m.teamScore[0] >= roundsToWin || m.teamScore[1] >= roundsToWin || m.round >= maxRound {
 		m.matchWon = localWon
+		m.winnerTeam = winnerTeam                    // the per-player cmd 103 rank reads this so each side gets its OWN win/lose
 		m.enter(now, phMatchEndPause, matchEndPause) // pause on the final kill, then cmd 103
 		return
 	}
@@ -610,7 +628,8 @@ func (m *Match) postBannerEdge(now time.Time) {
 	spawn := s.player.SpawnPos
 	m.pull = &spawn // set = "reposition active"; sendPull teleports EVERY player to its own new gate
 	if len(dead) > 0 {
-		m.enter(now, phPostReviveBind, bindDelay) // rebind + reload + reposition everyone after the revives
+		m.revived = dead // only the players who died get a fresh loadout; survivors keep theirs
+		m.enter(now, phPostReviveBind, bindDelay)
 		return
 	}
 	for _, p := range m.players {

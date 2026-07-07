@@ -58,6 +58,10 @@ const (
 	CmdAddContainer        = 227 // server -> client: GONMBPDMEBE — RUDP_ADD_CONTAINER ([i16 count]{u32,f32,bool}; no position)
 	CmdDelContainer        = 228 // server -> client: OPNFJLJGPFC — RUDP_DEL_CONTAINER ([u16 containerID][u8 containerType])
 	CmdTakeDamage          = 106 // client -> server: hit report (victim u32, damage u16, attacker u32, ...); server applies HP
+	CmdWeaponAction        = 104 // client -> server: MFCMPPGIMNH — weapon action (u32 pid, u32 weapon, u32 tick, u32 actionType[2=START FIRE], f32 turn); relay to others for the fire visual
+	CmdStopFire            = 105 // client -> server: FCHFNBNCJLB — stop firing (u32 pid, u32 weapon, ...); relay to others
+	CmdReloadStart         = 133 // client -> server: DAGDONBPDDC — reload started (u32 pid, f32 time, bool, u32 weapon); relay to others
+	CmdReloadFinish        = 134 // client -> server: GKPFCFLPBNE — reload finished (u32 pid, u32, u32 weapon); relay to others
 	CmdDead                = 107 // server -> client: OGCHKCGKGKN — entity died (victim, killer, position, ...)
 	CmdKnockDown           = 139 // server -> client: NKDBFGLPCCF — RUDP_KNOCK_DOWN (DBNO: downed+bleeding, still alive; distinct from cmd 107)
 	CmdKnockRevive         = 140 // server -> client: DJOOMNBJMOG — RUDP_KNOCK_REVIVE (teammate revive done: revivedId, rescuerId)

@@ -83,6 +83,7 @@ func (s *session) handleChangeHeldItem(p *packet.Packet) {
 	}
 	unique := binary.LittleEndian.Uint32(p.Payload[4:])
 	s.itemOnHand = unique
+	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1) // eager: remote clients swap to the new held weapon (PRI field 4)
 }
 
 // heldWeaponData returns the DataID of the item the local player currently holds (the
