@@ -192,8 +192,10 @@ func (m *Match) reviveAll() {
 		m.life[p.entityID] = lifeAlive
 		m.hp[p.entityID] = maxHP
 	}
-	m.life[m.botEntity] = lifeAlive
-	m.hp[m.botEntity] = maxHP
+	if m.botEntity != 0 {
+		m.life[m.botEntity] = lifeAlive
+		m.hp[m.botEntity] = maxHP
+	}
 	m.knock = map[uint32]*knockState{}
 	m.rescues = map[uint32]*rescueState{}
 	m.roundOver = false

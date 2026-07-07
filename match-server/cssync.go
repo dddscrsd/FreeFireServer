@@ -31,7 +31,7 @@ func (m *Match) priPayload() []byte {
 		score := message.PackScore(m.teamScore[p.team-1], m.teamScore[2-p.team])
 		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(m.entityHP(p.entityID), maxHP, coins, uint16(p.award), score, p.faction, capByte(m.kills[p.entityID]), capByte(m.deaths[p.entityID]), m.damage[p.entityID])})
 	}
-	if m.entityHP(m.botEntity) > 0 {
+	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {
 		botScore := message.PackScore(m.teamScore[1], m.teamScore[0]) // the bot is team 2
 		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(m.entityHP(m.botEntity), maxHP, 0, 0, botScore, botFaction, capByte(m.kills[m.botEntity]), capByte(m.deaths[m.botEntity]), m.damage[m.botEntity])})
 	}
@@ -193,9 +193,11 @@ func (s *session) bindPRIs() {
 			entries = append(entries, message.BindEntry{RepID: p.repID, EntityType: message.BindEntityPlayer, EntityGameID: p.entityID})
 		}
 	}
-	entries = append(entries, message.BindEntry{RepID: botRepID, EntityType: message.BindEntityPlayer, EntityGameID: m.botEntity})
+	if m.botEntity != 0 { // no bot to bind once it's retired (a 2nd human joined)
+		entries = append(entries, message.BindEntry{RepID: botRepID, EntityType: message.BindEntityPlayer, EntityGameID: m.botEntity})
+	}
 	s.sendDataLog(packet.CmdBindPRI, message.BindPRI(entries),
-		fmt.Sprintf("cmd=118 BindPRI self ent=%#x (+%d humans + bot ent=%#x)", s.entityID, len(m.players)-1, m.botEntity))
+		fmt.Sprintf("cmd=118 BindPRI self ent=%#x (+%d humans, bot=%#x)", s.entityID, len(m.players)-1, m.botEntity))
 }
 
 // bindAll re-sends every human's BindPRI (each self-first) — used when the roster changes on a join

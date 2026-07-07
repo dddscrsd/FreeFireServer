@@ -29,18 +29,17 @@ type Match struct {
 	done     chan struct{}
 
 	// Shared world state (moved off the session in Step 4a — the whole match sees ONE of each).
-	round          int                   // 1-based CS round
-	teamGenerators [2]teamIndexGenerator // monotonic team-index allocators (faction 0/1) for the round
-	teamScore      [2]uint8              // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
-	matchStart     time.Time             // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
-	tpSeq          uint32                // force-teleport token sequence (round-transition repositions)
-	arena          csArena               // spawn city for the current round (re-picked each round)
-	bot            joinPlayer            // the current-round enemy bot (becomes a roster *player in 4c)
-	botEntity      uint32                // the (fixed) enemy bot entity id
-	hp             map[uint32]uint16     // entity id -> current HP (player + bot); splits to per-player in 4c
-	kills          map[uint32]uint16     // entity id -> match kill count (scoreboard, PRI field 10)
-	deaths         map[uint32]uint16     // entity id -> match death count (PRI field 29)
-	damage         map[uint32]uint32     // entity id -> total damage dealt (PRI field 31)
+	round      int               // 1-based CS round
+	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
+	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
+	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
+	arena      csArena           // spawn city for the current round (re-picked each round)
+	bot        joinPlayer        // the current-round enemy bot (becomes a roster *player in 4c)
+	botEntity  uint32            // the (fixed) enemy bot entity id
+	hp         map[uint32]uint16 // entity id -> current HP (player + bot); splits to per-player in 4c
+	kills      map[uint32]uint16 // entity id -> match kill count (scoreboard, PRI field 10)
+	deaths     map[uint32]uint16 // entity id -> match death count (PRI field 29)
+	damage     map[uint32]uint32 // entity id -> total damage dealt (PRI field 31)
 
 	// Shared world objects: placed gloo walls (FIFO, walls[0] oldest) + ground-loot boxes.
 	walls           []*iceWall
@@ -75,10 +74,6 @@ type Match struct {
 // csPhase is a state in the match loop. Each maps to a client GRI phase (griPhase) and has a
 // deadline; advancePhase fires the edge when the deadline passes (or "enemy dead" for Fight).
 type csPhase int
-
-type teamIndexGenerator struct {
-	cur byte
-}
 
 const (
 	phSetupBind      csPhase = iota // +bindDelay -> bindPRIs
@@ -132,30 +127,47 @@ func griPhase(ph csPhase) (uint16, bool) {
 // it is created 1:1 with the session (from main.go); Step 4b hands match creation to the
 // MatchManager so multiple players can share one match.
 func newMatch(s *session) *Match {
-	gens := [2]teamIndexGenerator{
-		{cur: 0}, // team 0 (local) starts at 0
-		{cur: 0}, // team 1 (enemy) starts at 0
-	}
-	m := &Match{s: s, mailbox: make(chan func(), 256), done: make(chan struct{}, 2), teamGenerators: gens}
+	m := &Match{s: s, mailbox: make(chan func(), 256), done: make(chan struct{}, 2)}
 	s.match = m
 	return m
 }
 
-// allocSlot hands out the next participant's ids from the match's monotonic slot counter, so no
-// two players collide. Odd slot -> team 1 (faction 0, the "local"/left-gate side), even slot ->
-// team 2 (faction 1, right gate). It reproduces the old constants exactly: slot 1 = entity
-// 0x01000001 / RepID 1000 / faction 0 (the first human), slot 2 = entity 0x02000002 / RepID 1001 /
-// faction 1 (the bot). entity id = team<<24 | slot; RepID = playerRepID + slot - 1.
+// allocSlot hands out the next participant's ids. The slot is a monotonic counter (unique entity-id
+// low bits); the TEAM is BALANCED — the joiner fills the team with fewer HUMANS (tie -> team 1). The
+// bot isn't in m.players, so it doesn't skew the count: the 1st human -> team 1, the bot slot -> team
+// 2, and a 2nd human -> team 2 (opposite the 1st). (Was odd/even, which put both humans on team 1.)
+// entity id = team<<24 | slot; RepID = playerRepID + slot - 1.
 func (m *Match) allocSlot() (entityID, repID uint32, faction, team, idx, slot byte) {
 	m.nextSlot++
 	slot = m.nextSlot
-	team = 2 - slot%2
+	var human [3]int // human[1], human[2] = humans currently on team 1 / team 2
+	for _, p := range m.players {
+		human[p.team]++
+	}
+	team = 1
+	if human[2] < human[1] {
+		team = 2
+	}
 	faction = team - 1
-	idx = m.teamGenerators[faction].cur
-	m.teamGenerators[faction].cur++
+	idx = byte(human[team]) // 0-based index among CURRENT teammates (the retired bot isn't counted)
 	entityID = uint32(team)<<24 | uint32(slot)
 	repID = playerRepID + uint32(slot) - 1
 	return
+}
+
+// retireBot removes the bring-up filler bot once a 2nd human is present (plan §2): despawn its pawn on
+// the existing clients (cmd 107, no killer) and clear it from all match state so the humans face each
+// other on opposing teams. After this m.botEntity == 0 and every bot special-case gates off.
+func (m *Match) retireBot() {
+	bot := m.botEntity
+	m.broadcastData(packet.CmdDead, message.PlayerDead(bot, 0, 0, 0, 0, 0, m.bot.SpawnPos, false),
+		fmt.Sprintf("cmd=107 BOT retired ent=%#x (2nd human joined -> human vs human)", bot))
+	m.botEntity = 0
+	delete(m.hp, bot)
+	delete(m.life, bot)
+	delete(m.kills, bot)
+	delete(m.deaths, bot)
+	delete(m.damage, bot)
 }
 
 // addPlayer allocates a roster slot for a joining human session — its entity / RepID / faction /
@@ -236,6 +248,11 @@ func (m *Match) admitLater(s *session) {
 	m.hp[s.entityID] = maxHP
 	m.life[s.entityID] = lifeAlive
 
+	// The bot was only a 1-human filler; a 2nd human retires it so the humans face each other (§2).
+	if m.botEntity != 0 {
+		m.retireBot()
+	}
+
 	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 join res (2nd+ player)")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player), // the joiner's OWN entity FIRST (client adopts the first as its local player)
 		fmt.Sprintf("cmd=101 self ent=%d %q", s.player.EntityID, s.player.Name))
@@ -245,7 +262,9 @@ func (m *Match) admitLater(s *session) {
 				fmt.Sprintf("cmd=101 other ent=%d %q", p.player.EntityID, p.player.Name))
 		}
 	}
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot), fmt.Sprintf("cmd=101 BOT ent=%#x", m.bot.EntityID))
+	if m.botEntity != 0 { // only if the bot is still around (1-human match); retired once a 2nd human joins
+		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot), fmt.Sprintf("cmd=101 BOT ent=%#x", m.bot.EntityID))
+	}
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
 
 	for _, p := range m.players { // every already-present human learns the joiner
@@ -539,16 +558,18 @@ func (m *Match) endFight(now time.Time) {
 		winnerTeam = enemyTeamID
 		m.teamScore[1]++
 	}
-	award := 500 * s.roundKills.Swap(0)
-	award += 500 * uint32(m.round)
-	if localWon {
-		award += 500 // win bonus
+	// Per-player round coins: each player earns off THEIR OWN kills + a round bonus, plus a win
+	// bonus for the WINNING team's members (was m.s-only, so only player 1 got paid).
+	for _, p := range m.players {
+		aw := 500 * p.roundKills.Swap(0)
+		aw += 500 * uint32(m.round)
+		if p.team == winnerTeam {
+			aw += 500 // win bonus
+		}
+		p.coins += aw
+		p.award = aw
 	}
-	s.coins += award
-	s.award = award
-	total := s.coins
-	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d) +%d coins (=%d) %v",
-		m.round, winnerTeam, m.teamScore[0], m.teamScore[1], award, total, s.remote)
+	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d)", m.round, winnerTeam, m.teamScore[0], m.teamScore[1])
 
 	if m.teamScore[0] >= roundsToWin || m.teamScore[1] >= roundsToWin || m.round >= maxRound {
 		m.matchWon = localWon
@@ -562,7 +583,9 @@ func (m *Match) endFight(now time.Time) {
 	for _, p := range m.players {
 		p.player.SpawnPos, p.player.SpawnFace = m.arena.spawnFor(p.faction)
 	}
-	m.bot = botPlayer(s.player, m.botEntity) // same entity, new spot near the primary player
+	if m.botEntity != 0 {
+		m.bot = botPlayer(s.player, m.botEntity) // same entity, new spot near the primary player
+	}
 	log.Printf("[mm-udp] round transition -> arena=%q revivePlayer=%v %v", m.arena.City, m.revive, s.remote)
 	m.enter(now, phPostBanner, postToBlack)
 }
@@ -578,7 +601,9 @@ func (m *Match) postBannerEdge(now time.Time) {
 		p.playerPos = p.player.SpawnPos // reset so the shrinking zone can't damage a stale position
 	}
 	s.clearWalls() // gloo walls are per-round world state
-	s.respawnBot()
+	if m.botEntity != 0 {
+		s.respawnBot()
+	}
 	for _, p := range dead {
 		m.respawnPlayer(p) // cmd 388: revive each dead human at its new spawn (broadcast)
 	}

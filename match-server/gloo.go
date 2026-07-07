@@ -204,7 +204,7 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 	//    keyed by that same id (w.repID == w.id), so it routes to the wall. Trailing byte 0 =
 	//    "not destroyed on spawn". No cmd 118 needed — the wall self-binds under its own id.
 	id, repID := s.nextWall()
-	w := &iceWall{id: id, repID: repID, owner: playerEntityID, pos: req.Pos, rot: req.Rot,
+	w := &iceWall{id: id, repID: repID, owner: s.entityID, pos: req.Pos, rot: req.Rot,
 		wallType: req.WallType, hp: glooMaxHP, state: wallIntact, placedAt: time.Now()}
 	s.match.walls = append(s.match.walls, w)
 	out = append(out, outPkt{packet.CmdAddIcewall,
@@ -213,8 +213,8 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 
 	// 3) FIFO-TRIM active walls down to the cap (oldest first). One place normally trims
 	//    at most one; the loop robustly enforces active <= cap.
-	for s.ownerWallCount(playerEntityID) > glooWallCap {
-		oldest := s.popOldestWall(playerEntityID)
+	for s.ownerWallCount(s.entityID) > glooWallCap {
+		oldest := s.popOldestWall(s.entityID)
 		if oldest == nil {
 			break
 		}
@@ -259,7 +259,7 @@ func (s *session) handleIcewallDamage(p *packet.Packet) {
 		log.Printf("Updated wall state for wall id=%d", w.id)
 	}
 
-	s.flush(out)
+	s.match.flushBroadcast(out)                         // break/remove must reach EVERY client, not just the reporter
 	s.sendVar(packet.CmdPRISync, s.resyncWallsPri(), 1) // replicate the new HP/state on the PRI
 }
 
@@ -279,7 +279,7 @@ func (s *session) sweepWalls() {
 		}
 	}
 	s.match.walls = kept
-	s.flush(out)
+	s.match.flushBroadcast(out) // break/remove must reach EVERY client, not just the reporter
 }
 
 // clearWalls removes every live wall (cmd 221 each) and empties the list. Walls are
@@ -292,7 +292,7 @@ func (s *session) clearWalls() {
 			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (round reset)", w.id)})
 	}
 	s.match.walls = nil
-	s.flush(out)
+	s.match.flushBroadcast(out) // break/remove must reach EVERY client, not just the reporter
 }
 
 // resyncWalls re-adds every live wall in one cmd 220 RESYNC_ICEWALL — used on a mid-match
