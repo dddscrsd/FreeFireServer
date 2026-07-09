@@ -33,6 +33,11 @@ services:
   traefik:
     image: traefik:v3.1
     restart: unless-stopped
+    # Traefik's docker client otherwise negotiates an API version (1.24) older than
+    # the daemon accepts (min 1.40), so the provider fails and NO routers register
+    # (every request 404s). Pin it to a version the daemon supports.
+    environment:
+      DOCKER_API_VERSION: "1.40"
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
