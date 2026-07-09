@@ -27,8 +27,8 @@ async function handler(reqObj, ctx) {
     ctx.logger.warn(`[tcp] PresenceList lookup failed: ${e.message}`);
   }
 
-  const presences = ids.map((id) => ({ i: id, r: ctx.region || DEFAULT_REGION, p: online[id] ? 1 : 0 }));
-  ctx.logger.info(`[tcp] PresenceList uid=${ctx.account.uid} queried=${ids.length} online=${presences.filter((x) => x.p).length} region=${ctx.region || DEFAULT_REGION}`);
+  const presences = ids.map((id) => ({ i: id, r: DEFAULT_REGION, p: online[id] ? 1 : 0 }));
+  ctx.logger.info(`[tcp] PresenceList uid=${ctx.account.uid} queried=${ids.length} online=${presences.filter((x) => x.p).length} region=${DEFAULT_REGION}`);
   return { presences, account_list_type: listType };
 }
 
