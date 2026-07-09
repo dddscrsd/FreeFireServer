@@ -32,8 +32,8 @@ x-node: &node
 # Shared config for the two auth services (Discord-OAuth "fbconnect"). Each
 # overrides command + labels. Served over plain HTTP on the `web` entrypoint
 # because the auth domains are Cloudflare-PROXIED (CF terminates TLS and talks
-# HTTP to the origin) — unlike the grey game domains on `websecure`. LOGIN_PORT
-# comes from AUTH_LOGIN_PORT so it doesn't collide with the game's LOGIN_PORT.
+# HTTP to the origin) — the same as every other HTTP domain now. LOGIN_PORT comes
+# from AUTH_LOGIN_PORT so it doesn't collide with the game's LOGIN_PORT.
 x-auth: &auth
   image: ghcr.io/foices/ff-auth:latest
   build:
@@ -68,26 +68,17 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
       - --entrypoints.gateway.address=:10300
-      # No global http->https redirect: grey game domains use HTTPS directly (TLS on
-      # :443), and the Cloudflare-PROXIED auth domains are served over plain HTTP on
-      # :80 (CF terminates TLS). A global redirect loops the proxied domains
-      # (CF talks HTTP to the origin -> :80 redirects to https -> CF -> :80 -> ...).
-      - --certificatesresolvers.le.acme.tlschallenge=true
-      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}
-      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
-      # ACME CA. Defaults to Let's Encrypt PRODUCTION. While debugging certs, set
-      # ACME_CASERVER to the STAGING URL in .env (near-unlimited, untrusted certs)
-      # to avoid prod rate limits; switch back once the flow works.
-      - --certificatesresolvers.le.acme.caserver=${ACME_CASERVER:-https://acme-v02.api.letsencrypt.org/directory}
+      # ALL HTTP domains are Cloudflare-proxied: Cloudflare terminates TLS with its
+      # own trusted cert and talks HTTP to the origin ("Flexible" SSL), so Traefik
+      # serves plain HTTP and needs NO ACME/Let's Encrypt at all (no rate limits, no
+      # renewals). The gateway (:10300) and match (UDP) stay grey/direct — Cloudflare
+      # can't proxy raw TCP/UDP without Spectrum.
     ports:
       - "80:80"
-      - "443:443"
       - "10300:10300"   # TCP gateway (raw AES passthrough)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - letsencrypt:/letsencrypt
 
   redis:
     image: redis:7-alpine
@@ -112,8 +103,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.live.rule=Host(`${LIVE_DOMAIN}`)
-      - traefik.http.routers.live.entrypoints=websecure
-      - traefik.http.routers.live.tls.certresolver=le
+      - traefik.http.routers.live.entrypoints=web
       - traefik.http.services.live.loadbalancer.server.port=${LIVE_PORT:-3000}
 
   login:
@@ -122,8 +112,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.login.rule=Host(`${LOGIN_DOMAIN}`)
-      - traefik.http.routers.login.entrypoints=websecure
-      - traefik.http.routers.login.tls.certresolver=le
+      - traefik.http.routers.login.entrypoints=web
       - traefik.http.services.login.loadbalancer.server.port=${LOGIN_PORT:-3001}
 
   main:
@@ -132,8 +121,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.main.rule=Host(`${MAIN_DOMAIN}`)
-      - traefik.http.routers.main.entrypoints=websecure
-      - traefik.http.routers.main.tls.certresolver=le
+      - traefik.http.routers.main.entrypoints=web
       - traefik.http.services.main.loadbalancer.server.port=${MAIN_PORT:-3002}
 
   # TCP gateway: raw AES socket (app-layer crypto, NOT TLS) → Traefik TCP passthrough
@@ -193,5 +181,4 @@ services:
 volumes:
   pgdata:
   redisdata:
-  letsencrypt:
   mongodata:
