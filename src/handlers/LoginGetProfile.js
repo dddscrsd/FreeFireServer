@@ -7,18 +7,18 @@
 
 'use strict';
 
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 
 // LoginGet* endpoints are public (router does not attach ctx.account), so
 // resolve the player from the Bearer token ourselves, mirroring the reference.
-function accountFromToken(ctx) {
+async function accountFromToken(ctx) {
   const auth = (ctx.req && ctx.req.headers['authorization']) || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  return token ? player.getByToken(token) : null;
+  return token ? getRepo().getByToken(token) : null;
 }
 
-function handleLoginGetProfile(reqObj, ctx) {
-  const account = ctx.account || accountFromToken(ctx);
+async function handleLoginGetProfile(reqObj, ctx) {
+  const account = ctx.account || (await accountFromToken(ctx));
   if (!account) return {}; // reference returns 401/404; we respond benignly.
 
   const profiles = (account.profile && account.profile.profiles) || [];

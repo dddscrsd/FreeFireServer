@@ -8,21 +8,21 @@
 
 'use strict';
 
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { requireAccount } = require('./_shared');
 
-function handleRequestAddingFriend(reqObj, ctx) {
+async function handleRequestAddingFriend(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
   const adder = reqObj.adder || account.uid;
   const addee = reqObj.addee;
   if (!adder || !addee) return {};
 
-  const target = Number(addee) === Number(account.uid) ? account : player.getById(addee);
+  const target = Number(addee) === Number(account.uid) ? account : await getRepo().getById(addee);
   if (!target) return {};
   target.requests = target.requests || [];
   if (!target.requests.includes(adder)) target.requests.push(adder);
-  player.save(target);
+  await getRepo().save(target);
   ctx.logger.info(`[ported_2] RequestAddingFriend ${adder} -> ${addee}`);
   return {};
 }

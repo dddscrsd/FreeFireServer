@@ -6,19 +6,15 @@
 
 'use strict';
 
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { requireAccount, buildAccountInfoBasic } = require('./_shared');
 
-function handleGetFriendRequestList(reqObj, ctx) {
+async function handleGetFriendRequestList(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
 
-  const reqUids = Array.isArray(account.requests) ? account.requests : [];
-  const infos = [];
-  for (const uid of reqUids) {
-    const other = player.getById(uid);
-    if (other) infos.push(buildAccountInfoBasic(other));
-  }
+  const reqUids = (Array.isArray(account.requests) ? account.requests : []).filter(Boolean);
+  const infos = (await getRepo().getByIds(reqUids)).map((other) => buildAccountInfoBasic(other));
   ctx.logger.info(`[ported_0] GetFriendRequestList uid=${account.uid} count=${infos.length}`);
   return { infos };
 }

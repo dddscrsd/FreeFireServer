@@ -12,20 +12,18 @@
 'use strict';
 
 const { requireAccount, accountToPresence } = require('./_shared');
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 
-function handler(reqObj, ctx) {
+async function handler(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
   const friendIds = Array.isArray(account.friends) ? account.friends : [];
   const now = Math.floor(Date.now() / 1000);
 
-  const friends = [];
-  for (const fid of friendIds) {
-    const id = typeof fid === 'object' ? fid.account_id || fid.uid : fid;
-    const acc = id ? player.getById(id) : null;
-    if (acc) friends.push(accountToPresence(acc, now));
-  }
+  const ids = friendIds
+    .map((fid) => (typeof fid === 'object' ? fid.account_id || fid.uid : fid))
+    .filter(Boolean);
+  const friends = (await getRepo().getByIds(ids)).map((acc) => accountToPresence(acc, now));
   ctx.logger.info(`[ported] GetFriend uid=${account.uid} -> ${friends.length} friends`);
   return { friends, star_friends: [], friends_alias_info: [] };
 }

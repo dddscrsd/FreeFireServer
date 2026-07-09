@@ -20,11 +20,12 @@
 'use strict';
 
 const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { DEFAULT_REGION, TOKEN_TTL, nowSecs, newToken, serverUrl } = require('./_shared');
 
-function handleMajorLogin(reqObj, ctx) {
+async function handleMajorLogin(reqObj, ctx) {
   const openId = player.deriveOpenId(reqObj);
-  const account = player.getByOpenId(openId);
+  const account = await getRepo().getByOpenId(openId);
   if (!account) {
     ctx.logger.info(`[login] MajorLogin open_id=${openId} -> 404 (not registered, client will register)`);
     ctx.res.status(404).type('text/plain').end();
@@ -36,7 +37,7 @@ function handleMajorLogin(reqObj, ctx) {
   account.token_created_at = nowSecs();
   if (reqObj.device_id) account.device_id = String(reqObj.device_id);
   if (reqObj.client_version) account.client_version = String(reqObj.client_version);
-  player.save(account);
+  await getRepo().save(account);
 
   const region = account.region || '';
 

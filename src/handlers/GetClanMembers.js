@@ -8,20 +8,25 @@
 
 'use strict';
 
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { requireAccount, accountToBasic } = require('./_shared');
 
-function handleGetClanMembers(reqObj, ctx) {
+async function handleGetClanMembers(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
   const clan = account.clan || {};
   const clanId = reqObj.clan_id || clan.id || 0;
   const members = Array.isArray(clan.members) ? clan.members : [];
 
+  const memberIds = members
+    .map((m) => (typeof m === 'object' ? m.account_id || m.uid : m))
+    .filter(Boolean);
+  const accById = new Map((await getRepo().getByIds(memberIds)).map((a) => [Number(a.uid), a]));
+
   const member_list = [];
   for (const m of members) {
     const memberId = typeof m === 'object' ? m.account_id || m.uid : m;
-    const acc = memberId ? player.getById(memberId) : null;
+    const acc = memberId ? accById.get(Number(memberId)) : null;
     member_list.push({
       basic_info: acc ? accountToBasic(acc) : { account_id: memberId || 0 },
       clan_id: clanId,

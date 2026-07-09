@@ -11,8 +11,9 @@
 'use strict';
 
 const { requireAccount, nowSecs } = require('./_shared');
+const { getRepo } = require('../db/repo');
 
-function handleConfirmFriendRequest(reqObj, ctx) {
+async function handleConfirmFriendRequest(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
 
@@ -26,13 +27,12 @@ function handleConfirmFriendRequest(reqObj, ctx) {
   ctx.savePlayer();
 
   // Mirror the friendship onto the adder if they exist in our store.
-  const player = require('../db/player');
-  const adder = player.getById(adderId);
+  const adder = await getRepo().getById(adderId);
   if (adder) {
     adder.friends = Array.isArray(adder.friends) ? adder.friends : [];
     if (!adder.friends.some((f) => Number(f) === Number(account.uid))) {
       adder.friends.push(Number(account.uid));
-      player.save(adder);
+      await getRepo().save(adder);
     }
   }
 

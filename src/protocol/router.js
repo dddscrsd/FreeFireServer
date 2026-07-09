@@ -5,7 +5,7 @@ const express = require('express');
 const logger = require('../logger');
 const { lookup } = require('./protos');
 const { encrypt, decrypt, BODY_ENCODING } = require('./aes');
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 
 // Endpoints that DON'T require a Bearer token (login/registration/handshake).
 // Everything else must present a valid token resolvable via player.getByToken.
@@ -236,7 +236,7 @@ function createProtocolRouter({ filter } = {}) {
         const token = authHeader.startsWith('Bearer ')
           ? authHeader.slice(7).trim()
           : '';
-        account = token ? player.getByToken(token) : null;
+        account = token ? await getRepo().getByToken(token) : null;
         if (!account) {
           // No / invalid token on an authed endpoint: respond benignly with a
           // default-constructed resType (never crash the client).
@@ -246,6 +246,7 @@ function createProtocolRouter({ filter } = {}) {
       }
 
       // 3) Build the response object (handler or generic default-constructed).
+      let dirty = false;
       const ctx = {
         endpoint: cmd,
         entry,
@@ -258,8 +259,11 @@ function createProtocolRouter({ filter } = {}) {
         // Authenticated player document (null on public endpoints), plus a
         // convenience persist hook. See the porting contract in src/handlers.
         account,
+        // Mark the account for persistence; the router does the single awaited
+        // save AFTER the handler returns, so handlers don't each await a write.
         savePlayer() {
-          return account ? player.save(account) : undefined;
+          dirty = true;
+          return account;
         }
       };
 
@@ -267,6 +271,8 @@ function createProtocolRouter({ filter } = {}) {
       if (handler) {
         resObj = await handler.fn(reqObj, ctx);
       }
+      // Persist the authenticated account if the handler mutated it.
+      if (dirty && account) await getRepo().save(account);
       // A handler may take full control of the transport (e.g. MajorLogin sends a
       // 404 so the client opens the register screen). If it already responded,
       // don't try to encode/send again.

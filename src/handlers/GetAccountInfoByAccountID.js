@@ -8,13 +8,13 @@
 
 'use strict';
 
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { requireAccount, buildAccountInfoBasic } = require('./_shared');
 
-function handleGetAccountInfoByAccountID(reqObj, ctx) {
+async function handleGetAccountInfoByAccountID(reqObj, ctx) {
   if (!requireAccount(ctx)) return {};
   const targetId = reqObj.account_id || 0;
-  const target = targetId ? player.getById(targetId) : null;
+  const target = targetId ? await getRepo().getById(targetId) : null;
   if (!target) {
     ctx.logger.warn(`[ported_0] GetAccountInfoByAccountID: uid=${targetId} not found`);
     return {};
