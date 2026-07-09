@@ -1,0 +1,16 @@
+.git
+node_modules
+data
+logs
+test_logs
+original_to_read
+tools
+.refactor_backup
+dist
+.env
+*.log
+match-server/*.exe
+match-server/*.exe~
+match-server/*.test
+scratch_body.txt
+http_aes.txt

@@ -43,7 +43,9 @@ node scripts/bus-smoke.js publish
 The Go side should print the Node `Ping`, proving the shared envelope contract
 round-trips across both clients.
 
-## Still in Phase 0 (edge/deploy, next commit)
+## Edge / deploy (Phase 0b)
 
-`docker-compose` (Postgres, Redis, Traefik) + a `Dockerfile` per module, the
-per-domain Traefik routing, and the GitHub Actions → GHCR → VPS deploy workflow.
+See `docs/deploy.md`: `docker-compose.yml` (Traefik edge + the Node tier as four
+independent services + the Go match instance + Postgres/Redis), the two
+`docker/*.Dockerfile`s, and the GitHub Actions → GHCR → VPS workflow
+(`.github/workflows/deploy.yml`).

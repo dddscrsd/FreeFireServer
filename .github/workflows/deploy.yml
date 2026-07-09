@@ -1,0 +1,65 @@
+name: build-deploy
+
+# Build a per-module image, push to GHCR, then have the VPS pull + restart.
+# Secrets required (repo settings → Secrets and variables → Actions):
+#   VPS_HOST, VPS_USER, VPS_SSH_KEY   — SSH into the OCI VPS
+# GITHUB_TOKEN (auto) pushes to ghcr.io/foices/*.
+on:
+  push:
+    branches: [main, feat/infra-migration]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: foices
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - image: ff-node
+            dockerfile: docker/node.Dockerfile
+          - image: ff-match
+            dockerfile: docker/match.Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}:latest
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull + restart on the VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/freefire
+            docker compose pull
+            # Phase 1+: run gated DB migrations here BEFORE restarting app services.
+            # Phase 3+: drain match instances (stop new matches, wait for match.ended)
+            #           before swapping them, so no game is killed mid-deploy.
+            docker compose up -d --remove-orphans
+            docker image prune -f

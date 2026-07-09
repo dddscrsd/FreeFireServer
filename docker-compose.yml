@@ -1,0 +1,128 @@
+# Full stack: Traefik edge + the Node tier as four independent services + the Go
+# match instance + Postgres/Redis backing. Domains, secrets and DATABASE_URL come
+# from a .env next to this file (see .env.example). On the VPS, CI pushes images to
+# GHCR and this pulls them; locally, `docker compose up --build` builds from source.
+name: freefire
+
+# Shared config for the four Node services. Each overrides `command` + `labels`.
+x-node: &node
+  image: ghcr.io/foices/ff-node:latest
+  build:
+    context: .
+    dockerfile: docker/node.Dockerfile
+  restart: unless-stopped
+  environment:
+    NODE_ENV: production
+    REDIS_URL: redis://redis:6379
+    DATABASE_URL: ${DATABASE_URL:-}
+    MATCH_JWT_SECRET: ${MATCH_JWT_SECRET:?set MATCH_JWT_SECRET in .env}
+    SERVER_URL: ${SERVER_URL:-}
+    LIVE_DOMAIN: ${LIVE_DOMAIN:-}
+    LOGIN_DOMAIN: ${LOGIN_DOMAIN:-}
+    MAIN_DOMAIN: ${MAIN_DOMAIN:-}
+    TCP_PUBLIC_HOST: ${TCP_PUBLIC_HOST:-}
+    MATCH_PUBLIC_HOST: ${MATCH_PUBLIC_HOST:-}
+  depends_on: [redis]
+
+services:
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.gateway.address=:10300
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+      - "10300:10300"   # TCP gateway (raw AES passthrough)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ff}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-freefire}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  live:
+    <<: *node
+    command: ["node", "src/servers/live.js"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.live.rule=Host(`${LIVE_DOMAIN}`)
+      - traefik.http.routers.live.entrypoints=websecure
+      - traefik.http.routers.live.tls.certresolver=le
+      - traefik.http.services.live.loadbalancer.server.port=3000
+
+  login:
+    <<: *node
+    command: ["node", "src/servers/login.js"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.login.rule=Host(`${LOGIN_DOMAIN}`)
+      - traefik.http.routers.login.entrypoints=websecure
+      - traefik.http.routers.login.tls.certresolver=le
+      - traefik.http.services.login.loadbalancer.server.port=3001
+
+  main:
+    <<: *node
+    command: ["node", "src/servers/main.js"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.main.rule=Host(`${MAIN_DOMAIN}`)
+      - traefik.http.routers.main.entrypoints=websecure
+      - traefik.http.routers.main.tls.certresolver=le
+      - traefik.http.services.main.loadbalancer.server.port=3002
+
+  # TCP gateway: raw AES socket (app-layer crypto, NOT TLS) → Traefik TCP passthrough
+  # on its own entrypoint. HostSNI(`*`) matches non-TLS TCP.
+  gateway:
+    <<: *node
+    command: ["node", "src/servers/tcp.js"]
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.gateway.rule=HostSNI(`*`)
+      - traefik.tcp.routers.gateway.entrypoints=gateway
+      - traefik.tcp.services.gateway.loadbalancer.server.port=10300
+
+  # Match instance — addressed DIRECTLY by the client (allocated by the matchmaker),
+  # never behind Traefik. Scale into a fleet by adding match-2, match-3 … on other ports.
+  match:
+    image: ghcr.io/foices/ff-match:latest
+    build:
+      context: .
+      dockerfile: docker/match.Dockerfile
+    restart: unless-stopped
+    command: ["-addr", ":10100"]
+    environment:
+      REDIS_URL: redis://redis:6379
+      NODE_ID: ${NODE_ID:-match-1}
+      MATCH_JWT_SECRET: ${MATCH_JWT_SECRET:?set MATCH_JWT_SECRET in .env}
+    ports:
+      - "10100:10100/udp"
+    depends_on: [redis]
+
+volumes:
+  pgdata:
+  redisdata:
+  letsencrypt:
