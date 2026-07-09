@@ -24,17 +24,25 @@ async function handleGetLoginData(reqObj, ctx) {
   const localIp = await getLocalIp();
   const region = account.region || DEFAULT_REGION;
 
-  // Realtime endpoints the client connects to after login (LoginRes carries
-  // them). Host comes from config, else the request host, else localhost.
+  // Realtime endpoints the client connects to after login (LoginRes carries them).
   const p = (config.protocol) || {};
-  const host =
+  const d = (config.domains) || {};
+  // Fallback host when no public host is configured: the detected LAN IP, else the
+  // request host, else localhost (local dev).
+  const fallbackHost =
     localIp ||
     ((ctx.req.headers.host || '').split(':')[0]) ||
     '127.0.0.1';
-  const gameServerIp = `${host}:${p.gameServerPort || '10100'}`;
-  const chatAddr = `${host}:${p.chatPort || '10200'}`;
+  // Prefer the configured PUBLIC host so we never hand the client the container's
+  // internal IP (e.g. 10.0.0.x behind the edge):
+  //   TCP_PUBLIC_HOST   -> notification channel (the TCP gateway)
+  //   MATCH_PUBLIC_HOST -> realtime UDP match server (+ its ping probe)
+  const tcpHost = d.tcp || fallbackHost;
+  const matchHost = d.match || fallbackHost;
+  const gameServerIp = `${matchHost}:${p.gameServerPort || '10100'}`;
+  const chatAddr = `${fallbackHost}:${p.chatPort || '10200'}`;
   // TCP gateway the client opens for server push — single-sourced from ports.tcp.
-  const notificationChannel = `${host}:${(config.ports && config.ports.tcp) || p.notificationPort || '10300'}`;
+  const notificationChannel = `${tcpHost}:${(config.ports && config.ports.tcp) || p.notificationPort || '10300'}`;
 
   ctx.logger.info(`[login] GetLoginData uid=${account.uid} region="${region}" game=${gameServerIp}`);
 
@@ -101,7 +109,7 @@ async function handleGetLoginData(reqObj, ctx) {
     return_at: 0,
     network_log_url: serverUrl(ctx) + '/',
     ping_addr_desc_list: [
-      {ip: host, is_traceroute: false}
+      {ip: matchHost, is_traceroute: false}
     ],
     ip_region: "https://brnetwork.ggblueshark.com/",
     ranking_peak_threshold: 0,

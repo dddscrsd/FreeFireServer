@@ -20,10 +20,12 @@ const { getLocalIp } = require('../utils/address');
 const { EProtocol, EMatchmaking } = require('./protocol');
 
 const MIN_PLAYERS = Number(process.env.MM_MIN_PLAYERS || 2);    // form a match at N players...
-const TIMEOUT_MS = Number(process.env.MM_TIMEOUT_MS || 5000);  // ...or after this wait
-const TICK_MS = 1000;
+const TIMEOUT_MS = Number(process.env.MM_TIMEOUT_MS || 10000);  // ...or after this wait
+const TICK_MS = 1;
 
-// Resolve the LAN host once for the game-server address handed to clients.
+// Resolve the LAN host once as a FALLBACK for the game-server address handed to
+// clients; MATCH_PUBLIC_HOST (config.domains.match) overrides it in production so
+// the client never receives the container's internal IP.
 let host = '127.0.0.1';
 getLocalIp().then((ip) => { if (ip) host = ip; }).catch(() => {});
 
@@ -109,7 +111,8 @@ function buildPrepareToken(account, matchId) {
 function formMatch(entries) {
   const matchId = ++matchSeq;
   const mode = entries[0].mode;
-  const serverAddr = `${host}:${(config.protocol && config.protocol.gameServerPort) || '10100'}`;
+  const matchHost = (config.domains && config.domains.match) || host;
+  const serverAddr = `${matchHost}:${(config.protocol && config.protocol.gameServerPort) || '10100'}`;
   const secret = '00112233445566778899aabbccddeeff'; // hex; client does HexStringToByte()
   logger.info(
     `[mm] MATCH #${matchId} mode=${modeKey(mode)} players=[${entries.map((e) => e.accountId).join(',')}] -> ${serverAddr}`
