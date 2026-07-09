@@ -11,7 +11,7 @@
 'use strict';
 
 const { getRepo } = require('../db/repo');
-const { requireAccount, accountToBasic } = require('./_shared');
+const { requireAccount, accountToBasic, DEFAULT_REGION } = require('./_shared');
 
 async function handleFuzzySearchAccountByName(reqObj, ctx) {
   const account = requireAccount(ctx);
@@ -23,7 +23,11 @@ async function handleFuzzySearchAccountByName(reqObj, ctx) {
   const ids = await repo.searchByNickname(nickname);
   const infos = [];
   for (const acc of await repo.getByIds(ids)) {
-    if (acc) infos.push(accountToBasic(acc));
+    if (!acc) continue;
+    const basic = accountToBasic(acc);
+    // Same-region so the client's add-friend gate passes (see GetAccountInfoByAccountID).
+    basic.region = account.region || DEFAULT_REGION;
+    infos.push(basic);
   }
   ctx.logger.info(`[ported] FuzzySearchAccountByName "${nickname}" -> ${infos.length} hits`);
   return { infos };
