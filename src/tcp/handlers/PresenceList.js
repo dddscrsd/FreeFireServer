@@ -13,6 +13,7 @@
 
 const { EProtocol, EPresence } = require('../protocol');
 const { getBus } = require('../../bus/instance');
+const { DEFAULT_REGION } = require('../../handlers/_shared');
 
 async function handler(reqObj, ctx) {
   const ids = (Array.isArray(reqObj.account_ids) ? reqObj.account_ids : []).map(Number).filter(Boolean);
@@ -26,8 +27,8 @@ async function handler(reqObj, ctx) {
     ctx.logger.warn(`[tcp] PresenceList lookup failed: ${e.message}`);
   }
 
-  const presences = ids.map((id) => ({ i: id, r: ctx.region || '', p: online[id] ? 1 : 0 }));
-  ctx.logger.info(`[tcp] PresenceList uid=${ctx.account.uid} queried=${ids.length} online=${presences.filter((x) => x.p).length}`);
+  const presences = ids.map((id) => ({ i: id, r: ctx.region || DEFAULT_REGION, p: online[id] ? 1 : 0 }));
+  ctx.logger.info(`[tcp] PresenceList uid=${ctx.account.uid} queried=${ids.length} online=${presences.filter((x) => x.p).length} region=${ctx.region || DEFAULT_REGION}`);
   return { presences, account_list_type: listType };
 }
 
