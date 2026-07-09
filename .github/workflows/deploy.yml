@@ -48,6 +48,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Only deploy from main. Feature-branch pushes just build (validates the images)
+    # without touching the VPS.
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Pull + restart on the VPS
         uses: appleboy/ssh-action@v1.2.0
