@@ -281,7 +281,7 @@ function createProtocolRouter({ filter } = {}) {
         try {
           const bus = getBus();
           if (bus) {
-            bus.publishPS('player.updated', { account_id: Number(account.uid) })
+            bus.publishPS('player.updated', 'PlayerUpdated', { account_id: Number(account.uid) })
               .catch((e) => logger.warn(`[router] player.updated publish: ${e.message}`));
           }
         } catch (e) { logger.warn(`[router] player.updated: ${e.message}`); }

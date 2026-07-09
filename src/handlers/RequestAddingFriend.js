@@ -42,7 +42,7 @@ async function handleRequestAddingFriend(reqObj, ctx) {
       const T = lookup('AccountInfoBasic');
       if (adderAcc && T) {
         const content = Buffer.from(T.encode(T.fromObject(buildAccountInfoBasic(adderAcc))).finish());
-        await bus.publishPS('gw.push', {
+        await bus.publishPS('gw.push', 'GatewayPush', {
           target_account_id: Number(addee),
           protocol: EProtocol.FRIEND,
           cmd: EFriend.REQUEST_NTF,
