@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package bus;
+
+option go_package = "libmadoka/match-server/bus/pb;pb";
+
+// Event payloads carried inside Envelope.payload. Each Envelope.type string maps
+// to exactly one message here. Transport (durable Stream vs ephemeral PubSub) is
+// a routing decision made by the publisher, documented per message below.
+
+// --- smoke test -----------------------------------------------------------
+message Ping {
+  string from  = 1;
+  int64  nonce = 2;
+  string note  = 3;
+}
+
+// --- match lifecycle · durable / Streams ----------------------------------
+
+message RosterSlot {
+  int64  account_id = 1;
+  uint32 team       = 2;
+}
+
+// "match.created" — matchmaker → match, main. Establishes the shared match-id
+// keyspace the one-shot JWT never provided; L4 seeds the real roster/mode from it.
+message MatchCreated {
+  string              match_id    = 1;
+  string              server_addr = 2; // instance the players were allocated to
+  repeated RosterSlot roster      = 3;
+  uint32              game_mode   = 4;
+  uint32              match_mode  = 5; // GameServerMatchMode (6 = CS ranking)
+  string              map_id      = 6;
+  string              city        = 7;
+}
+
+message PlayerResult {
+  int64 account_id  = 1;
+  int32 coins       = 2;
+  int32 kills       = 3;
+  int32 deaths      = 4;
+  bool  win         = 5;
+  int32 rank_points = 6;
+  int32 xp          = 7;
+}
+
+// "match.result" — match → settlement worker, gateway. Settlement is idempotent
+// on (match_id, account_id); redelivery must not double-credit.
+message MatchResult {
+  string                match_id = 1;
+  repeated PlayerResult players  = 2;
+}
+
+// "match.ended" — match → matchmaker (capacity), main.
+message MatchEnded {
+  string match_id    = 1;
+  uint32 winner_team = 2;
+  int64  duration_ms = 3;
+  uint32 end_type    = 4;
+}
+
+// --- economy / social · durable / Streams ---------------------------------
+
+message WalletChanged { // "wallet.changed"
+  int64  account_id = 1;
+  int64  coins      = 2;
+  int64  gems       = 3;
+  int64  delta      = 4;
+  string reason     = 5;
+}
+
+message MailReceived { // "mail.received"
+  int64  target_account_id = 1;
+  string mail_id           = 2;
+  string kind              = 3;
+  bytes  attachments       = 4; // serialized mail body (opaque here)
+}
+
+message FriendRequest { // "social.friend_request"
+  int64  target_account_id = 1;
+  int64  adder_account_id  = 2;
+  string adder_nickname    = 3;
+}
+
+message FriendConfirmed { // "social.friend_confirmed"
+  int64 adder_account_id     = 1;
+  int64 confirmer_account_id = 2;
+}
+
+message ClanUpdated { // "social.clan_updated"
+  int64          clan_id             = 1;
+  string         change              = 2; // created | member_joined | member_left | dismissed | renamed
+  int64          affected_account_id = 3;
+  repeated int64 member_ids          = 4;
+}
+
+// --- presence / control · ephemeral / PubSub ------------------------------
+
+message PresenceChanged { // "presence.changed" — also backed by a uid→node TTL key
+  int64  account_id = 1;
+  string state      = 2; // online | offline | in-match
+  string node       = 3;
+  int64  ts_unix_ms = 4;
+}
+
+message SessionRevoke { // "session.revoke" — login/mod → gateway kick
+  int64  account_id = 1;
+  string reason     = 2;
+}
+
+message PlayerUpdated { // "player.updated" — main → matchmaker (drop the stale snapshot)
+  int64           account_id     = 1;
+  uint32          version        = 2;
+  repeated string changed_fields = 3;
+}

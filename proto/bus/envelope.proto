@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package bus;
+
+// Generated Go lands in the match-server module; Node loads this file directly
+// via protobufjs (no codegen). This .proto is the SINGLE source of truth for the
+// cross-layer bus contract shared by the Node tier and the Go match-server.
+option go_package = "libmadoka/match-server/bus/pb;pb";
+
+// Envelope wraps every message on the Redis bus. The concrete event rides in
+// `payload` as its own serialized protobuf; `type` selects how to decode it and
+// which handler runs. Routing is by Redis key — `stream:<domain>` for durable
+// commands (XADD + consumer groups), `ps:<topic>` for ephemeral fan-out
+// (PUBLISH) — never by parsing fields out of this struct.
+message Envelope {
+  string type           = 1; // e.g. "match.result", "presence.changed"
+  string source         = 2; // producing layer: match | main | gateway | login | worker
+  string correlation_id = 3; // trace id; for settlement, also the idempotency assist
+  int64  ts_unix_ms     = 4; // producer wall clock (millis)
+  bytes  payload        = 5; // the event's own protobuf message (see events.proto)
+}

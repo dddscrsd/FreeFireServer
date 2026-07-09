@@ -30,6 +30,11 @@ type config struct {
 	noZone             bool // MATCH_NO_ZONE=1: skip the Fight-phase SafeZone so the passive test player doesn't die to it (self-testing only)
 	zoneStatic         bool // MATCH_ZONE_STATIC=1: the Fight zone never shrinks — a fixed damaging circle so a test player can walk out on demand to trigger a knockdown
 	matchBot           bool // MATCH_BOT=1: when the waiting-for-players countdown expires with no opponents, fill the enemy team with a bot (solo testing) instead of cancelling the match
+
+	// Infra migration (Phase 0+). redisURL empty => the match-server runs standalone
+	// with no bus (unchanged behaviour); when set, it connects to the Redis event bus.
+	redisURL string // REDIS_URL
+	nodeID   string // NODE_ID — this instance's id (presence + match allocation); defaults to the hostname
 }
 
 var cfg config
@@ -48,6 +53,8 @@ func loadConfig() config {
 		zoneStatic:         os.Getenv("MATCH_ZONE_STATIC") == "1",
 		unlimitedMoneyTest: os.Getenv("MATCH_UNLIMITED_MONEY") == "1",
 		matchBot:           os.Getenv("MATCH_BOT") == "1",
+		redisURL:           os.Getenv("REDIS_URL"),
+		nodeID:             envOr("NODE_ID", hostname()),
 	}
 	if sp, ok := parseVec3(os.Getenv("MATCH_SPAWN")); ok {
 		c.spawn = &sp
@@ -66,6 +73,14 @@ func envOr(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// hostname is the default NODE_ID for this match instance.
+func hostname() string {
+	if h, _ := os.Hostname(); h != "" {
+		return h
+	}
+	return "match-local"
 }
 
 // parseVec3 parses "x,y,z" (floats) into a message.Vec3.
