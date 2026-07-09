@@ -138,6 +138,23 @@ class Bus {
     return this.pub.get(`presence:${accountId}`);
   }
 
+  /** Batch presence lookup — returns { accountId: node } for the ONLINE ids only. */
+  async getNodes(accountIds) {
+    if (!accountIds || !accountIds.length) return {};
+    const vals = await this.pub.mget(accountIds.map((id) => `presence:${id}`));
+    const out = {};
+    accountIds.forEach((id, i) => { if (vals[i]) out[id] = vals[i]; });
+    return out;
+  }
+
+  /** Refresh the presence TTL for many accounts in one round-trip (pipeline). */
+  async refreshPresence(accountIds, ttlSec) {
+    if (!accountIds || !accountIds.length) return;
+    const pipe = this.pub.pipeline();
+    for (const id of accountIds) pipe.set(`presence:${id}`, this.node, 'EX', ttlSec);
+    await pipe.exec();
+  }
+
   /** Decode an envelope's inner payload into a plain object of the given type. */
   static payload(env, payloadType) {
     return decode(payloadType, env.payload);

@@ -20,9 +20,27 @@ const { lookup } = require('../protocol/protos');
 const { CMD, INIT_ACK, decrypt, parseClientFrames, encodeServerFrame } = require('./framing');
 const tcpRouter = require('./router');
 const matchmaker = require('./matchmaker');
+const { getBus } = require('../bus/instance');
 
 // account uid -> { socket, account, region, lastSeen }
 const sessions = new Map();
+
+// Cross-layer PRESENCE: while a client's notification channel is connected we write
+// presence:<uid> = this node to Redis (TTL-based) so OTHER processes (the HTTP tier,
+// the matchmaker) can tell who is online and where. Refreshed on a heartbeat so a
+// crashed gateway's keys expire; cleared on disconnect. Best-effort — a Redis blip
+// never touches the socket path.
+const PRESENCE_TTL_SEC = 45;
+const PRESENCE_REFRESH_MS = 20000;
+
+function markOnline(uid) {
+  const bus = getBus();
+  if (bus) bus.setPresence(uid, PRESENCE_TTL_SEC).catch((e) => logger.warn(`[tcp] presence set uid=${uid}: ${e.message}`));
+}
+function markOffline(uid) {
+  const bus = getBus();
+  if (bus) bus.clearPresence(uid).catch((e) => logger.warn(`[tcp] presence clear uid=${uid}: ${e.message}`));
+}
 
 function register(entry) {
   const prev = sessions.get(entry.account.uid);
@@ -72,6 +90,7 @@ function handleConnection(socket) {
     if (entry && sessions.get(entry.account.uid) && sessions.get(entry.account.uid).socket === socket) {
       sessions.delete(entry.account.uid);
       matchmaker.cancel(entry.account.uid);
+      markOffline(entry.account.uid); // clear cross-layer presence
       logger.info(`[tcp] disconnected uid=${entry.account.uid} (${peer})`);
     } else {
       logger.info(`[tcp] disconnected ${entry ? 'uid=' + entry.account.uid + ' (stale) ' : '(unauth) '}${peer}`);
@@ -107,6 +126,7 @@ async function handleFrame(socket, f, entry, peer) {
     }
     const newEntry = { socket, account, region: f.region, lastSeen: Date.now() };
     register(newEntry);
+    markOnline(account.uid); // publish cross-layer presence
     socket.write(INIT_ACK); // server init ack
     logger.info(`[tcp] authenticated uid=${account.uid} nickname="${account.nickname || ''}" region=${f.region} (${peer})`);
     return newEntry;
@@ -245,7 +265,20 @@ function kick(accountId, reasonPayload) {
 function isOnline(accountId) { return sessions.has(accountId); }
 function onlineCount() { return sessions.size; }
 
+// Refresh presence TTL for every locally-connected account in one pipeline, so a
+// live gateway keeps its uids marked online while a crashed one lets them expire.
+function startPresenceHeartbeat() {
+  const t = setInterval(() => {
+    const bus = getBus();
+    if (!bus || !sessions.size) return;
+    bus.refreshPresence([...sessions.keys()], PRESENCE_TTL_SEC).catch(() => {});
+  }, PRESENCE_REFRESH_MS);
+  if (t.unref) t.unref();
+  return t;
+}
+
 function createGateway() {
+  startPresenceHeartbeat();
   return net.createServer(handleConnection);
 }
 
