@@ -33,6 +33,7 @@ function enumValues(fqn) {
 module.exports = {
   EProtocol: enumValues('tcp.EProtocol.Proto'),
   EFriend: enumValues('tcp.EFriend.Proto'),
+  EPresence: enumValues('tcp.EPresence.Proto'),
   EMatchmaking: enumValues('tcp.EMatchmaking.Proto'),
   EMatchmakingErr: enumValues('tcp.EMatchmaking.ErrCode'),
   enumValues

@@ -1,17 +1,20 @@
 /**
  * ConfirmFriendRequest (CSFriendReq -> AccountInfoWithPresence)
  * reference: confirm_friend_request @ htpp.py:6686 — addee (current account)
- * accepts adder's request: drop from requests, add mutual friendship, return
- * the now-confirmed friend's info.
+ * accepts adder's request: drop from requests, add mutual friendship, return the
+ * now-confirmed friend's info. If the adder is online, push a CONFIRM_NTF so their
+ * friend list updates live (the friendship is already mutual in the DB either way).
  *
- * Ported verbatim from ported_9.js (handleConfirmFriendRequest). Registered
- * without explicit req/res types in the source, so both are null.
+ * Ported from ported_9.js (handleConfirmFriendRequest).
  */
 
 'use strict';
 
-const { requireAccount, nowSecs } = require('./_shared');
+const { requireAccount, nowSecs, buildAccountInfoBasic } = require('./_shared');
 const { getRepo } = require('../db/repo');
+const { getBus } = require('../bus/instance');
+const { lookup } = require('../protocol/protos');
+const { EProtocol, EFriend } = require('../tcp/protocol');
 
 async function handleConfirmFriendRequest(reqObj, ctx) {
   const account = requireAccount(ctx);
@@ -34,6 +37,29 @@ async function handleConfirmFriendRequest(reqObj, ctx) {
       adder.friends.push(Number(account.uid));
       await getRepo().save(adder);
     }
+  }
+
+  // Real-time: tell the adder (the original requester), if online, that we accepted —
+  // so we appear in their friend list live instead of only after a re-open. Carries
+  // OUR AccountInfoBasic (the shape the working REQUEST_NTF uses). Best-effort; the
+  // friendship is already persisted mutually, so a missed push just means "on reopen".
+  try {
+    const bus = getBus();
+    if (bus && (await bus.getNode(adderId))) {
+      const T = lookup('AccountInfoBasic');
+      if (T) {
+        const content = Buffer.from(T.encode(T.fromObject(buildAccountInfoBasic(account))).finish());
+        await bus.publishPS('gw.push', 'GatewayPush', {
+          target_account_id: adderId,
+          protocol: EProtocol.FRIEND,
+          cmd: EFriend.CONFIRM_NTF,
+          content
+        });
+        ctx.logger.info(`[ported_9] pushed CONFIRM_NTF -> uid=${adderId} (accepter=${account.uid})`);
+      }
+    }
+  } catch (e) {
+    ctx.logger.warn(`[ported_9] confirm push failed: ${e.message}`);
   }
 
   const friend = adder;
