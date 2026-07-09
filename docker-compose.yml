@@ -29,9 +29,35 @@ x-node: &node
     TCP_PORT: ${TCP_PORT:-10300}
   depends_on: [redis]
 
+# Shared config for the two auth services (Discord-OAuth "fbconnect"). Each
+# overrides command + labels. Served over plain HTTP on the `web` entrypoint
+# because the auth domains are Cloudflare-PROXIED (CF terminates TLS and talks
+# HTTP to the origin) — unlike the grey game domains on `websecure`. LOGIN_PORT
+# comes from AUTH_LOGIN_PORT so it doesn't collide with the game's LOGIN_PORT.
+x-auth: &auth
+  image: ghcr.io/foices/ff-auth:latest
+  build:
+    context: .
+    dockerfile: docker/auth.Dockerfile
+  restart: unless-stopped
+  environment:
+    NODE_ENV: production
+    TRUST_PROXY: "true"
+    CONNECT_PORT: ${CONNECT_PORT:-5000}
+    LOGIN_PORT: ${AUTH_LOGIN_PORT:-25565}
+    MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017}
+    DB_NAME: ${DB_NAME:-libmadoka_auth}
+    APP_ID: ${APP_ID:?set APP_ID in .env}
+    APP_SECRET: ${APP_SECRET:?set APP_SECRET in .env}
+    DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:?set DISCORD_CLIENT_ID in .env}
+    DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:?set DISCORD_CLIENT_SECRET in .env}
+    DISCORD_REDIRECT_URI: https://${AUTH_LOGIN_DOMAIN}/oauth/discord/callback
+    OAUTH_STATE_SECRET: ${OAUTH_STATE_SECRET:?set OAUTH_STATE_SECRET in .env}
+  depends_on: [mongo]
+
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.6
     restart: unless-stopped
     # Traefik's docker client otherwise negotiates an API version (1.24) older than
     # the daemon accepts (min 1.40), so the provider fails and NO routers register
@@ -44,8 +70,10 @@ services:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --entrypoints.gateway.address=:10300
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # No global http->https redirect: grey game domains use HTTPS directly (TLS on
+      # :443), and the Cloudflare-PROXIED auth domains are served over plain HTTP on
+      # :80 (CF terminates TLS). A global redirect loops the proxied domains
+      # (CF talks HTTP to the origin -> :80 redirects to https -> CF -> :80 -> ...).
       - --certificatesresolvers.le.acme.tlschallenge=true
       - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
@@ -132,7 +160,34 @@ services:
       - "10100:10100/udp"
     depends_on: [redis]
 
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongodata:/data/db
+
+  # Discord-OAuth "fbconnect" auth server: connect (SDK/token API) + login (the
+  # browser dialog). HTTP on the `web` entrypoint; Cloudflare fronts them with TLS.
+  auth-connect:
+    <<: *auth
+    command: ["npm", "run", "start:connect"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authconnect.rule=Host(`${AUTH_CONNECT_DOMAIN}`)
+      - traefik.http.routers.authconnect.entrypoints=web
+      - traefik.http.services.authconnect.loadbalancer.server.port=${CONNECT_PORT:-5000}
+
+  auth-login:
+    <<: *auth
+    command: ["npm", "run", "start:login"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authlogin.rule=Host(`${AUTH_LOGIN_DOMAIN}`)
+      - traefik.http.routers.authlogin.entrypoints=web
+      - traefik.http.services.authlogin.loadbalancer.server.port=${AUTH_LOGIN_PORT:-25565}
+
 volumes:
   pgdata:
   redisdata:
   letsencrypt:
+  mongodata:

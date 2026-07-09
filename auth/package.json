@@ -1,0 +1,26 @@
+{
+  "name": "@auth/root",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Discord OAuth authentication server (Connect + Login microservices) for libmadoka.",
+  "workspaces": [
+    "shared",
+    "connect-server",
+    "login-server"
+  ],
+  "scripts": {
+    "dev": "run-p dev:connect dev:login",
+    "dev:connect": "nodemon --watch connect-server/src --watch shared/src connect-server/src/index.js",
+    "dev:login": "nodemon --watch login-server/src --watch shared/src login-server/src/index.js",
+    "start": "run-p start:connect start:login",
+    "start:connect": "node connect-server/src/index.js",
+    "start:login": "node login-server/src/index.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "npm-run-all": "^4.1.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
