@@ -115,7 +115,7 @@ function buildAccountInfoBasic(acc) {
     account_type: acc.account_type || 0,
     nickname: acc.nickname || '',
     external_id: acc.open_id || '',
-    region: acc.region || DEFAULT_REGION,
+    region: DEFAULT_REGION,
     level: acc.level || 1,
     exp: acc.exp || 0,
     external_type: acc.external_type || 0,
