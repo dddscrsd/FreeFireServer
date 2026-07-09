@@ -35,6 +35,10 @@ type config struct {
 	// with no bus (unchanged behaviour); when set, it connects to the Redis event bus.
 	redisURL string // REDIS_URL
 	nodeID   string // NODE_ID — this instance's id (presence + match allocation); defaults to the hostname
+	// advertiseAddr (MATCH_ADVERTISE) is the PUBLIC host:port the client dials for THIS
+	// instance. When set (+ the bus), the instance self-registers in the fleet registry
+	// so the matchmaker can allocate matches across a fleet. Empty => not registered.
+	advertiseAddr string
 }
 
 var cfg config
@@ -55,6 +59,7 @@ func loadConfig() config {
 		matchBot:           os.Getenv("MATCH_BOT") == "1",
 		redisURL:           os.Getenv("REDIS_URL"),
 		nodeID:             envOr("NODE_ID", hostname()),
+		advertiseAddr:      os.Getenv("MATCH_ADVERTISE"),
 	}
 	if sp, ok := parseVec3(os.Getenv("MATCH_SPAWN")); ok {
 		c.spawn = &sp

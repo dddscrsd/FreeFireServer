@@ -48,6 +48,14 @@ func main() {
 		}
 	}
 
+	// Advertise this instance in the fleet registry so the matchmaker can allocate
+	// matches to it. MATCH_ADVERTISE = the PUBLIC host:port the client dials for THIS
+	// instance; without it the matchmaker falls back to its static configured address.
+	if eventBus != nil && cfg.advertiseAddr != "" {
+		go fleetHeartbeat(cfg.advertiseAddr)
+		log.Printf("[mm-udp] fleet register: advertise=%s", cfg.advertiseAddr)
+	}
+
 	key, err := hex.DecodeString(secretHex)
 	if err != nil {
 		log.Fatalf("bad secret: %v", err)

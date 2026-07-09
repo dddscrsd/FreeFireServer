@@ -18,6 +18,7 @@ const config = require('../../config/default');
 const jwt = require('../utils/jwt');
 const { getLocalIp } = require('../utils/address');
 const { EProtocol, EMatchmaking } = require('./protocol');
+const fleet = require('./fleet');
 
 const MIN_PLAYERS = Number(process.env.MM_MIN_PLAYERS || 2);    // form a match at N players...
 const TIMEOUT_MS = Number(process.env.MM_TIMEOUT_MS || 10000);  // ...or after this wait
@@ -112,7 +113,10 @@ function formMatch(entries) {
   const matchId = ++matchSeq;
   const mode = entries[0].mode;
   const matchHost = (config.domains && config.domains.match) || host;
-  const serverAddr = `${matchHost}:${(config.protocol && config.protocol.gameServerPort) || '10100'}`;
+  const staticAddr = `${matchHost}:${(config.protocol && config.protocol.gameServerPort) || '10100'}`;
+  // Allocate this match to a LIVE instance from the fleet registry (all players in ONE
+  // match get the SAME instance); fall back to the static address (single instance / no bus).
+  const serverAddr = fleet.pickServer() || staticAddr;
   const secret = '00112233445566778899aabbccddeeff'; // hex; client does HexStringToByte()
   logger.info(
     `[mm] MATCH #${matchId} mode=${modeKey(mode)} players=[${entries.map((e) => e.accountId).join(',')}] -> ${serverAddr}`

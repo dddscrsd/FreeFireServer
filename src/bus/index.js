@@ -155,6 +155,18 @@ class Bus {
     await pipe.exec();
   }
 
+  /**
+   * Fleet registry: the PUBLIC addresses of match servers that have heartbeated within
+   * maxAgeSec. Match instances ZADD themselves into "matchservers" (score = unix
+   * seconds; see the Go match-server); the matchmaker reads this to allocate whole
+   * matches across the fleet. Stale members are pruned each call.
+   */
+  async getMatchServers(maxAgeSec = 30) {
+    const cutoff = Math.floor(Date.now() / 1000) - maxAgeSec;
+    await this.pub.zremrangebyscore('matchservers', '-inf', '(' + cutoff); // drop stale (score < cutoff)
+    return this.pub.zrangebyscore('matchservers', cutoff, '+inf');
+  }
+
   /** Decode an envelope's inner payload into a plain object of the given type. */
   static payload(env, payloadType) {
     return decode(payloadType, env.payload);

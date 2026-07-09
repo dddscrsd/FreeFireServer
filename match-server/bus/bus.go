@@ -217,6 +217,14 @@ func (b *Bus) GetNode(accountID int64) (string, error) {
 	return node, err
 }
 
+// RegisterServer advertises this instance in the match-server fleet registry (a Redis
+// sorted set "matchservers" scored by heartbeat time), so the matchmaker can allocate
+// whole matches to a LIVE instance. addr is the PUBLIC host:port the client dials for
+// this instance; a stale entry ages out once the heartbeat stops. Call periodically.
+func (b *Bus) RegisterServer(addr string, nowUnix int64) error {
+	return b.rdb.ZAdd(b.ctx, "matchservers", redis.Z{Score: float64(nowUnix), Member: addr}).Err()
+}
+
 // Close stops the drainer and subscriptions and closes the Redis connection.
 func (b *Bus) Close() error {
 	b.cancel()
