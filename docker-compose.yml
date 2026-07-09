@@ -22,6 +22,11 @@ x-node: &node
     MAIN_DOMAIN: ${MAIN_DOMAIN:-}
     TCP_PUBLIC_HOST: ${TCP_PUBLIC_HOST:-}
     MATCH_PUBLIC_HOST: ${MATCH_PUBLIC_HOST:-}
+    # Internal listen ports (config.ports.*). Traefik targets these same values.
+    LIVE_PORT: ${LIVE_PORT:-3000}
+    LOGIN_PORT: ${LOGIN_PORT:-3001}
+    MAIN_PORT: ${MAIN_PORT:-3002}
+    TCP_PORT: ${TCP_PORT:-10300}
   depends_on: [redis]
 
 services:
@@ -72,7 +77,7 @@ services:
       - traefik.http.routers.live.rule=Host(`${LIVE_DOMAIN}`)
       - traefik.http.routers.live.entrypoints=websecure
       - traefik.http.routers.live.tls.certresolver=le
-      - traefik.http.services.live.loadbalancer.server.port=3000
+      - traefik.http.services.live.loadbalancer.server.port=${LIVE_PORT:-3000}
 
   login:
     <<: *node
@@ -82,7 +87,7 @@ services:
       - traefik.http.routers.login.rule=Host(`${LOGIN_DOMAIN}`)
       - traefik.http.routers.login.entrypoints=websecure
       - traefik.http.routers.login.tls.certresolver=le
-      - traefik.http.services.login.loadbalancer.server.port=3001
+      - traefik.http.services.login.loadbalancer.server.port=${LOGIN_PORT:-3001}
 
   main:
     <<: *node
@@ -92,7 +97,7 @@ services:
       - traefik.http.routers.main.rule=Host(`${MAIN_DOMAIN}`)
       - traefik.http.routers.main.entrypoints=websecure
       - traefik.http.routers.main.tls.certresolver=le
-      - traefik.http.services.main.loadbalancer.server.port=3002
+      - traefik.http.services.main.loadbalancer.server.port=${MAIN_PORT:-3002}
 
   # TCP gateway: raw AES socket (app-layer crypto, NOT TLS) → Traefik TCP passthrough
   # on its own entrypoint. HostSNI(`*`) matches non-TLS TCP.
@@ -103,7 +108,7 @@ services:
       - traefik.enable=true
       - traefik.tcp.routers.gateway.rule=HostSNI(`*`)
       - traefik.tcp.routers.gateway.entrypoints=gateway
-      - traefik.tcp.services.gateway.loadbalancer.server.port=10300
+      - traefik.tcp.services.gateway.loadbalancer.server.port=${TCP_PORT:-10300}
 
   # Match instance — addressed DIRECTLY by the client (allocated by the matchmaker),
   # never behind Traefik. Scale into a fleet by adding match-2, match-3 … on other ports.
