@@ -68,15 +68,17 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
-      - --entrypoints.gateway.address=:10300
+      # Gateway listens on TCP_PORT (the notification-channel port handed to the
+      # client in GetLoginData); keep it in sync with the published port below.
+      - --entrypoints.gateway.address=:${TCP_PORT:-10300}
       # ALL HTTP domains are Cloudflare-proxied: Cloudflare terminates TLS with its
       # own trusted cert and talks HTTP to the origin ("Flexible" SSL), so Traefik
       # serves plain HTTP and needs NO ACME/Let's Encrypt at all (no rate limits, no
-      # renewals). The gateway (:10300) and match (UDP) stay grey/direct — Cloudflare
-      # can't proxy raw TCP/UDP without Spectrum.
+      # renewals). The gateway (TCP_PORT) and match (UDP) stay grey/direct —
+      # Cloudflare can't proxy raw TCP/UDP without Spectrum.
     ports:
       - "80:80"
-      - "10300:10300"   # TCP gateway (raw AES passthrough)
+      - "${TCP_PORT:-10300}:${TCP_PORT:-10300}"   # TCP gateway (raw AES passthrough)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
