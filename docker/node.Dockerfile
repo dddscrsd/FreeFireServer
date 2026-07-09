@@ -17,6 +17,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY config ./config
 COPY proto ./proto
+COPY protocol ./protocol
+COPY migrations ./migrations
+COPY scripts ./scripts
 COPY src ./src
 # Overridden per service in docker-compose (e.g. node src/servers/login.js).
 CMD ["node", "src/servers/main.js"]
