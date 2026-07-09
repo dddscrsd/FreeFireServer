@@ -77,6 +77,10 @@ services:
       - --certificatesresolvers.le.acme.tlschallenge=true
       - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      # ACME CA. Defaults to Let's Encrypt PRODUCTION. While debugging certs, set
+      # ACME_CASERVER to the STAGING URL in .env (near-unlimited, untrusted certs)
+      # to avoid prod rate limits; switch back once the flow works.
+      - --certificatesresolvers.le.acme.caserver=${ACME_CASERVER:-https://acme-v02.api.letsencrypt.org/directory}
     ports:
       - "80:80"
       - "443:443"
