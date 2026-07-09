@@ -22,14 +22,22 @@ One async interface, two backends selected by `DATABASE_URL`:
 Interface: `getByToken`, `getById`, `getByOpenId`, `getByIds` (batch — kills the
 N+1 friend/clan fan-outs), `searchByNickname`, `createFromLogin`, `save`, `close`.
 
-## Run it (Postgres up, e.g. from the compose stack)
+## Cutover procedure (Postgres up, e.g. from the compose stack)
 ```sh
 export DATABASE_URL=postgres://ff:PASS@localhost:5432/freefire
-npm run migrate      # apply migrations/*.sql (tracked in _migrations)
-npm run repo-smoke   # exercise every repo method against real Postgres, then clean up
+npm run migrate        # 1. apply migrations/*.sql (schema; tracked in _migrations)
+npm run migrate-data   # 2. copy accounts.db -> Postgres (idempotent; resets the id sequence)
+npm run repo-smoke     # (optional) exercise the repo against real Postgres, then clean up
+# 3. restart the app with DATABASE_URL set -> the HTTP tier now runs on Postgres.
 ```
+With `DATABASE_URL` unset the app stays on SQLite unchanged.
 
-## Next
-Step 3 wires the repository behind `src/db/player.js` — the async ripple through
-the ~130 call sites via the `savePlayer` hook + `getByToken`. Step 4 migrates
-`accounts.db` → Postgres; step 5 is the parity harness before cutover.
+## Status
+- **Step 1–2 (schema + repository)** — done.
+- **Step 3 (HTTP tier on the async repo)** — done. The router resolves auth via
+  the repo and persists via a deferred save; the direct-caller handlers `await
+  getRepo().*`.
+- **Step 4 (data migration)** — done (`src/db/migrate-data.js`).
+- **Remaining:** convert the **TCP gateway** (`src/tcp/gateway.js` `getByToken`)
+  off the sync SQLite path before the cutover (else HTTP→PG but gateway→SQLite),
+  then a parity check.
