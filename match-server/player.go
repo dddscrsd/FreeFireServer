@@ -23,6 +23,11 @@ const (
 	playerRepID    = 1000       // local player's PRI RepID (first EntityType=1 BindPRI entry; props/vehicles use other ranges)
 	localFaction   = 0          // local player's CS FACTION_ID (0=left gate); matches PRIHPBlock field 34
 	maxHP          = 200        // starting/max HP for a player entity (PRI fields 0/1)
+	// defaultBattleFlag equips every player a battle flag (BattleFlag.csv 1410000001 = Pirate) so flag emotes
+	// plant — the client only sends cmd 0x114 when BattleFlagID != 0. It's a testing default; the JWT's
+	// battle_flag should carry the player's real equipped flag. Any nonzero value works (the flag model
+	// resolves from the emote link_id, not this id). See [[cs-emotes]].
+	defaultBattleFlag = 1410000001
 )
 
 // Enemy bot identity. RE showed a CS enemy is just an ordinary remote Player entity
@@ -77,6 +82,7 @@ type joinPlayer = message.PlayerInfo
 // token falls back to the stub player so a manual join still works.
 func resolvePlayer(tok string) joinPlayer {
 	p := joinPlayer{AccountID: fallbackAccountID, EntityID: playerEntityID, Name: fallbackName}
+	p.BattleFlag = defaultBattleFlag // equip a flag so flag emotes plant; the JWT overrides below if it carries one
 	if tok == "" {
 		log.Printf("[mm-udp] cmd 440 carried no prepare_token — using fallback player %d %q", p.AccountID, p.Name)
 		return p
@@ -99,6 +105,9 @@ func resolvePlayer(tok string) joinPlayer {
 		p.Avatar, p.Color, p.Head, p.Banner = s.Avatar, s.Color, s.Head, s.Banner
 		p.Clothes, p.Slots = s.Clothes, s.Slots
 		p.Emotes = s.Emotes
+		if s.BattleFlag != 0 { // the player's real equipped flag, if the token carries one
+			p.BattleFlag = s.BattleFlag
+		}
 	}
 	log.Printf("[mm-udp] prepare_token OK: acc=%d name=%q region=%q role=%d match=%d avatar=%d clothes=%d slots=%d emotes=%d",
 		p.AccountID, p.Name, claims.Region, p.Role, claims.MatchID, p.Avatar, len(p.Clothes), len(p.Slots), len(p.Emotes))

@@ -54,10 +54,6 @@ func (s *session) handleTakeDamage(p *packet.Packet) {
 	}
 	victim := binary.LittleEndian.Uint32(p.Payload[0:])
 	dmg := binary.LittleEndian.Uint16(p.Payload[4:])
-	base_dmg := binary.LittleEndian.Uint16(p.Payload[6:])
-	if dmg < base_dmg {
-		return
-	}
 	// Hit body part is at offset 9 — the high byte of the packed field @6, which is
 	// (rawBaseDamage & 0xFFFFFF) | (bodyPart<<24); it also appears at the dedicated byte
 	// @22. Offset 8 (what we read before) is raw-damage bits 16-23, ~always 0, so it
@@ -84,8 +80,21 @@ func (s *session) handleChangeHeldItem(p *packet.Packet) {
 		return
 	}
 	unique := binary.LittleEndian.Uint32(p.Payload[4:])
+	// Remember the weapon held right before switching TO the gloo wall, so gloo.go can auto-switch back
+	// to it once the last wall is thrown (the reference does this so the player isn't left empty-handed).
+	if s.isGloo(unique) && !s.isGloo(s.itemOnHand) {
+		s.heldBeforeGloo = s.itemOnHand
+	}
 	s.itemOnHand = unique
 	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1) // eager: remote clients swap to the new held weapon (PRI field 4)
+}
+
+// isGloo reports whether an item unique is the player's gloo-wall stack (data glooDataID).
+func (s *session) isGloo(unique uint32) bool {
+	if it, ok := s.clientUIDs[unique]; ok {
+		return it.data == glooDataID
+	}
+	return false
 }
 
 // heldWeaponData returns the DataID of the item the local player currently holds (the

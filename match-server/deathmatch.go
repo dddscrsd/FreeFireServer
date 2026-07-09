@@ -185,6 +185,19 @@ func (m *Match) emitDeath(victim, killer, weapon, weaponSkin, observe uint32, bo
 	body := message.PlayerDead(victim, killer, weapon, weaponSkin, observe, bodyPart, pos, system, pendingRevive)
 	m.broadcastData(packet.CmdDead, body,
 		fmt.Sprintf("cmd=107 DEAD victim=%#x killer=%#x weapon=%d observe=%#x pending=%v", victim, killer, weapon, observe, pendingRevive))
+
+	// The dead client now spectates `observe`; its camera re-renders that pawn's weapon, which can drop the
+	// mounted attachments (e.g. a 2x scope reverts to the default 1x on the spectator's view). Re-send the
+	// watched player's attachment mounts (cmd 124) so the spectator sees the same maxed attachments. Guarded:
+	// `observe` may be the bot (no session) and the victim may be the bot too.
+	if observe != 0 {
+		if watched := m.sessionByEntity(observe); watched != nil {
+			if spectator := m.sessionByEntity(victim); spectator != nil {
+				watched.resendEquipTo(spectator)  // re-affirm the watched player's back-mounted weapons
+				watched.resendAttachTo(spectator) // + attachments (so a 2x scope isn't seen as the default 1x)
+			}
+		}
+	}
 }
 
 // stepKnock bleeds every KNOCKED player on run()'s tick: -knockBleedAmt on the cadence; at 0 the

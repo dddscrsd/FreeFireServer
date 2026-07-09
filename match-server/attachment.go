@@ -132,6 +132,35 @@ func (s *session) sendAttachEquips(equips []attachEquip) {
 			message.AttachmentChanged(s.player.EntityID, ae.slot, ae.weaponUnique, ae.data, ae.unique),
 			fmt.Sprintf("cmd=124 equip attach data=%d slot=%d -> weapon uid=%d (all)", ae.data, ae.slot, ae.weaponUnique))
 	}
+	s.attachments = append(s.attachments, equips...) // remember the mounts so a late joiner can be brought up to date (resendAttachTo)
+}
+
+// resendAttachTo re-fires this player's currently-mounted attachments (cmd 124) to a SINGLE target
+// session — used to bring a late joiner up to date (admitLater), since attachments are otherwise
+// mounted via a one-time broadcast the joiner missed. The joiner already has the attachment ITEMS
+// (they ride in this player's currentInventorySync as tracked clientUIDs); this mounts them onto the
+// weapons so the joiner sees the same maxed attachments everyone else does. See [[cs-attachments]].
+func (s *session) resendAttachTo(target *session) {
+	for _, ae := range s.attachments {
+		target.sendDataLog(packet.CmdAttachmentChanged,
+			message.AttachmentChanged(s.player.EntityID, ae.slot, ae.weaponUnique, ae.data, ae.unique),
+			fmt.Sprintf("cmd=124 attach resync data=%d slot=%d weapon uid=%d ent=%#x -> joiner", ae.data, ae.slot, ae.weaponUnique, s.entityID))
+	}
+}
+
+// pruneWeaponAttach forgets the mounts belonging to a weapon that just left the loadout (dropped /
+// overridden), so a late joiner isn't sent cmd-124 mounts for a weapon the player no longer holds.
+func (s *session) pruneWeaponAttach(weaponUnique uint32) {
+	if len(s.attachments) == 0 {
+		return
+	}
+	kept := s.attachments[:0]
+	for _, ae := range s.attachments {
+		if ae.weaponUnique != weaponUnique {
+			kept = append(kept, ae)
+		}
+	}
+	s.attachments = kept
 }
 
 // handleEquipAttachment logs a cmd 122 client equip request. The server auto-maxes

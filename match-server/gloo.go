@@ -181,12 +181,22 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 
 	// 1) DEDUCT one, unless infinite. cmd 112 DropInventoryRes SETS the client's stack to
 	//    the new count (client removes the item at 0).
+	var autoSwitch uint32 // if the last gloo was thrown, the weapon to auto-switch the placer back to
 	if !cfg.infiniteGloo {
 		newCount := glooCount - 1
 		if newCount == 0 {
 			delete(s.clientUIDs, glooUID)
 			s.clearEquip(message.SlotBuilding) // free slot 13
-
+			// No gloo walls left — plan to auto-switch the placer back to the weapon held before the gloo
+			// (the reference does this so the player isn't left holding an empty Building slot), but emit it
+			// AFTER the cmd 112 consume below so it overrides the client's own switch-to-fists on removal.
+			if s.heldBeforeGloo != 0 {
+				if _, ok := s.clientUIDs[s.heldBeforeGloo]; ok {
+					autoSwitch = s.heldBeforeGloo
+					s.itemOnHand = s.heldBeforeGloo
+				}
+				s.heldBeforeGloo = 0
+			}
 		} else {
 			it := s.clientUIDs[glooUID]
 			it.count = newCount
@@ -195,6 +205,11 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 		out = append(out, outPkt{packet.CmdDropInventory,
 			message.DropInventoryRes(glooUID, newCount, 0),
 			fmt.Sprintf("cmd=112 gloo consume uid=%d -> %d left", glooUID, newCount)})
+		if autoSwitch != 0 { // after the consume: switch the placer's hand back to their last weapon (all clients)
+			out = append(out, outPkt{packet.CmdChangeHeldItem,
+				message.ChangeInventoryOnHand(s.player.EntityID, autoSwitch),
+				fmt.Sprintf("cmd=108 auto-switch to uid=%d after last gloo thrown", autoSwitch)})
+		}
 	}
 
 	// 2) SPAWN the wall (cmd 218) with its game id as the ReplicationID, so the cmd 218

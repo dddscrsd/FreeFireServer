@@ -1,0 +1,4 @@
+Id,Name,ModelRes,LobbyModelRes,FlagRes,EffectRes,duration,level_threshold,link_id
+物品ID,旗子名称（策划用）,旗子模型,大厅旗子模型,旗面模型,旗子特效,旗子持续时间,每级击杀数下限(不包括),关联物品id
+1410000001,普通的旗子,BattleFlag_Pirate,BattleFlag_Pirate_Store,,,60,0,909000034
+1410000002,工会战的旗子,BattleFlag_Pirate_GuildWar,BattleFlag_Pirate_GuildWar_Store,,,60,0,909000128

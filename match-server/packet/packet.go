@@ -40,11 +40,17 @@ const (
 	CmdJoinMatchRes        = 100  // server -> client: LGIGCGIDOKP (join result)
 	CmdPlayerJoin          = 101  // server -> client: GKBDLJFGGMI (player join)
 	CmdMatchEnd            = 103  // server -> client: RUDP_MATCH_END (also used as the SendKick(so=3) carrier on shutdown)
-	CmdChangeHeldItem      = 108  // client -> server: RUDP_CHANGE_INVENTORY_ON_HAND — [entity u32][itemUnique u32]
+	CmdChangeHeldItem      = 108  // client <-> server: RUDP_CHANGE_INVENTORY_ON_HAND — [entity u32][itemUnique u32] (C2S rx GMEMMIIODBK; S2C re-assert send class JLMEBGKMNIL)
+	CmdEquip               = 119  // client -> server: JHMFPMMDOLP — RUDP_EQUIP (inventory slot swap): [u8 slotID][u32 uniqueID]
+	CmdEquipmentChanged    = 121  // server -> client: LJGFNPIMGMA — RUDP_EQUIPMENT_CHANGED (visual slot move): [u32 pid][u8 slot][u32 oldUID][u32 newUID][u32 dataID][u32 runtime]
 	CmdPickupInventory     = 111  // client -> server: LHODJLEHDND — RUDP_PICKUP_INVENTORY (pick a ground item by UniqueID)
 	CmdDropInventory       = 112  // client <-> server: KJBONEENCAL — RUDP_DROP_INVENTORY (req: u32 unique,u32 count,u8 reason; res reuses class)
 	CmdUseInventory        = 113  // client -> server: RUDP_USE_INVENTORY — finished channelling a consumable ([u32 uid][u32 count][u32 param]); server applies the effect + tracks the consume
 	CmdTryUseInventory     = 131  // client -> server: RUDP_TRYUSE_INVENTORY (KOMODKGGDBG, [u32 entity][u32 item][u32 tick]) — started channelling a consumable
+	CmdDoAction            = 201  // server -> client: FPCOHGNMLBG — RUDP_DoAction (0xC9): plays an action anim on a REMOTE pawn (medkit cure begin/end); NOT a cmd 131/113 relay
+	CmdEmote               = 369  // client <-> server: 0x171 — play emote. C2S LAPCIFKMAAP [u32 emoteId][u8 effIdx][u8 loop][u8 leadIngame][u32 followLeader][u32 leadTick]; S2C NIBOCOJJCCJ [u32 pid][u32 emoteId][u8 effIdx][u8 loop] relayed to others
+	CmdBattleFlagReq       = 276  // client -> server: 0x114 GILPGGDOOGE — RequestUseBattleFlag: [u32 owner][i32 x][i32 y][i32 z /1000][u32 flagConfigId]; client planted a flag-emote flag
+	CmdBattleFlagSync      = 277  // server -> client: 0x115 AACLJKNELJE — [i16 count]{AMPGELLIDGH: u32 owner, u32 objectId, u8 active(0=despawn), i32 x/y/z /1000, u32 flagConfigId, u8 extra=0}×count; authoritative named-flag spawn/despawn
 	CmdEquipAttachment     = 122  // client -> server: RUDP_EQUIP_ATTACHMENT — client's manual attachment equip (server auto-maxes on buy, so logged/ignored)
 	CmdUnequipAttachment   = 123  // client -> server: RUDP_UNEQUIP_ATTACHMENT — IGNORED (attachments are kept locked on the weapon)
 	CmdAttachmentChanged   = 124  // server -> client: KBDODAHANGB — RUDP_ATTACHMENT_CHANGED (force-equip a maxed attachment onto a bought weapon)
@@ -82,6 +88,7 @@ const (
 	CmdPlayerQuitRes       = 192  // server -> client: typed — player quit
 	CmdCSShop              = 407  // server -> client: NDBLNLLMMJA (typed) — Contra Squad buy-phase shop (LOJA) item list
 	CmdCSPurchase          = 408  // client <-> server: IIOCLGDNBBB (typed) — buy request / result (result carries new coin balance)
+	CmdShopPurchaseCount   = 533  // server -> client: JOOMADHAPPD (typed) — per-round PURCHASE COUNT per limited shop item ([i16 count]{u32 itemID,u32 count,u32 limit}); drives the shop cell's "N/limit" label (m_PurchaseCnt). NOT carried by the cmd 408 result.
 	CmdCSRoundResult       = 409  // server -> client: DMJPAJFMMMB (typed) — round result (winner team id -> VICTORY/DEFEAT + score tally)
 	CmdSafeZoneChange      = 117  // server -> client: KGOHADAMBLI (typed) — circular safezone (outer->inner shrink; EndMs drives the Fight timer)
 	CmdNotifyRevive        = 388  // server -> client: MJCMIMNHILD (typed) — revive an EXISTING dead player at a position (keeps team/faction/loadout)

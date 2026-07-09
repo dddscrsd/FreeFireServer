@@ -33,7 +33,11 @@ type PlayerInfo struct {
 	Clothes []uint32 // clothes item ids
 	Slots   []uint32 // loadout slot item ids
 	Emotes  []uint32 // emote item ids
-	TeamIdx uint8    // the player's index on the team
+	// BattleFlag is the equipped battle-flag config id, wired into PKPAMKEDCDC.MDDDNKCOMDF. The client reads
+	// it into Player.BattleFlagID; NONZERO is what lets it plant a flag emote (send cmd 0x114). The flag's
+	// actual model resolves from the emote link_id, so any nonzero value enables all flag emotes. See [[cs-emotes]].
+	BattleFlag uint32
+	TeamIdx    uint8 // the player's index on the team
 
 	// Spawn transform, written into the OGJKHJAFNHB sub-object of cmd 101
 	// (CCIKDFGDBAM position ×1000 / CCDDHEBKMGD facing ×100). This is the
@@ -112,9 +116,9 @@ func (w *Writer) pkpamkedcdc(pi PlayerInfo) {
 	w.Str("")             // MFLBOPEBOKE
 	w.Str("")             // AIBGAEMOLAN
 	w.U32(0)              // LGFOLJMCMFH
-	w.U32List(pi.Slots)   // OJENBEIOBGL : List<u32> (count=0)
-	w.I16(0)              // GLHCLEMMLDN : List<u32> (count=0, read-ahead)
-	w.U32(0)              //   MDDDNKCOMDF (trailing u32 of GLHCLEMMLDN)
+	w.U32List(pi.Slots)  // OJENBEIOBGL : List<u32> (count=0)
+	w.I16(0)             // GLHCLEMMLDN : List<u32> (count=0)
+	w.U32(pi.BattleFlag) // MDDDNKCOMDF : equipped BattleFlagID (@+0xB0) — NONZERO gates the flag-emote plant (client sends cmd 0x114)
 	w.U32(0)              // FHMMPDFIPMJ (pin id)
 	w.U32(0)              // ALELGKLAAOK
 	w.U32(0)              // PAPFCAJCNPO

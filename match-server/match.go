@@ -47,6 +47,8 @@ type Match struct {
 	wallSeq         uint32                // monotonic wall entity-id / PRI-RepID allocator (never reused)
 	containers      map[uint16]*container // live ground boxes keyed by ContainerObjectID
 	nextContainerID uint16                // runtime container-id allocator (runtimeContainerBase..Max)
+	flags           map[uint32]flagObject // owner entityId -> live battle-flag object (1 per player; emote-planted, 60s server-despawn, see battleflag.go)
+	flagSeq         uint32                // monotonic flag object-id allocator (flagEntityBase band)
 
 	// Zone state (during Fight), replacing runSafeZone's goroutine + tickers.
 	zoneOn          bool
@@ -298,10 +300,12 @@ func (m *Match) admitLater(s *session) {
 	if m.botEntity != 0 { // only if the bot is still around (1-human match); retired once a 2nd human joins
 		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot), fmt.Sprintf("cmd=101 BOT ent=%#x", m.bot.EntityID))
 	}
-	for _, p := range m.players { // the joiner learns each existing player's inventory (held weapon + skin)
+	for _, p := range m.players { // the joiner learns each existing player's inventory (held weapon + skin + back-mounted loadout)
 		if p != s {
 			s.sendDataLog(packet.CmdSyncInventory, p.currentInventorySync(),
 				fmt.Sprintf("cmd=174 existing ent=%#x inventory -> joiner", p.entityID))
+			p.resendEquipTo(s)  // cmd 121 so the joiner back-mounts each existing player's equipped weapons
+			p.resendAttachTo(s) // + mount their maxed attachments so the joiner sees full guns, not bare ones
 		}
 	}
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
@@ -379,10 +383,12 @@ func (m *Match) run() {
 			m.stepZone(now)
 			m.stepKnock(now)   // bleed any downed players; a bleed-out finalizes a cmd-107 death
 			m.stepRescue(now)  // complete / cancel in-progress teammate revives
+			m.stepFlags(now)   // despawn emote-planted battle flags past their 60s lifetime
 			m.streamMovement() // Step 6: relay each human's latest cmd-1001 state to the others
 			for _, p := range m.players {
-				p.stepHeal(now) // medkit heal-over-time, per player (run()-driven)
-				p.stepEP(now)   // mushroom EP -> HP regen, per player
+				p.stepHeal(now)        // medkit heal-over-time, per player (run()-driven)
+				p.stepEP(now)          // mushroom EP -> HP regen, per player
+				p.stepHealChannel(now) // stop a stuck medkit cure animation on interrupt/timeout
 			}
 			if now.Sub(lastClock) >= clockTick {
 				m.streamClock()
@@ -612,7 +618,7 @@ func (m *Match) endFight(now time.Time) {
 	// bonus for the WINNING team's members (was m.s-only, so only player 1 got paid).
 	for _, p := range m.players {
 		aw := 500 * p.roundKills.Swap(0)
-		aw += 500 * uint32(m.round)
+		aw += 500 * (uint32(m.round) + 1)
 		if p.team == winnerTeam {
 			aw += 500 // win bonus
 		}
@@ -629,8 +635,10 @@ func (m *Match) endFight(now time.Time) {
 	}
 	s.roundResult(winnerTeam) // cmd 409 round result (non-deciding rounds only)
 	m.revive = !localWon
-	// Transition setup (was roundTransition step 1): pick the next arena + spawns + a fresh bot.
-	m.arena = pickArena()
+	// Transition setup (was roundTransition step 1): pick the next arena + spawns + a fresh bot. nextArena
+	// avoids any city already played this match (the old pickArena() picked purely at random, so rounds
+	// could repeat a city).
+	m.arena = m.nextArena()
 	for _, p := range m.players {
 		p.player.SpawnPos, p.player.SpawnFace = m.arena.spawnFor(p.faction)
 	}
@@ -651,8 +659,10 @@ func (m *Match) postBannerEdge(now time.Time) {
 	for _, p := range m.players {
 		p.playerPos = p.player.SpawnPos // reset so the shrinking zone can't damage a stale position
 		p.resetEP()                     // fresh round: clear the mushroom EP buffer + per-round count
+		p.sendMushroomCount()           // cmd 533: reset the shop's mushroom "N/2" label for the new round (m_PurchaseCnt persists client-side otherwise)
 	}
-	s.clearWalls() // gloo walls are per-round world state
+	s.clearWalls()      // gloo walls are per-round world state
+	m.clearAllFlags()   // emote-planted battle flags are per-round world state too (never auto-remove client-side)
 	if m.botEntity != 0 {
 		s.respawnBot()
 	}

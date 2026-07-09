@@ -60,9 +60,30 @@ var spawnRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func allArenas() []csArena { return csArenas } // returns the full list of spawn arenas (for testing / debug)
 
-// pickArena selects a random CS spawn city. Called at match start (and, once the
-// round loop exists, at each round start — see the ROUND SYSTEM TODO above).
-func pickArena() csArena { return csArenas[spawnRand.Intn(len(csArenas))] }
+// nextArena selects a CS spawn city that has NOT been used yet this match, marks it used, and returns
+// it. Once every city has been used it clears the set and starts over — so arenas never repeat until the
+// whole 12-city pool is exhausted (and a match is at most maxRound=7 rounds, well under 12, so within a
+// single match the arena never repeats). Keyed off the shared m.arenasUsed, so both the match-start spawn
+// and every round transition draw from the same "already used" set — the old pickArena() ignored it,
+// which is why rounds could land on a city already played.
+func (m *Match) nextArena() csArena {
+	if m.arenasUsed == nil {
+		m.arenasUsed = make(map[csArena]bool)
+	}
+	var available []csArena
+	for _, a := range csArenas {
+		if !m.arenasUsed[a] {
+			available = append(available, a)
+		}
+	}
+	if len(available) == 0 { // whole pool used — reset and reuse all
+		clear(m.arenasUsed)
+		available = append(available, csArenas...)
+	}
+	a := available[spawnRand.Intn(len(available))]
+	m.arenasUsed[a] = true
+	return a
+}
 
 // spawnFor returns the (position, facing) for a faction in this arena: faction 0
 // spawns at Fence0, faction 1 at Fence1, each facing the opposing fence.

@@ -33,16 +33,16 @@ func (m *Match) priPayload() []byte {
 		if p.firing {
 			fireState = 2 // READY: remote clients render the muzzle flash / tracer
 		}
-		sighting := byte(0)
+		sighting := 0
 		if p.sighting {
-			sighting = 1 // ADS: remote clients strike the scoped/aiming pose (PRI field 12)
+			sighting = 534 // ADS: remote clients strike the scoped/aiming pose (PRI field 12)
 		}
 		onHand := uint64(p.itemOnHand)<<32 | uint64(p.heldWeaponData()) // remote pawn's held gun (PRIHPBlock field 4)
 		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(message.PRIState{
 			CurHP: m.entityHP(p.entityID), MaxHP: maxHP, Coins: coins, EarnedCoin: uint16(p.award), Score: score,
 			VestDur: p.vestDur, HelmetDur: p.helmetDur, ItemOnHand: onHand, Faction: p.faction,
 			Kills: capByte(m.kills[p.entityID]), Deaths: capByte(m.deaths[p.entityID]),
-			FireState: fireState, Sighting: sighting, CurEP: byte(p.ep), Damage: m.damage[p.entityID],
+			FireState: fireState, Sighting: uint32(sighting), CurEP: byte(p.ep), Damage: m.damage[p.entityID],
 		})})
 	}
 	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {
@@ -98,6 +98,8 @@ func (s *session) giveLoadout(resetCoins bool) {
 	const uspData = 3
 	const pistolAmmo = 202
 
+	before := s.equipSnapshot() // capture the pre-reset slot map so remotes clear any old back-mounted weapons
+
 	if resetCoins {
 		s.coins = startingCoins
 	}
@@ -130,6 +132,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 		medkitID: {unique: medkitID, data: medkitData, count: 2, runtime: 2},
 	}
 	s.itemOnHand = uspUID
+	s.attachments = nil // fresh loadout: forget the old weapons' mounts (the cmd 327 wipe below drops them client-side too)
 	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1)
 	s.clearArmor() // the loadout wipe (cmd 327) drops the client's armor too — clear the durability bars
 	// Max the starter USP's attachments too (magazine/muzzle) so its ammo is full and it
@@ -152,13 +155,14 @@ func (s *session) giveLoadout(resetCoins bool) {
 		s.sendDataLog(packet.CmdRemoveInventoryList, message.RemoveInventoryList(s.player.EntityID, stale),
 			fmt.Sprintf("cmd=327 RemoveInventoryList (clear %d stale items)", len(stale)))
 	}
-	for _, id := range staleBoxes { // remove stale ground boxes so they vanish on respawn/reset
-		s.sendDataLog(packet.CmdDelContainer, message.DelContainer(id, message.ContainerDynamic),
+	for _, id := range staleBoxes { // remove stale ground boxes so they vanish on respawn/reset — for EVERY player (the boxes are shared world state)
+		s.match.broadcastData(packet.CmdDelContainer, message.DelContainer(id, message.ContainerDynamic),
 			fmt.Sprintf("cmd=228 DelContainer box=%d (loadout reset)", id))
 	}
 	body := message.SyncInventory(s.player.EntityID, inv, uspAttach, equip, onHand)
 	s.match.broadcastData(packet.CmdSyncInventory, body, "cmd=174 SyncInventory (USP + ammo) -> all (remotes render the held weapon + skin)")
 	s.sendAttachEquips(uspEquips) // mount the starter USP's maxed attachments
+	s.broadcastEquipDiff(before)  // tell remotes the slot changes (respawn: drop old back-mounted weapons, show the fresh USP)
 }
 
 // currentInventorySync builds a cmd 174 from a player's CURRENT tracked inventory + equipment, so a
@@ -209,6 +213,7 @@ func (s *session) reissueLoadout() {
 func (s *session) sendCSShop() {
 	s.sendDataLog(packet.CmdCSShop, message.CSShop(csShopItems, csShopTitle, false),
 		fmt.Sprintf("cmd=407 CSShop (%d items, %q)", len(csShopItems), csShopTitle))
+	s.sendMushroomCount() // cmd 533: re-sync the mushroom "N/2" label to this round's count (0 after a round reset)
 }
 
 // bindPRIs sends the cmd 118 BindPRI to THIS player, mapping RepIDs to entities so subsequent cmd

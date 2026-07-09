@@ -13,9 +13,12 @@ import (
 // overridden item spawns on the ground inside a CONTAINER anyone can walk to and pick up
 // (cmd 227 AddContainer + cmd 114 AddPickup). A pickup (cmd 111) installs the ground item
 // into the loadout (type-aware slot) and removes it from its container (cmd 115 DelPickup;
-// cmd 228 DelContainer when the box empties). A CS match has ONE real client + a
-// server-driven bot, so "everyone" == this session: every loot packet is a plain reliable
-// send to s.remote (no broadcast loop). The bot never picks anything up.
+// cmd 228 DelContainer when the box empties). The ground items are shared world state, so a
+// drop/pickup's world packets (AddPickup / DelPickup / container add/del) fan out to the
+// WHOLE roster — every player sees a loose item appear and vanish — while the owner-only
+// inventory syncs (cmd 174 / cmd 327) reach just the picker/dropper (flush routes by cmd).
+// The container map lives on the Match, so any player can pick up any player's drop. The bot
+// never picks anything up.
 
 // lootItem is one item lying on the ground inside a container. It KEEPS the item's original
 // inventory Unique so the client can re-pick it with the same UID it already knows (the
@@ -84,10 +87,29 @@ func (m *Match) flushBroadcast(out []outPkt) {
 	}
 }
 
-// flush sends every queued packet in order.
+// worldLoot reports whether a queued loot packet is shared ground-world state (a loose item
+// or its container) that EVERY player must see, as opposed to an owner-only inventory sync
+// (cmd 174 SyncInventory / cmd 327 RemoveInventoryList) that only the picker/dropper needs.
+func worldLoot(cmd uint16) bool {
+	switch cmd {
+	case packet.CmdAddPickup, packet.CmdDelPickup, packet.CmdAddPickupList,
+		packet.CmdAddContainer, packet.CmdDelContainer:
+		return true
+	}
+	return false
+}
+
+// flush sends every queued packet in order: shared ground-loot spawns/removals broadcast to
+// the whole roster (so a dropped item appears + vanishes for everyone), while the owner-only
+// inventory syncs go to this session alone. The held-weapon model that others render still
+// rides the PRI (field 4), so a picked-up gun shows on the picker without broadcasting cmd 174.
 func (s *session) flush(out []outPkt) {
 	for _, o := range out {
-		s.sendDataLog(o.cmd, o.payload, o.label)
+		if worldLoot(o.cmd) {
+			s.match.broadcastData(o.cmd, o.payload, o.label)
+		} else {
+			s.sendDataLog(o.cmd, o.payload, o.label)
+		}
 	}
 }
 
@@ -170,6 +192,7 @@ func (s *session) removeTrackedItem(unique uint32, out []outPkt) []outPkt {
 		}
 	}
 	delete(s.clientUIDs, unique)
+	s.pruneWeaponAttach(unique) // forget its mounts so a late joiner isn't sent stale cmd-124s
 	if s.itemOnHand == unique {
 		s.itemOnHand = 0
 	}
@@ -285,6 +308,7 @@ func (s *session) removeLoadoutWeapon(slot byte, out []outPkt) ([]outPkt, csWeap
 	delete(s.weapons, slot)
 	s.clearEquip(slot)
 	delete(s.clientUIDs, w.unique)
+	s.pruneWeaponAttach(w.unique) // forget its mounts so a late joiner isn't sent stale cmd-124s
 	if s.itemOnHand == w.unique {
 		s.itemOnHand = 0
 	}
@@ -328,6 +352,7 @@ func (s *session) handlePickup(p *packet.Packet) {
 		return
 	}
 	pos := s.snapPlayerPos()
+	before := s.equipSnapshot()  // capture the slot map so we can tell remotes which slots changed
 	var pickEquips []attachEquip // maxed-attachment equips for a picked-up weapon (sent after flush)
 
 	box, it, ok := s.findLoot(req.UniqueID)
@@ -400,6 +425,7 @@ func (s *session) handlePickup(p *packet.Packet) {
 	}
 
 	s.flush(out)
+	s.broadcastEquipDiff(before)   // tell remotes the changed slot(s) so the picked-up weapon back-mounts (not just the held gun)
 	s.sendAttachEquips(pickEquips) // mount the picked weapon's maxed attachments (after the cmd 174 flush)
 }
 
@@ -424,9 +450,11 @@ func (s *session) handleDrop(p *packet.Packet) {
 		return
 	}
 	// A weapon carries its full magazine as runtime; every other item drops its tracked stack.
+	before := s.equipSnapshot() // capture the slot map so we can tell remotes which slot emptied
 	var out []outPkt
 	out = s.removeTrackedItem(req.Unique, out)
 	out = s.dropToGround(it, pos, out)
 
 	s.flush(out)
+	s.broadcastEquipDiff(before) // tell remotes the dropped weapon left its slot (clears their back-mount view)
 }

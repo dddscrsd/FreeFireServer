@@ -45,6 +45,8 @@ func (s *session) route(p *packet.Packet) {
 		s.handleStopSniper(p)
 	case packet.CmdChangeHeldItem: // 108
 		s.handleChangeHeldItem(p)
+	case packet.CmdEquip: // 119 — inventory slot swap (drag an item to another loadout slot)
+		s.handleEquip(p)
 	case packet.CmdPickupInventory: // 111 — pick up a ground-loot item
 		s.handlePickup(p)
 	case packet.CmdDropInventory: // 112 — drop a loadout weapon to the ground
@@ -53,6 +55,10 @@ func (s *session) route(p *packet.Packet) {
 		s.handleUseInventory(p)
 	case packet.CmdTryUseInventory: // 131 — started channelling a consumable
 		s.handleTryUseInventory(p)
+	case packet.CmdEmote: // 369 — play emote: relay the animation to others
+		s.handleEmote(p)
+	case packet.CmdBattleFlagReq: // 276 — client planted a flag-emote flag: spawn/replace the named world object
+		s.handleBattleFlagReq(p)
 	case packet.CmdEquipAttachment: // 122 — client's manual attachment equip (server auto-maxes)
 		s.handleEquipAttachment(p)
 	case packet.CmdUnequipAttachment: // 123 — never unequip; attachments stay locked on
@@ -215,7 +221,8 @@ func (s *session) handleClientPos(p *packet.Packet) {
 func (s *session) handlePlayerQuit(p *packet.Packet) {
 	s.stopped.Store(true)
 	s.sendDataLog(packet.CmdPlayerQuitRes, message.PlayerQuit(1), fmt.Sprintf("cmd=192 PlayerQuit payload=%x", p.Payload))
-	s.match.removePlayer(s) // drop from the roster; the match keeps running for the others
+	s.match.clearFlag(s.entityID) // despawn the quitter's flag (it never auto-removes client-side)
+	s.match.removePlayer(s)       // drop from the roster; the match keeps running for the others
 }
 
 // handleStartRescue handles cmd 142 (RUDP_START_RESCURE): a teammate began reviving a knocked player.

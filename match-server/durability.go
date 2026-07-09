@@ -1,6 +1,11 @@
 package main
 
-import "libmadoka/match-server/message"
+import (
+	"fmt"
+
+	"libmadoka/match-server/message"
+	"libmadoka/match-server/packet"
+)
 
 // Armor durability (helmet + vest). The CLIENT applies the armor damage-reduction to its own HP; the
 // server only TRACKS + streams each piece's durability (PRI fields 2/3) so armor bars show, deplete,
@@ -40,7 +45,8 @@ func (s *session) equipArmor(dataID uint32, slot byte) {
 	}
 }
 
-// wearArmor drops the hit piece's durability (the client already reduced HP), breaking it at 0.
+// wearArmor drops the hit piece's durability (the client already reduced HP), breaking it at 0, then
+// pushes the change so the armor bar redraws (syncArmor).
 func (s *session) wearArmor(bodyPart uint8, netDmg uint16) {
 	switch bodyPart {
 	case bodyHead:
@@ -48,14 +54,58 @@ func (s *session) wearArmor(bodyPart uint8, netDmg uint16) {
 			if s.helmetDur = wearDown(s.helmetDur, netDmg, armorReduction[s.helmetData]); s.helmetDur == 0 {
 				s.helmetData = 0 // helmet broke — cleared like the client drops it
 			}
+			s.syncArmor(message.SlotHelmet)
 		}
 	case bodyChest:
 		if s.vestDur > 0 {
 			if s.vestDur = wearDown(s.vestDur, netDmg, armorReduction[s.vestData]); s.vestDur == 0 {
 				s.vestData = 0 // vest broke
 			}
+			s.syncArmor(message.SlotVest)
 		}
 	}
+}
+
+// syncArmor pushes an armor slot's durability change to the client's armor bar. RE (1.70.1): there is NO
+// in-place durability message — the equipped vest/helmet's durability is written ONLY when the item OBJECT
+// is created (from its Runtime), and neither re-sending the same UID via cmd 174 (touches count only) nor a
+// cmd 121 (re-equips the existing item, shows "equipped") moves the bar. So a WEAR (dur > 0) RE-CREATES the
+// piece under a FRESH UniqueID carrying the reduced Runtime (cmd 174 → the client news the item at the new
+// durability), re-equips it (cmd 121 → the re-equip fires RefreshEquipmentStats, redrawing the bar), then
+// drops the stale old item (cmd 327). A BREAK (dur 0) just removes the piece. Owner-targeted: the bar is the
+// local HUD and the durability apply is IsLocalPlayer-gated (remotes ignore it).
+func (s *session) syncArmor(slot byte) {
+	oldUID, data, ok := s.equipAt(slot)
+	if !ok {
+		return
+	}
+	dur := s.slotRuntime(slot)
+	if dur == 0 { // broke -> remove the piece
+		s.clearEquip(slot)
+		delete(s.clientUIDs, oldUID)
+		s.sendDataLog(packet.CmdEquipmentChanged,
+			message.EquipmentChanged(s.player.EntityID, slot, oldUID, 0, 0, 0),
+			fmt.Sprintf("cmd=121 armor slot=%d uid=%d broke -> removed", slot, oldUID))
+		s.sendDataLog(packet.CmdRemoveInventoryList,
+			message.RemoveInventoryList(s.player.EntityID, []uint32{oldUID}),
+			fmt.Sprintf("cmd=327 remove broken armor uid=%d", oldUID))
+		return
+	}
+	// wear -> re-create the piece with the reduced durability under a NEW UID (durability is only applied at
+	// item creation), re-equip it, then drop the stale old item.
+	newUID := s.nextUID()
+	delete(s.clientUIDs, oldUID)
+	s.trackItem(lootItem{unique: newUID, data: data, count: 1, runtime: dur})
+	s.setEquip(slot, data, newUID)
+	s.sendDataLog(packet.CmdSyncInventory,
+		message.SyncInventory(s.player.EntityID, []message.InvItem{{Unique: newUID, Data: data, Count: 1, Runtime: dur}}, nil, nil, s.itemOnHand),
+		fmt.Sprintf("cmd=174 armor refresh slot=%d uid=%d dur=%d (new item)", slot, newUID, dur))
+	s.sendDataLog(packet.CmdEquipmentChanged,
+		message.EquipmentChanged(s.player.EntityID, slot, oldUID, newUID, data, dur),
+		fmt.Sprintf("cmd=121 re-equip armor slot=%d %d->%d dur=%d", slot, oldUID, newUID, dur))
+	s.sendDataLog(packet.CmdRemoveInventoryList,
+		message.RemoveInventoryList(s.player.EntityID, []uint32{oldUID}),
+		fmt.Sprintf("cmd=327 remove stale armor uid=%d", oldUID))
 }
 
 // wearDown returns dur reduced by the absorbed damage = net * r/(1-r), clamped at 0 (>=1 per hit so

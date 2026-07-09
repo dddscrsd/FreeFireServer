@@ -66,8 +66,10 @@ type session struct {
 	uidCounter uint32              // allocates unique item instance ids — MONOTONIC (never reset), so a new item can't collide with a stale one the client hasn't dropped yet
 	equipment  []message.Equipment // full loadout slot map (re-sent whole each sync)
 	weapons    map[byte]csWeapon   // current loadout weapons keyed by slot (2-primary placement + round-restart ammo refill)
-	clientUIDs map[uint32]lootItem // uid -> item the client holds; source of truth for the cmd-327 respawn clear AND for dropping ANY item (cmd 112) by unique (consumables/throwables have no weapon slot)
-	itemOnHand uint32              // unique of the currently held item
+	clientUIDs     map[uint32]lootItem // uid -> item the client holds; source of truth for the cmd-327 respawn clear AND for dropping ANY item (cmd 112) by unique (consumables/throwables have no weapon slot)
+	itemOnHand     uint32              // unique of the currently held item
+	attachments    []attachEquip       // mounted cmd-124 attachments (per weapon); resent to a late joiner (admitLater). Recorded on mount, pruned on weapon removal, cleared on loadout wipe
+	heldBeforeGloo uint32              // the weapon unique held right before switching to the gloo wall — auto-switched back to when the last gloo is thrown (gloo.go), matching the reference
 
 	// playerPos is this player's last-reported world position (cmd 1001), used by the SafeZone
 	// out-of-zone check. (The per-entity HP map is shared world state on the Match now — 4a; it
@@ -100,6 +102,12 @@ type session struct {
 	healActive  bool
 	healStart   time.Time
 	healApplied int
+
+	// Medkit cure-CHANNEL animation state (distinct from the heal above): cmd 131 starts the channel
+	// (remote DoAction Start), cmd 113 finishes it (End); if neither closes it, stepHealChannel ends it
+	// on interrupt (death/knock) or timeout so the remote cure animation never sticks. See medkit.go.
+	healChanneling   bool
+	healChannelStart time.Time
 
 	// Shop-mushroom EP (energy): buying a mushroom grants EP; stepEP drains it back into HP over
 	// time. mushrooms counts buys this round (capped at mushroomsPerRound); both reset each round.

@@ -263,8 +263,8 @@ type PRIState struct {
 	ItemOnHand         uint64 // (uniqueID<<32)|weaponDataID (field 4) — remote pawn's held weapon
 	Faction            byte
 	Kills, Deaths      byte
-	FireState          byte // START_FIRE_STATE (field 21) — remote muzzle/tracer
-	Sighting           byte // IS_SIGHTING (field 12) — remote ADS/scoped pose
+	FireState          byte   // START_FIRE_STATE (field 21) — remote muzzle/tracer
+	Sighting           uint32 // IS_SIGHTING (field 12) — remote ADS/scoped pose
 	CurEP              byte
 	Damage             uint32
 }
@@ -280,17 +280,17 @@ func PRIHPBlock(st PRIState) []byte {
 		{RepU8, 21, uint64(st.FireState)}, // START_FIRE_STATE (0 idle / 1 firing) — remote muzzle+tracer
 		{RepU8, 6, uint64(st.CurEP)},      // CUR_EP
 		{RepU8, 7, 200},                   // MAX_EP
-		{RepU32, 8, 0},                    // STATUS
+		{RepU32, 8, 0},                    // CUR_AP
+		{RepU32, 9, 0},                    // MAX_AP
 		{RepU16, 39, 0},                   // (unknown, new)
-		{RepU32, 9, uint64(534)},          // SIGHTING_ID
-		{RepU8, 10, uint64(st.Kills)},     // KILL_COUNT
-		{RepU8, 11, 0},                    // OB_COUNT
-		{RepU32, 12, uint64(st.Sighting)}, // IS_SIGHTING (remote ADS/scoped pose; the old "BUFF" label was wrong)
-		{RepU8, 13, 0},                    // CAMOUFLAGE_HP
-		{RepU8, 14, 0},                    // LIKED_COUNT
-		{RepU16, 15, 0},
-		{RepU64, 16, 0},
-		{RepU8, 17, 0},
+		{RepU8, 10, 1},                    // LIFE_COUNT
+		{RepU8, 11, 0},                    // STATUS
+		{RepU32, 12, uint64(st.Sighting)}, // SIGHTING_ID
+		{RepU8, 13, uint64(st.Kills)},     // CAMOUFLAGE_HP
+		{RepU8, 14, 0},                    // OB_COUNT
+		{RepU16, 15, 0},                   // BUFF
+		{RepU64, 16, 0},                   // CAMOUFLAGE_HP
+		{RepU8, 17, 0},                    // LIKE_COUNT
 		{RepU64, 18, 0},
 		{RepBool, 19, 0},
 		{RepU32, 20, uint64(st.Kills)}, // PVE_KILL_COUNT
@@ -302,7 +302,7 @@ func PRIHPBlock(st PRIState) []byte {
 		{RepU64, 27, 0},
 		{RepU16, 28, uint64(st.Score)},      // SCORE (CS round wins, packed own|oppo<<8)
 		{RepU8, 29, uint64(st.Deaths)},      // DEAD_COUNT
-		{RepU8, 30, 0},                      // ASSIST_COUNT
+		{RepU8, 30, uint64(st.Kills)},       // ASSIST_COUNT
 		{RepU32, 31, uint64(st.Damage)},     // TOTAL_DAMAGE
 		{RepU16, 32, uint64(st.Coins)},      // CUR_COIN (buy-phase money shown in the shop)
 		{RepU16, 33, uint64(st.EarnedCoin)}, // EARNED_COIN

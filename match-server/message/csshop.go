@@ -24,6 +24,31 @@ type ShopItem struct {
 	Bonus      bool
 }
 
+// PurchaseCount is one limited item's per-round buy count (CHEEGFNLIOE): the count the player has bought
+// this round + the round limit.
+type PurchaseCount struct {
+	ItemID uint32
+	Count  uint32
+	Limit  uint32
+}
+
+// ShopPurchaseCount builds the cmd 533 payload (server->client, message JOOMADHAPPD): the per-round
+// PURCHASE COUNT for limited shop items. The client's OnPurchaseSuccess (event UI_CSPURCHASE_SUCCESS)
+// reads it into the shop cell's m_PurchaseCnt, which drives the "N/limit" label — the cmd 408 result does
+// NOT carry this (its item list is ignored), so an instant consumable like the mushroom (no inventory
+// count) shows "0/limit" forever without it. Wire (LE): [i16 count] then per entry {u32 ItemID, u32 Count,
+// u32 Limit}; Limit 0 falls back to the cmd 407 shop Limitation. Verified from JOOMADHAPPD::Serialize.
+func ShopPurchaseCount(entries []PurchaseCount) []byte {
+	w := &Writer{}
+	w.I16(int16(len(entries)))
+	for _, e := range entries {
+		w.U32(e.ItemID)
+		w.U32(e.Count)
+		w.U32(e.Limit)
+	}
+	return w.B
+}
+
 // CSShop builds the cmd 407 payload: the item list, a localization/title string, and
 // a trailing flag.
 func CSShop(items []ShopItem, locKey string, flag bool) []byte {

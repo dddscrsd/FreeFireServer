@@ -175,10 +175,12 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 		s.grantMushroom(time.Now())
 		s.sendDataLog(packet.CmdCSPurchase, message.PurchaseResult(purchaseOK, coins),
 			fmt.Sprintf("cmd=408 buy OK mushroom -> ep=%d (%d/%d this round) coins=%d", s.ep, s.mushrooms, mushroomsPerRound, coins))
+		s.sendMushroomCount() // cmd 533: bump the shop cell's "N/2" label (the mushroom has no inventory count to drive it)
 		s.sendVar(packet.CmdPRISync, s.match.priPayload(), 2) // eager: push the new EP + coins now
 		return
 	}
 
+	before := s.equipSnapshot() // capture the slot map so we can tell remotes which slot the buy filled
 	inv, attach, equip, outgoing, attachEquips := s.addPurchasedItem(item, qty)
 	if slot, isArmor := armorSlot[itemID]; isArmor {
 		log.Printf("cmd=408 setting max durability for armor piece, id=%d", itemID)
@@ -202,6 +204,11 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	// each cmd 124 can now resolve them by unique.
 	s.sendAttachEquips(attachEquips)
 
+	// Tell remotes the bought weapon now occupies its slot (cmd 121) so it back-mounts on their view
+	// without the buyer having to swap slots. The full cmd 174 above alone doesn't reliably drive the
+	// remote back-mount (its apply is playerID-gated); cmd 121 does.
+	s.broadcastEquipDiff(before)
+
 	// The new weapon took the slot in the cmd 174 above; the overridden weapon it displaced is
 	// dropped to the ground LAST (inline — the sends are reliable and in order), so the client has
 	// finished equipping the new weapon and the slot is FULL when the drop appears. Otherwise the
@@ -218,6 +225,16 @@ const (
 	purchaseOK      byte = 0
 	purchaseNoMoney byte = 5
 )
+
+// sendMushroomCount sends cmd 533 (JOOMADHAPPD) with the mushroom's per-round buy count so the shop cell
+// renders "N/2". The mushroom is an instant consumable (no inventory item), so the client's m_PurchaseCnt
+// — set ONLY by this message — is the sole thing that can move the label off "0/2". Sent after each
+// mushroom buy and when the shop opens (which re-syncs it to the round's current count, 0 after a reset).
+func (s *session) sendMushroomCount() {
+	s.sendDataLog(packet.CmdShopPurchaseCount,
+		message.ShopPurchaseCount([]message.PurchaseCount{{ItemID: itemMushroom, Count: uint32(s.mushrooms), Limit: mushroomsPerRound}}),
+		fmt.Sprintf("cmd=533 mushroom count %d/%d", s.mushrooms, mushroomsPerRound))
+}
 
 // addPurchasedItem appends the bought item (and its ammo, for weapons) to the
 // loadout, updates the equipment slot map / in-hand item, and returns the inventory
@@ -251,6 +268,7 @@ func (s *session) addPurchasedItem(item *message.ShopItem, qty uint32) (inv, att
 		if old, occupied := s.weapons[place.slot]; occupied {
 			outgoing = append(outgoing, s.weaponLoot(old))
 			delete(s.clientUIDs, old.unique)
+			s.pruneWeaponAttach(old.unique) // the overridden weapon leaves — forget its mounts (late-joiner resync)
 		}
 		s.itemOnHand = uid // switch to the newly bought weapon
 		s.weapons[place.slot] = csWeapon{slot: place.slot, data: item.ItemID, unique: uid, ammo: place.ammo}

@@ -29,6 +29,9 @@ type Show struct {
 	Clothes []uint32 `json:"clothes"`
 	Slots   []uint32 `json:"slots"`
 	Emotes  []uint32 `json:"emotes"`
+	// BattleFlag is the player's equipped battle-flag config id (BattleFlag.csv Id). Nonzero lets the client
+	// plant flag emotes (it gates the cmd 0x114 send). Optional — 0/absent means no equipped flag.
+	BattleFlag uint32 `json:"battle_flag"`
 }
 
 // Claims is the decoded prepare_token payload.
