@@ -15,7 +15,7 @@
 
 const net = require('net');
 const logger = require('../logger');
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { lookup } = require('../protocol/protos');
 const { CMD, INIT_ACK, decrypt, parseClientFrames, encodeServerFrame } = require('./framing');
 const tcpRouter = require('./router');
@@ -39,25 +39,33 @@ function handleConnection(socket) {
 
   let buf = Buffer.alloc(0);
   let entry = null; // set once authenticated
+  // handleFrame awaits the DB on AUTH, so serialise per-connection processing to
+  // a promise chain — otherwise a second 'data' chunk could interleave reads and
+  // writes of buf/entry while the first is awaiting.
+  let queue = Promise.resolve();
 
   socket.on('data', (chunk) => {
-    buf = Buffer.concat([buf, chunk]);
-    let parsed;
-    try {
-      parsed = parseClientFrames(buf);
-    } catch (err) {
-      logger.error(`[tcp] frame parse error from ${peer}: ${err.message}`);
-      socket.destroy();
-      return;
-    }
-    buf = parsed.rest;
-    for (const f of parsed.frames) {
-      try {
-        entry = handleFrame(socket, f, entry, peer) || entry;
-      } catch (err) {
-        logger.error(`[tcp] handler error (cmd=${f.cmd}) from ${peer}: ${err.stack || err}`);
-      }
-    }
+    queue = queue
+      .then(async () => {
+        buf = Buffer.concat([buf, chunk]);
+        let parsed;
+        try {
+          parsed = parseClientFrames(buf);
+        } catch (err) {
+          logger.error(`[tcp] frame parse error from ${peer}: ${err.message}`);
+          socket.destroy();
+          return;
+        }
+        buf = parsed.rest;
+        for (const f of parsed.frames) {
+          try {
+            entry = (await handleFrame(socket, f, entry, peer)) || entry;
+          } catch (err) {
+            logger.error(`[tcp] handler error (cmd=${f.cmd}) from ${peer}: ${err.stack || err}`);
+          }
+        }
+      })
+      .catch((err) => logger.error(`[tcp] data processing error ${peer}: ${err.stack || err}`));
   });
 
   socket.on('close', () => {
@@ -73,7 +81,7 @@ function handleConnection(socket) {
 }
 
 // Returns the (new) session entry when auth happens, else undefined.
-function handleFrame(socket, f, entry, peer) {
+async function handleFrame(socket, f, entry, peer) {
   // Heartbeat: echo a bare 0x02 so the client's 180s liveness timer resets.
   if (f.cmd === CMD.HEARTBEAT) {
     socket.write(INIT_ACK);
@@ -91,7 +99,7 @@ function handleFrame(socket, f, entry, peer) {
       socket.destroy();
       return;
     }
-    const account = token ? player.getByToken(token) : null;
+    const account = token ? await getRepo().getByToken(token) : null;
     if (!account) {
       logger.warn(`[tcp] ${peer}: unknown/expired token -> closing`);
       socket.destroy();
