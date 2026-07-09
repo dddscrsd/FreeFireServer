@@ -6,6 +6,7 @@ const logger = require('../logger');
 const { lookup } = require('./protos');
 const { encrypt, decrypt, BODY_ENCODING } = require('./aes');
 const { getRepo } = require('../db/repo');
+const { getBus } = require('../bus/instance');
 
 // Endpoints that DON'T require a Bearer token (login/registration/handshake).
 // Everything else must present a valid token resolvable via player.getByToken.
@@ -271,8 +272,20 @@ function createProtocolRouter({ filter } = {}) {
       if (handler) {
         resObj = await handler.fn(reqObj, ctx);
       }
-      // Persist the authenticated account if the handler mutated it.
-      if (dirty && account) await getRepo().save(account);
+      // Persist the authenticated account if the handler mutated it, then tell the TCP
+      // gateway (a different process) so it refreshes its cached snapshot — the
+      // matchmaker builds the prepare_token from that snapshot, so this keeps a match's
+      // cosmetics in sync with lobby changes. Best-effort PubSub; never blocks.
+      if (dirty && account) {
+        await getRepo().save(account);
+        try {
+          const bus = getBus();
+          if (bus) {
+            bus.publishPS('player.updated', { account_id: Number(account.uid) })
+              .catch((e) => logger.warn(`[router] player.updated publish: ${e.message}`));
+          }
+        } catch (e) { logger.warn(`[router] player.updated: ${e.message}`); }
+      }
       // A handler may take full control of the transport (e.g. MajorLogin sends a
       // 404 so the client opens the register screen). If it already responded,
       // don't try to encode/send again.

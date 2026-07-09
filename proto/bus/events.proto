@@ -108,6 +108,17 @@ message SessionRevoke { // "session.revoke" — login/mod → gateway kick
   string reason     = 2;
 }
 
+// "gw.push" — any layer → the gateway holding target_account_id relays this to the
+// client as a MessageNotify{protocol, cmd, content}. Ephemeral PubSub: dropped if the
+// target isn't connected (the DB stays the durable source of truth). `content` is a
+// pre-encoded TCP proto, so the gateway is a DUMB relay with no per-message knowledge.
+message GatewayPush {
+  int64  target_account_id = 1;
+  uint32 protocol          = 2;
+  uint32 cmd               = 3;
+  bytes  content           = 4;
+}
+
 message PlayerUpdated { // "player.updated" — main → matchmaker (drop the stale snapshot)
   int64           account_id     = 1;
   uint32          version        = 2;

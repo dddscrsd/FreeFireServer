@@ -887,6 +887,78 @@ func (x *SessionRevoke) GetReason() string {
 	return ""
 }
 
+// "gw.push" — any layer → the gateway holding target_account_id relays this to the
+// client as a MessageNotify{protocol, cmd, content}. Ephemeral PubSub: dropped if the
+// target isn't connected (the DB stays the durable source of truth). `content` is a
+// pre-encoded TCP proto, so the gateway is a DUMB relay with no per-message knowledge.
+type GatewayPush struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	TargetAccountId int64                  `protobuf:"varint,1,opt,name=target_account_id,json=targetAccountId,proto3" json:"target_account_id,omitempty"`
+	Protocol        uint32                 `protobuf:"varint,2,opt,name=protocol,proto3" json:"protocol,omitempty"`
+	Cmd             uint32                 `protobuf:"varint,3,opt,name=cmd,proto3" json:"cmd,omitempty"`
+	Content         []byte                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *GatewayPush) Reset() {
+	*x = GatewayPush{}
+	mi := &file_events_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GatewayPush) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GatewayPush) ProtoMessage() {}
+
+func (x *GatewayPush) ProtoReflect() protoreflect.Message {
+	mi := &file_events_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GatewayPush.ProtoReflect.Descriptor instead.
+func (*GatewayPush) Descriptor() ([]byte, []int) {
+	return file_events_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GatewayPush) GetTargetAccountId() int64 {
+	if x != nil {
+		return x.TargetAccountId
+	}
+	return 0
+}
+
+func (x *GatewayPush) GetProtocol() uint32 {
+	if x != nil {
+		return x.Protocol
+	}
+	return 0
+}
+
+func (x *GatewayPush) GetCmd() uint32 {
+	if x != nil {
+		return x.Cmd
+	}
+	return 0
+}
+
+func (x *GatewayPush) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
 type PlayerUpdated struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     int64                  `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -898,7 +970,7 @@ type PlayerUpdated struct {
 
 func (x *PlayerUpdated) Reset() {
 	*x = PlayerUpdated{}
-	mi := &file_events_proto_msgTypes[13]
+	mi := &file_events_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -910,7 +982,7 @@ func (x *PlayerUpdated) String() string {
 func (*PlayerUpdated) ProtoMessage() {}
 
 func (x *PlayerUpdated) ProtoReflect() protoreflect.Message {
-	mi := &file_events_proto_msgTypes[13]
+	mi := &file_events_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -923,7 +995,7 @@ func (x *PlayerUpdated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayerUpdated.ProtoReflect.Descriptor instead.
 func (*PlayerUpdated) Descriptor() ([]byte, []int) {
-	return file_events_proto_rawDescGZIP(), []int{13}
+	return file_events_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *PlayerUpdated) GetAccountId() int64 {
@@ -1027,7 +1099,12 @@ const file_events_proto_rawDesc = "" +
 	"\rSessionRevoke\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x03R\taccountId\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\tR\x06reason\"o\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\x81\x01\n" +
+	"\vGatewayPush\x12*\n" +
+	"\x11target_account_id\x18\x01 \x01(\x03R\x0ftargetAccountId\x12\x1a\n" +
+	"\bprotocol\x18\x02 \x01(\rR\bprotocol\x12\x10\n" +
+	"\x03cmd\x18\x03 \x01(\rR\x03cmd\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\fR\acontent\"o\n" +
 	"\rPlayerUpdated\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x03R\taccountId\x12\x18\n" +
@@ -1046,7 +1123,7 @@ func file_events_proto_rawDescGZIP() []byte {
 	return file_events_proto_rawDescData
 }
 
-var file_events_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_events_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_events_proto_goTypes = []any{
 	(*Ping)(nil),            // 0: bus.Ping
 	(*RosterSlot)(nil),      // 1: bus.RosterSlot
@@ -1061,7 +1138,8 @@ var file_events_proto_goTypes = []any{
 	(*ClanUpdated)(nil),     // 10: bus.ClanUpdated
 	(*PresenceChanged)(nil), // 11: bus.PresenceChanged
 	(*SessionRevoke)(nil),   // 12: bus.SessionRevoke
-	(*PlayerUpdated)(nil),   // 13: bus.PlayerUpdated
+	(*GatewayPush)(nil),     // 13: bus.GatewayPush
+	(*PlayerUpdated)(nil),   // 14: bus.PlayerUpdated
 }
 var file_events_proto_depIdxs = []int32{
 	1, // 0: bus.MatchCreated.roster:type_name -> bus.RosterSlot
@@ -1084,7 +1162,7 @@ func file_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_events_proto_rawDesc), len(file_events_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

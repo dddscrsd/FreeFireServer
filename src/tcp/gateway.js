@@ -21,6 +21,7 @@ const { CMD, INIT_ACK, decrypt, parseClientFrames, encodeServerFrame } = require
 const tcpRouter = require('./router');
 const matchmaker = require('./matchmaker');
 const { getBus } = require('../bus/instance');
+const { Bus } = require('../bus');
 
 // account uid -> { socket, account, region, lastSeen }
 const sessions = new Map();
@@ -238,6 +239,18 @@ function notify(accountId, protocol, cmd, typeName, obj, ret) {
   return true;
 }
 
+/**
+ * Send a MessageNotify with PRE-ENCODED `content` bytes to a connected account.
+ * Used by the cross-layer push relay (gw.push): the publisher already built the exact
+ * TCP proto, so the gateway just wraps + frames it. False if not connected here.
+ */
+function notifyRaw(accountId, protocol, cmd, content, ret) {
+  const entry = sessions.get(accountId);
+  if (!entry) return false;
+  sendNotify(entry.socket, accountId, protocol, ret || 0, cmd, content || Buffer.alloc(0));
+  return true;
+}
+
 /** Encode a protobuf object of `typeName` and push it as command `cmd`. */
 function push(accountId, cmd, typeName, obj) {
   const T = lookup(typeName);
@@ -277,9 +290,47 @@ function startPresenceHeartbeat() {
   return t;
 }
 
+// Subscribe to cross-layer bus events (best-effort; no-op if the bus is disabled):
+//  - gw.push: another layer built a MessageNotify for a specific account -> relay it
+//    if that client is connected HERE (broadcast across gateways + local filter).
+//  - player.updated: a profile changed (usually via the HTTP tier) -> refresh the
+//    cached account IN PLACE so the matchmaker's prepare_token carries fresh cosmetics
+//    (the queue holds the same object reference, so Object.assign reaches it).
+function startBusSubscriptions() {
+  const bus = getBus();
+  if (!bus) return;
+
+  bus.subscribePS('gw.push', (env) => {
+    const m = Bus.payload(env, 'GatewayPush');
+    const target = Number(m.target_account_id);
+    if (!sessions.has(target)) return; // another node owns this client (or it's offline)
+    const content = Buffer.isBuffer(m.content) ? m.content : Buffer.from(m.content || []);
+    notifyRaw(target, m.protocol, m.cmd, content);
+    logger.info(`[tcp] relay gw.push -> uid=${target} protocol=${m.protocol} cmd=${m.cmd} (${content.length}B)`);
+  });
+
+  bus.subscribePS('player.updated', async (env) => {
+    const m = Bus.payload(env, 'PlayerUpdated');
+    const uid = Number(m.account_id);
+    const entry = sessions.get(uid);
+    if (!entry) return; // not connected here
+    try {
+      const fresh = await getRepo().getById(uid);
+      if (fresh) {
+        Object.assign(entry.account, fresh); // mutate in place — the matchmaker holds this ref
+        logger.info(`[tcp] refreshed cached account uid=${uid} (player.updated)`);
+      }
+    } catch (e) {
+      logger.warn(`[tcp] player.updated refresh uid=${uid}: ${e.message}`);
+    }
+  });
+  logger.info('[tcp] bus subscriptions up (gw.push, player.updated)');
+}
+
 function createGateway() {
   startPresenceHeartbeat();
+  startBusSubscriptions();
   return net.createServer(handleConnection);
 }
 
-module.exports = { createGateway, notify, push, pushRaw, kick, isOnline, onlineCount, sessions };
+module.exports = { createGateway, notify, notifyRaw, push, pushRaw, kick, isOnline, onlineCount, sessions };
