@@ -22,6 +22,10 @@ x-node: &node
     MAIN_DOMAIN: ${MAIN_DOMAIN:-}
     TCP_PUBLIC_HOST: ${TCP_PUBLIC_HOST:-}
     MATCH_PUBLIC_HOST: ${MATCH_PUBLIC_HOST:-}
+    # Match server port the login/matchmaker ADVERTISE to the client
+    # (config.protocol.gameServerPort in GetLoginData + the matchmaker's server_addr);
+    # MUST equal the match service's GAME_SERVER_PORT or the client dials a dead port.
+    GAME_SERVER_PORT: ${GAME_SERVER_PORT:-10100}
     # Internal listen ports (config.ports.*). Traefik targets these same values.
     LIVE_PORT: ${LIVE_PORT:-3000}
     LOGIN_PORT: ${LOGIN_PORT:-3001}
