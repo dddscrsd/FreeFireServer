@@ -19,6 +19,8 @@
     "main": "node src/servers/main.js",
     "tcp": "node src/servers/tcp.js",
     "dev": "nodemon --watch src --watch config --exec node src/server.js",
+    "migrate": "node src/db/migrate.js",
+    "repo-smoke": "node scripts/repo-smoke.js",
     "lint": "eslint . --ext .js",
     "test": "echo \"No tests yet\" && exit 0"
   },
@@ -37,6 +39,7 @@
     "http-errors": "^2.0.0",
     "ioredis": "^5.11.1",
     "morgan": "^1.10.0",
+    "pg": "^8.22.0",
     "protobufjs": "^7.4.0",
     "winston": "^3.8.2"
   },
