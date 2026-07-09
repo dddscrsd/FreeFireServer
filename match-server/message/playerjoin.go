@@ -116,9 +116,9 @@ func (w *Writer) pkpamkedcdc(pi PlayerInfo) {
 	w.Str("")             // MFLBOPEBOKE
 	w.Str("")             // AIBGAEMOLAN
 	w.U32(0)              // LGFOLJMCMFH
-	w.U32List(pi.Slots)  // OJENBEIOBGL : List<u32> (count=0)
-	w.I16(0)             // GLHCLEMMLDN : List<u32> (count=0)
-	w.U32(pi.BattleFlag) // MDDDNKCOMDF : equipped BattleFlagID (@+0xB0) — NONZERO gates the flag-emote plant (client sends cmd 0x114)
+	w.U32List(pi.Slots)   // OJENBEIOBGL : List<u32> (count=0)
+	w.I16(0)              // GLHCLEMMLDN : List<u32> (count=0)
+	w.U32(pi.BattleFlag)  // MDDDNKCOMDF : equipped BattleFlagID (@+0xB0) — NONZERO gates the flag-emote plant (client sends cmd 0x114)
 	w.U32(0)              // FHMMPDFIPMJ (pin id)
 	w.U32(0)              // ALELGKLAAOK
 	w.U32(0)              // PAPFCAJCNPO
@@ -129,15 +129,21 @@ func (w *Writer) pkpamkedcdc(pi PlayerInfo) {
 	w.U32(0)              // CPDNBJNLAIM
 }
 
-// PlayerJoin builds message::GKBDLJFGGMI (cmd 101) from pi.
-func PlayerJoin(pi PlayerInfo) []byte {
+// PlayerJoin builds message::GKBDLJFGGMI (cmd 101) from pi. clockTick is the server's current match-tick
+// (matchSeconds / 0.033); it goes in field CEDJCPLOLNE, which the client uses ONLY on the LOCAL player's
+// cmd 101 to anchor its server clock: KOMMANDCOCL = localTick − CEDJCPLOLNE, so CurrentServerTime becomes
+// 0.033 × CEDJCPLOLNE at join, then advances at 1/s. It must be the match-tick, NOT the EntityID — putting
+// the EntityID (~16.7M) here inflated CurrentServerTime to ~553,000 s and broke EVERY seconds-based
+// countdown (the waiting overlay AND the buy-phase timer). Identity comes from the uid + the cmd 900/901
+// layer, so this field is purely the clock anchor. See [[cs-waiting-cancel-lock]].
+func PlayerJoin(pi PlayerInfo, clockTick uint32) []byte {
 	w := &Writer{}
-	w.ogjkhjafnhb(pi)  // DCAFPIJDJEL : OGJKHJAFNHB
-	w.U32(pi.EntityID) // CEDJCPLOLNE (local player reg id)
-	w.pkpamkedcdc(pi)  // IFHIJHODIKE : PKPAMKEDCDC
-	w.I32(0)           // NKINFDBFNGJ
-	w.I32(0)           // GPIPIFLLOGN
-	w.U8(0)            // FBCCMPIJBNC (platform)
+	w.ogjkhjafnhb(pi) // DCAFPIJDJEL : OGJKHJAFNHB
+	w.U32(clockTick)  // CEDJCPLOLNE — LOCAL player's server-clock anchor (match-tick), not the EntityID
+	w.pkpamkedcdc(pi) // IFHIJHODIKE : PKPAMKEDCDC
+	w.I32(0)          // NKINFDBFNGJ
+	w.I32(0)          // GPIPIFLLOGN
+	w.U8(0)           // FBCCMPIJBNC (platform)
 	return w.B
 }
 

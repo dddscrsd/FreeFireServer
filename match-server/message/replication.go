@@ -94,8 +94,15 @@ const (
 	CSPhaseIntroduction uint16 = 5
 )
 
-// EMatchDrawState (GRI field 5, high 16 bits). NormalStart is required for normal
-// play; HalfwayJoin shows a "waiting to connect" countdown instead.
+// EMatchDrawState (JBCMHIAGMHA GRI field 5; hi16 = state, lo16 = countdown deadline second). The
+// pre-match WAITING/CANCEL overlay — a separate field from the field-3 round phase. RE'd states (client
+// enum EFDIOPGODAE, handler JIKLJNHJOAG @0x26b5a38):
+//
+//	0 NormalStart — no overlay (normal play).
+//	1 HalfwayJoin — "Waiting for players" countdown (T_25_YP_CS_WAITING_CONNECT); lo16 = deadline sec.
+//	2 Draw        — "Match cancelled / cut short" (T_25_YP_CS_CUT_SHORT); the client fixes a 10s countdown.
+//	3 MatchEnd    — ReturnToLobby (fires RETURN_TO_LOBBY reason 9 -> kicks the client back to the lobby).
+//	4 CancelDraw  — Resume/clear the overlay, gameplay proceeds.
 const (
 	CSDrawNormalStart uint16 = 0
 	CSDrawHalfwayJoin uint16 = 1
@@ -110,17 +117,15 @@ func packPhase(enum, param uint16) uint64 {
 	return uint64(enum)<<16 | uint64(param)
 }
 
-// CSGRIInit builds the CS GRI block: round config (max + current round, 0-based) +
-// NormalStart draw state. Streamed continuously; bump currentRound to advance rounds.
-// It deliberately does NOT touch field 4 (matchPoint) — CSGRIMatchPoint owns that.
-// Setting matchPoint=0 here and then =1 in CSGRIMatchPoint on the same tick flipped
-// the field 0->1 every stream, re-firing the client's match-point handler (and the
-// round-start panel) each tick.
+// CSGRIInit builds the CS GRI block: round config (max + current round, 0-based). Streamed continuously;
+// bump currentRound to advance rounds. It deliberately does NOT touch field 4 (matchPoint) — CSGRIMatchPoint
+// owns that — NOR field 5 (draw/match-state) — CSGRIMatchState owns that. Both are separate to avoid the
+// toggle bug: setting a field here to one value and then to another in the same tick flips it every stream,
+// re-firing the client's change-handler each tick.
 func CSGRIInit(maxRound, currentRound uint8) []byte {
 	return ReplicationBlock([]RepEntry{
 		{RepU8, CSFieldMaxRound, uint64(maxRound)},
 		{RepU8, CSFieldCurrentRound, uint64(currentRound)},
-		{RepU32, CSFieldDrawState, packPhase(CSDrawNormalStart, 0)},
 	})
 }
 
@@ -129,6 +134,16 @@ func CSGRIInit(maxRound, currentRound uint8) []byte {
 func CSGRIPhase(phase, param uint16) []byte {
 	return ReplicationBlock([]RepEntry{
 		{RepU32, CSFieldPhase, packPhase(phase, param)},
+	})
+}
+
+// CSGRIMatchState builds a GRI block that sets only the match-state field (field 5, EMatchDrawState) — the
+// pre-match waiting/cancel overlay. state is a CSDraw* value; deadline is the lo16 match-clock second the
+// countdown targets (0 = none / the client fixes the duration). Sent as its OWN field so it isn't toggled
+// against CSGRIInit each stream (see the CSDraw* enum comment).
+func CSGRIMatchState(state, deadline uint16) []byte {
+	return ReplicationBlock([]RepEntry{
+		{RepU32, CSFieldDrawState, packPhase(state, deadline)},
 	})
 }
 

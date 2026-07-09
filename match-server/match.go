@@ -71,6 +71,7 @@ type Match struct {
 	// Match lifecycle: ended is set when the deciding round finishes so join() skips this match (a
 	// rejoin gets a fresh one); after a stats-hold the loop closes done, returns, and reap()s itself.
 	ended       bool
+	started     bool // proceeded past waiting-for-players -> LOCKED: canAdmit is false, so latecomers get a fresh match
 	tearingDown bool
 	revived     []*session       // players revived this round-transition — they get a fresh base loadout; survivors keep theirs
 	arenasUsed  map[csArena]bool // arena -> true for arenas already used this match (avoid repeats)
@@ -83,7 +84,7 @@ type csPhase int
 const (
 	phSetupBind      csPhase = iota // +bindDelay -> bindPRIs
 	phSetupGap                      // +setupGapDur -> start the Waiting stream
-	phSetupWait                     // +setupWaitDur Waiting stream -> shop + starting loadout -> Prepare
+	phSetupWait                     // +setupWaitDur brief Waiting intro -> shop + starting loadout -> Prepare (which then holds for players)
 	phPrepare                       // +buyPhase (or hold) -> Fight
 	phFight                         // enemy/player dead -> score -> MatchEndPause or PostBanner
 	phMatchEndPause                 // +matchEndPause -> matchEnd (cmd 103) -> MatchEnd
@@ -93,18 +94,22 @@ const (
 	phIntroWait                     // +bindDelay -> Intro
 	phIntro                         // +introReveal+introSettle (Introduction, teleport on entry) -> Prepare
 	phMatchEnd                      // hold (Post) — the match is over
+	phCancelled                     // pre-match cancel: hold the "Match cancelled" overlay (field 5 CutShort), then ReturnToLobby + reap
 )
 
 const (
-	baseTick      = 100 * time.Millisecond  // loop wake period — a phase transition lands within ~baseTick of its deadline
-	priTick       = 300 * time.Millisecond  // GRI/PRI stream throttle (matches the old 300ms; also forced on a phase transition)
-	clockTick     = 250 * time.Millisecond  // cmd 1000 server-clock throttle (matches the old serverTimeLoop)
-	setupGapDur   = 1000 * time.Millisecond // bindPRIs -> Waiting gap (was the csSyncLoop sleep)
-	setupWaitDur  = 3000 * time.Millisecond // Waiting stream before the shop opens (was shopWarmup)
-	bindDelay     = 150 * time.Millisecond  // small settle before a rebind / the intro reveal
-	matchEndPause = 500 * time.Millisecond  // pause on the final kill before cmd 103
-	introSettle   = 1000 * time.Millisecond // extra Intro hold (folded in from the post-transition sleep)
-	holdDur       = 6 * time.Hour           // Fight/MatchEnd/held-Prepare: a fixed far-future deadline so phaseParam stays CONSTANT across the phase (a drifting param makes the client re-fire the round-start each tick)
+	baseTick         = 100 * time.Millisecond  // loop wake period — a phase transition lands within ~baseTick of its deadline
+	priTick          = 300 * time.Millisecond  // GRI/PRI stream throttle (matches the old 300ms; also forced on a phase transition)
+	clockTick        = 250 * time.Millisecond  // cmd 1000 server-clock throttle (matches the old serverTimeLoop)
+	clientFixedDelta = 0.033                   // client Time.fixedDeltaTime — the server clock advances 1/this ticks per second, so CurrentServerTime = clientFixedDelta × CEDJCPLOLNE (see serverTick / message.PlayerJoin)
+	setupGapDur      = 1000 * time.Millisecond // bindPRIs -> Waiting gap (was the csSyncLoop sleep)
+	setupWaitDur     = 3000 * time.Millisecond // brief Waiting intro before the shop opens (was shopWarmup)
+	waitPlayersDur   = 30 * time.Second        // "Waiting for players" hold DURING Prepare: proceed EARLY when teams balance (teamsReady), else at this deadline fall back to a bot (MATCH_BOT) or cancel
+	cancelHoldDur    = 10 * time.Second        // "Match cancelled" (field 5 CutShort) hold before ReturnToLobby + reap — matches the client's fixed 10s CutShort countdown
+	bindDelay        = 150 * time.Millisecond  // small settle before a rebind / the intro reveal
+	matchEndPause    = 500 * time.Millisecond  // pause on the final kill before cmd 103
+	introSettle      = 1000 * time.Millisecond // extra Intro hold (folded in from the post-transition sleep)
+	holdDur          = 6 * time.Hour           // Fight/MatchEnd/held-Prepare: a fixed far-future deadline so phaseParam stays CONSTANT across the phase (a drifting param makes the client re-fire the round-start each tick)
 
 	matchStatsHold = 20 * time.Second // hold on the end-of-match stats screen before tearing the match down (so a rejoin gets a fresh match)
 )
@@ -115,6 +120,12 @@ func griPhase(ph csPhase) (uint16, bool) {
 	switch ph {
 	case phSetupWait:
 		return message.CSPhaseWaiting, true
+	case phCancelled:
+		// Stay in Prepare (unfrozen, at the gate), NOT Fight: the field-3 phase countdown then renders the
+		// 10s cancel timer (param - CurrentServerTime). Fight put the client on the SafeZone round timer,
+		// which — with no zone during the cancel — showed a garbage ~34000-minute value. The "Match cancelled"
+		// text + its authoritative 10s ride field 5 (state 2 / CutShort).
+		return message.CSPhasePrepare, true
 	case phPrepare:
 		return message.CSPhasePrepare, true
 	case phFight, phMatchEndPause:
@@ -225,11 +236,11 @@ func (m *Match) removePlayer(s *session) {
 func (m *Match) admitFirst(s *session) {
 	m.setupMatch(s)
 	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player),
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()),
 		fmt.Sprintf("cmd=101 GKBDLJFGGMI acc=%d ent=%d %q", s.player.AccountID, s.player.EntityID, s.player.Name))
 
 	if m.botEntity != 0 {
-		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot),
+		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, m.serverTick()),
 			fmt.Sprintf("cmd=101 BOT acc=%d ent=%#x %q pos=(%.1f,%.1f,%.1f)",
 				m.bot.AccountID, m.bot.EntityID, m.bot.Name, m.bot.SpawnPos.X, m.bot.SpawnPos.Y, m.bot.SpawnPos.Z))
 	}
@@ -289,16 +300,16 @@ func (m *Match) admitLater(s *session) {
 	}
 
 	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 join res (2nd+ player)")
-	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player), // the joiner's OWN entity FIRST (client adopts the first as its local player)
+	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()), // the joiner's OWN entity FIRST (client adopts the first as its local player)
 		fmt.Sprintf("cmd=101 self ent=%d %q", s.player.EntityID, s.player.Name))
 	for _, p := range m.players {
 		if p != s { // then the already-present humans
-			s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(p.player),
+			s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(p.player, m.serverTick()),
 				fmt.Sprintf("cmd=101 other ent=%d %q", p.player.EntityID, p.player.Name))
 		}
 	}
 	if m.botEntity != 0 { // only if the bot is still around (1-human match); retired once a 2nd human joins
-		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot), fmt.Sprintf("cmd=101 BOT ent=%#x", m.bot.EntityID))
+		s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, m.serverTick()), fmt.Sprintf("cmd=101 BOT ent=%#x", m.bot.EntityID))
 	}
 	for _, p := range m.players { // the joiner learns each existing player's inventory (held weapon + skin + back-mounted loadout)
 		if p != s {
@@ -312,7 +323,7 @@ func (m *Match) admitLater(s *session) {
 
 	for _, p := range m.players { // every already-present human learns the joiner
 		if p != s {
-			p.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player),
+			p.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()),
 				fmt.Sprintf("cmd=101 new player ent=%d %q -> %v", s.player.EntityID, s.player.Name, p.remote))
 		}
 	}
@@ -408,10 +419,17 @@ func (m *Match) stream() {
 	}
 	param := m.phaseParam()
 	if m.phase == phSetupWait {
-		param = 0 // the Waiting hold shows no countdown (matches the old shopWarmup)
+		param = 0 // the brief Waiting intro shows no phase countdown
 	}
+	// Held Prepare (waiting) and phCancelled both use phaseParam() as the field-3 countdown deadline so the
+	// client renders the REAL remaining seconds (param - CurrentServerTime): ~30s while waiting for players,
+	// then ~10s while cancelling. The old param=65000 "hold the buy timer high" hack rendered as a ~1083-min
+	// timer once match mode 6 made the phase-countdown HUD exist. phaseParam stays constant across a held
+	// phase (fixed deadline), so it doesn't re-fire the client's phase-change handler each tick.
+	state, stateDeadline := m.matchState()
 	s.sendVar(packet.CmdPRISync, m.priPayload(), 1)
-	s.sendVar(packet.CmdGRISync, message.CSGRIInit(maxRound, uint8(m.round-1)), 1)
+	s.sendVar(packet.CmdGRISync, message.CSGRIInit(maxRound, uint8(m.round-1)), 1) // fields 1,2 (round config)
+	s.sendVar(packet.CmdGRISync, message.CSGRIMatchState(state, stateDeadline), 1) // field 5 (waiting/cancel overlay)
 	s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
 	point := 0
 	if m.teamScore[0] == roundsToWin-1 || m.teamScore[1] == roundsToWin-1 {
@@ -431,6 +449,20 @@ func (m *Match) streamClock() {
 			p.out.send(pkt, "")
 		}
 	}
+}
+
+// serverTick is the match-tick the LOCAL player's cmd 101 (field CEDJCPLOLNE) anchors the client's
+// server clock to: the client sets CurrentServerTime = clientFixedDelta × serverTick at join, then
+// advances it at 1/s, so this makes CurrentServerTime read match-seconds — the same units phaseParam
+// and the field-5 deadline use, so every seconds countdown renders. Before the match loop sets
+// matchStart (the very first join, admitFirst) it is 0 = match start. Recomputing it on EVERY cmd 101
+// keeps the clock continuous across resends (a constant would snap the clock back each time). This is
+// the fix for the inflated clock (was CEDJCPLOLNE = EntityID ≈ 16.7M → CurrentServerTime ≈ 553,000 s).
+func (m *Match) serverTick() uint32 {
+	if m.matchStart.IsZero() {
+		return 0
+	}
+	return uint32(time.Since(m.matchStart).Seconds() / clientFixedDelta)
 }
 
 // streamMovement relays each human's latest cmd-1001 state to the OTHER players (Step 6): one batch
@@ -516,14 +548,23 @@ func (m *Match) sendPull() {
 	}
 }
 
-// enterPrepare opens a buy phase (or holds it forever in the dev holdPrepare mode).
+// enterPrepare opens the buy phase. On round 1 with too few players it HOLDS Prepare (the player is
+// unfrozen — mask off, shop open, can move at the gate) and shows the "Waiting for players" overlay (GRI
+// field 5) counting down, so the client isn't stuck in the frozen Waiting phase; advancePhase then starts
+// the buy phase when players arrive (startBuyPhase) or cancels at the deadline. With enough players, or on
+// any later round, it goes straight to the normal buy phase (+ lock). holdPrepare is the dev shop-hold mode.
 func (m *Match) enterPrepare(now time.Time) {
 	m.pull = nil
-	dur := cfg.buyPhase
 	if cfg.holdPrepare { // dev shop-testing: never leave Prepare
-		dur = holdDur
+		m.started = true
+		m.enter(now, phPrepare, holdDur)
+		return
 	}
-	m.enter(now, phPrepare, dur)
+	if !m.started && !m.teamsReady() {
+		m.enter(now, phPrepare, waitPlayersDur) // hold Prepare + show the waiting overlay (field 5 = HalfwayJoin)
+		return
+	}
+	m.startBuyPhase(now) // enough players (or a later round): normal buy phase + lock the roster
 }
 
 // startFight begins the Fight phase (ends on the enemy/player-dead condition, not the deadline)
@@ -532,6 +573,80 @@ func (m *Match) enterPrepare(now time.Time) {
 func (m *Match) startFight(now time.Time) {
 	m.enter(now, phFight, holdDur)
 	m.startZone()
+}
+
+// teamsReady reports whether the roster is balanced enough to start: both teams have at least one human AND
+// equal counts. allocSlot alternates joiners across the two teams, so 2 players => 1v1 => ready; a lone
+// player sits at 1v0 and keeps waiting.
+func (m *Match) teamsReady() bool {
+	var t1, t2 int
+	for _, p := range m.players {
+		switch p.team {
+		case 1:
+			t1++
+		case 2:
+			t2++
+		}
+	}
+	return t1 > 0 && t2 > 0 && t1 == t2
+}
+
+// matchState returns the GRI field-5 (EMatchDrawState) value + its lo16 deadline second for the current
+// phase: the "Waiting for players" overlay while gathering players, the "Match cancelled" (CutShort) overlay
+// while cancelling, else NormalStart (no overlay). The waiting countdown reuses the same match-clock deadline
+// second the phase-3 countdown uses (phaseParam), so client and server agree.
+func (m *Match) matchState() (uint16, uint16) {
+	switch m.phase {
+	case phPrepare:
+		if !m.started { // Prepare held for players -> "Waiting for players" overlay (state 1) + its deadline second
+			return message.CSDrawHalfwayJoin, m.phaseParam()
+		}
+	case phCancelled:
+		return message.CSDrawDraw, 0 // "Match cancelled" in-match overlay (state 2; the client fixes the 10s CutShort countdown)
+	}
+	// Normal play: actively CLEAR any overlay with Resume/CancelDraw (state 4 -> dispatch Hide), NOT
+	// NormalStart (0). The field-5 OnRep is change-only, and state 0 does not dispatch a hide, so a lone
+	// 1->0 transition would leave the "Waiting for players" overlay stuck on screen when the match starts
+	// early (teams balanced before the deadline). State 4 guarantees the overlay is hidden the moment the
+	// match proceeds; on a match that never waited it fires one harmless no-op Hide.
+	return message.CSDrawCancelDraw, 0
+}
+
+// startBuyPhase LOCKS the match (canAdmit false -> latecomers get a fresh match) and opens the normal
+// buy-phase countdown. Called the moment enough players arrive during the waiting hold, when a bot fills in,
+// and for every round after the first. The shop + starting loadout were already sent at the phSetupWait edge
+// (and to joiners at admitLater), so this only sets the deadline + lock; the field-5 waiting overlay clears
+// on the next stream now that m.started is set (matchState -> NormalStart).
+func (m *Match) startBuyPhase(now time.Time) {
+	first := !m.started
+	m.started = true
+	m.enter(now, phPrepare, cfg.buyPhase)
+	if first {
+		log.Printf("[mm-udp] match started (roster=%d bot=%#x) -> buy phase; locked to new joins", len(m.players), m.botEntity)
+	}
+}
+
+// enterCancel begins the pre-match cancel: mark the match ended (no rejoin) and hold the "Match cancelled"
+// overlay (field 5 CutShort) for cancelHoldDur, after which advancePhase sends ReturnToLobby and reaps it.
+func (m *Match) enterCancel(now time.Time) {
+	m.ended = true
+	m.enter(now, phCancelled, cancelHoldDur)
+	log.Printf("[mm-udp] no opponents found in %s -> Match cancelled (return to lobby in %s)", waitPlayersDur, cancelHoldDur)
+}
+
+// spawnFallbackBot fills the enemy team with the bring-up bot when MATCH_BOT is set and the wait expired with
+// no real opponent, so a solo player can still test a match. It re-enables the bot the way admitFirst used
+// to: create its identity (near the primary player, facing them), seed HP/life, broadcast its cmd 101 join,
+// and rebind so its PRI replicates. See retireBot for the inverse.
+func (m *Match) spawnFallbackBot() {
+	m.botEntity = botEntityID
+	m.bot = botPlayer(m.s.player, m.botEntity)
+	m.hp[m.botEntity] = maxHP
+	m.life[m.botEntity] = lifeAlive
+	m.broadcastData(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, m.serverTick()),
+		fmt.Sprintf("cmd=101 BOT fallback ent=%#x (MATCH_BOT: no players found)", m.botEntity))
+	m.bindAll()
+	log.Printf("[mm-udp] MATCH_BOT: filled the opponent with a bot ent=%#x", m.botEntity)
 }
 
 // advancePhase runs the state machine each tick: Fight ends on a condition, every other phase
@@ -544,6 +659,10 @@ func (m *Match) advancePhase(now time.Time) {
 		}
 		return
 	}
+	if m.phase == phPrepare && !m.started && m.teamsReady() { // players arrived during the waiting hold -> start the buy phase
+		m.startBuyPhase(now)
+		return
+	}
 	if m.deadline.IsZero() || now.Before(m.deadline) {
 		return
 	}
@@ -552,13 +671,26 @@ func (m *Match) advancePhase(now time.Time) {
 		m.bindAll()
 		m.enter(now, phSetupGap, setupGapDur)
 	case phSetupGap:
-		m.enter(now, phSetupWait, setupWaitDur)
+		m.enter(now, phSetupWait, setupWaitDur) // brief Waiting intro before the shop opens
 	case phSetupWait:
 		s.sendCSShop()
 		s.sendStartingLoadout()
-		m.enterPrepare(now)
+		m.enterPrepare(now) // -> hold Prepare + waiting overlay (too few players), or the normal buy phase
+	case phCancelled: // the "Match cancelled" hold ended -> return everyone to the lobby + reap the match
+		s.sendVar(packet.CmdGRISync, message.CSGRIMatchState(message.CSDrawMatchEnd, 0), 1)
+		if !m.tearingDown {
+			m.tearingDown = true
+			close(m.done)
+		}
 	case phPrepare:
-		m.startFight(now)
+		if m.started {
+			m.startFight(now) // normal buy phase ended -> Fight
+		} else if cfg.matchBot { // the waiting hold expired with too few players -> bot fill (MATCH_BOT dev) ...
+			m.spawnFallbackBot()
+			m.startBuyPhase(now)
+		} else {
+			m.enterCancel(now) // ... or cancel the match (Match cancelled -> lobby)
+		}
 	case phMatchEndPause:
 		m.matchEnd()
 		m.ended = true                           // join() now skips this match; a rejoin starts a fresh one
@@ -661,8 +793,8 @@ func (m *Match) postBannerEdge(now time.Time) {
 		p.resetEP()                     // fresh round: clear the mushroom EP buffer + per-round count
 		p.sendMushroomCount()           // cmd 533: reset the shop's mushroom "N/2" label for the new round (m_PurchaseCnt persists client-side otherwise)
 	}
-	s.clearWalls()      // gloo walls are per-round world state
-	m.clearAllFlags()   // emote-planted battle flags are per-round world state too (never auto-remove client-side)
+	s.clearWalls()    // gloo walls are per-round world state
+	m.clearAllFlags() // emote-planted battle flags are per-round world state too (never auto-remove client-side)
 	if m.botEntity != 0 {
 		s.respawnBot()
 	}

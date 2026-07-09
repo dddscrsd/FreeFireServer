@@ -33,7 +33,10 @@ func (localFactory) create(first *session) MatchHandle { return newMatch(first) 
 
 // --- in-process MatchHandle: the *Match itself is the handle -----------------
 
-func (m *Match) canAdmit() bool { return !m.ended && m.reserved < maxPlayers }
+// canAdmit gates the manager's join routing: a match takes a new player only while it is still gathering
+// players — not ended, not yet STARTED (locked once it proceeds past waiting-for-players), and below the
+// roster cap. Once m.started, latecomers fall through to a fresh match.
+func (m *Match) canAdmit() bool { return !m.ended && !m.started && m.reserved < maxPlayers }
 
 func (m *Match) reserve() { m.reserved++ }
 

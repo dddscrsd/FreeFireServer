@@ -29,6 +29,7 @@ type config struct {
 	infiniteGloo       bool // MATCH_INFINITE_GLOO=1: placing a gloo wall does NOT deduct from inventory (active walls still capped at the inventory count via FIFO evict-oldest)
 	noZone             bool // MATCH_NO_ZONE=1: skip the Fight-phase SafeZone so the passive test player doesn't die to it (self-testing only)
 	zoneStatic         bool // MATCH_ZONE_STATIC=1: the Fight zone never shrinks — a fixed damaging circle so a test player can walk out on demand to trigger a knockdown
+	matchBot           bool // MATCH_BOT=1: when the waiting-for-players countdown expires with no opponents, fill the enemy team with a bot (solo testing) instead of cancelling the match
 }
 
 var cfg config
@@ -46,6 +47,7 @@ func loadConfig() config {
 		noZone:             os.Getenv("MATCH_NO_ZONE") == "1",
 		zoneStatic:         os.Getenv("MATCH_ZONE_STATIC") == "1",
 		unlimitedMoneyTest: os.Getenv("MATCH_UNLIMITED_MONEY") == "1",
+		matchBot:           os.Getenv("MATCH_BOT") == "1",
 	}
 	if sp, ok := parseVec3(os.Getenv("MATCH_SPAWN")); ok {
 		c.spawn = &sp

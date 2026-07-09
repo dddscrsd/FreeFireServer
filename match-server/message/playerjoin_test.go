@@ -11,7 +11,7 @@ import (
 // wiring cosmetics later can't silently corrupt the fields the client keys on.
 func TestPlayerJoinIdentity(t *testing.T) {
 	pi := PlayerInfo{AccountID: 10000001, EntityID: 1, Name: "foices"}
-	b := PlayerJoin(pi)
+	b := PlayerJoin(pi, 0)
 
 	if got := binary.LittleEndian.Uint64(b[0:8]); got != pi.AccountID {
 		t.Fatalf("account id = %d, want %d", got, pi.AccountID)
@@ -29,7 +29,7 @@ func TestPlayerJoinIdentity(t *testing.T) {
 // (cosmetics unset ⇒ all-zero PKPAMKEDCDC). If this changes, the join wire
 // format changed — make sure the client still accepts it.
 func TestPlayerJoinStableWithoutCosmetics(t *testing.T) {
-	b := PlayerJoin(PlayerInfo{AccountID: 10000001, EntityID: 1, Name: "foices"})
+	b := PlayerJoin(PlayerInfo{AccountID: 10000001, EntityID: 1, Name: "foices"}, 0)
 	const wantLen = 234 // verified accepted live (see UDP_MATCH_PROTOCOL.md)
 	if len(b) != wantLen {
 		t.Fatalf("PlayerJoin len = %d, want %d (baseline changed — reverify with the client)", len(b), wantLen)
