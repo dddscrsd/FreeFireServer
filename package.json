@@ -18,10 +18,12 @@
     "login": "node src/servers/login.js",
     "main": "node src/servers/main.js",
     "tcp": "node src/servers/tcp.js",
+    "settlement": "node src/servers/settlement.js",
     "dev": "nodemon --watch src --watch config --exec node src/server.js",
     "migrate": "node src/db/migrate.js",
     "migrate-data": "node src/db/migrate-data.js",
     "repo-smoke": "node scripts/repo-smoke.js",
+    "settle-smoke": "node scripts/settle-smoke.js",
     "lint": "eslint . --ext .js",
     "test": "echo \"No tests yet\" && exit 0"
   },

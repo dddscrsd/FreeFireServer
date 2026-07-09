@@ -95,6 +95,7 @@ func resolvePlayer(tok string) joinPlayer {
 	if claims.AccountID != 0 {
 		p.AccountID = claims.AccountID
 	}
+	p.MatchID = claims.MatchID // shared match id (settlement idempotency key)
 	if claims.Role != 0 {
 		p.Role = claims.Role
 	}

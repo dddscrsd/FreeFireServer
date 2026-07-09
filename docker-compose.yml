@@ -137,6 +137,15 @@ services:
       - traefik.tcp.routers.gateway.entrypoints=gateway
       - traefik.tcp.services.gateway.loadbalancer.server.port=${TCP_PORT:-10300}
 
+  # Settlement worker — consumes stream:match.result (published by the match server at
+  # match end) and persists rewards/stats to Postgres via the idempotent match_results
+  # ledger. Not client-facing (no Traefik/ports). Scale with replicas: the shared
+  # consumer group splits the work. Requires DATABASE_URL.
+  settlement:
+    <<: *node
+    command: ["node", "src/servers/settlement.js"]
+    depends_on: [redis, postgres]
+
   # Match instance — addressed DIRECTLY by the client (allocated by the matchmaker),
   # never behind Traefik. Scale into a fleet by adding match-2, match-3 … on other ports.
   match:

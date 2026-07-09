@@ -165,6 +165,46 @@ class PostgresRepo {
     return this.save(acc);
   }
 
+  // Phase 3 settlement: idempotently record ONE player's match result and, only on a
+  // FRESH insert, credit their persistent coins (accounts.state.coins — what
+  // GetLoginData reads). The (match_id, account_id) PK + single transaction make
+  // at-least-once Stream redelivery safe: a redelivery hits the conflict and credits
+  // nothing. Returns { fresh, credited }.
+  async settleMatchResult(matchId, pr) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const ins = await client.query(
+        `INSERT INTO match_results
+           (match_id, account_id, coins, kills, deaths, win, rank_points, xp, settled_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         ON CONFLICT (match_id, account_id) DO NOTHING
+         RETURNING account_id`,
+        [matchId, pr.account_id, pr.coins | 0, pr.kills | 0, pr.deaths | 0,
+          !!pr.win, pr.rank_points | 0, pr.xp | 0, Date.now()]
+      );
+      const fresh = ins.rows.length === 1; // 0 rows on conflict = already settled
+      let credited = false;
+      if (fresh && (pr.coins | 0) > 0) {
+        await client.query(
+          `UPDATE accounts
+              SET state = jsonb_set(COALESCE(state, '{}'::jsonb), '{coins}',
+                          to_jsonb(COALESCE((state->>'coins')::bigint, 0) + $2::bigint))
+            WHERE account_id = $1`,
+          [pr.account_id, pr.coins | 0]
+        );
+        credited = true;
+      }
+      await client.query('COMMIT');
+      return { fresh, credited };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
   async close() {
     if (this.pool.end) await this.pool.end();
   }

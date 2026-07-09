@@ -31,5 +31,11 @@ module.exports = {
   async save(account) {
     return player.save(account);
   },
+  // Settlement writes the Postgres match_results ledger; the SQLite accounts store has
+  // no such table. The settlement worker refuses to start without DATABASE_URL, so this
+  // only trips if something misroutes to the SQLite backend.
+  async settleMatchResult() {
+    throw new Error('settleMatchResult requires the Postgres backend (set DATABASE_URL)');
+  },
   async close() {}
 };

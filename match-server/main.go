@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"libmadoka/match-server/bus"
 	"libmadoka/match-server/packet"
 )
 
@@ -25,10 +26,27 @@ var (
 	sessionsMu sync.Mutex
 )
 
+// eventBus is the process-wide Redis event bus, or nil when REDIS_URL is unset or
+// unreachable — the match server then runs standalone (unchanged). Match end
+// publishes the durable settlement events (match.result / match.ended) through it;
+// see results.go.
+var eventBus *bus.Bus
+
 func main() {
 	addr := flag.String("addr", ":10100", "UDP listen address")
 	flag.Parse()
 	cfg = loadConfig()
+
+	// Connect the event bus if configured. A missing/unreachable Redis is non-fatal:
+	// the match server logs it and runs standalone (results just won't be settled).
+	if cfg.redisURL != "" {
+		if b, err := bus.New(cfg.redisURL, "match", cfg.nodeID); err != nil {
+			log.Printf("[mm-udp] bus disabled (redis unreachable): %v", err)
+		} else {
+			eventBus = b
+			log.Printf("[mm-udp] bus connected: node=%s", cfg.nodeID)
+		}
+	}
 
 	key, err := hex.DecodeString(secretHex)
 	if err != nil {
