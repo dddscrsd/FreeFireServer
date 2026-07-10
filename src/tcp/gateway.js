@@ -20,6 +20,7 @@ const { lookup } = require('../protocol/protos');
 const { CMD, INIT_ACK, decrypt, parseClientFrames, encodeServerFrame } = require('./framing');
 const tcpRouter = require('./router');
 const matchmaker = require('./matchmaker');
+const rooms = require('./rooms');
 const { getBus } = require('../bus/instance');
 const { Bus } = require('../bus');
 
@@ -91,6 +92,7 @@ function handleConnection(socket) {
     if (entry && sessions.get(entry.account.uid) && sessions.get(entry.account.uid).socket === socket) {
       sessions.delete(entry.account.uid);
       matchmaker.cancel(entry.account.uid);
+      rooms.handleDisconnect(entry.account.uid); // leave/dismiss any custom room + notify survivors
       markOffline(entry.account.uid); // clear cross-layer presence
       logger.info(`[tcp] disconnected uid=${entry.account.uid} (${peer})`);
     } else {

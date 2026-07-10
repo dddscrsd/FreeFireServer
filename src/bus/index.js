@@ -170,6 +170,7 @@ class Bus {
   // Generic Redis helpers backing the SHARED matchmaker queue (a hash) + the global
   // match-id counter. Kept generic so the matchmaker owns its own key conventions.
   hset(key, field, val) { return this.pub.hset(key, field, val); }
+  hget(key, field) { return this.pub.hget(key, field); }
   hdel(key, ...fields) { return this.pub.hdel(key, ...fields); }
   hgetall(key) { return this.pub.hgetall(key); }
   hlen(key) { return this.pub.hlen(key); }
