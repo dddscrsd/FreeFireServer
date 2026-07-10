@@ -249,6 +249,8 @@ func (m *Match) admitFirst(s *session) {
 	}
 
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
+	s.sendDataLog(packet.CmdSyncRegionActivities, message.SyncRegionActivitiesDefault(),
+		"cmd=176 SYNC_REGION_ACTIVITIES (DEFAULT) — trigger dynamic-prefab visibility (jump pads/boxes)")
 	s.broadcastZone()      // draw the safe zone at the NEW city now that the player joined
 	m.broadcastZoneIndex() // name that city in the round-intro UI (cmd 457 per-player zone index)
 	s.startCSMatch()
@@ -323,6 +325,8 @@ func (m *Match) admitLater(s *session) {
 		}
 	}
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
+	s.sendDataLog(packet.CmdSyncRegionActivities, message.SyncRegionActivitiesDefault(),
+		"cmd=176 SYNC_REGION_ACTIVITIES (DEFAULT) — trigger dynamic-prefab visibility (jump pads/boxes)")
 
 	for _, p := range m.players { // every already-present human learns the joiner
 		if p != s {
