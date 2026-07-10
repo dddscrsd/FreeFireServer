@@ -17,6 +17,12 @@ type matchSettings struct {
 	maxHP       uint16   // per-player max/full HP (player.go maxHP by default)
 	noLoadout   bool     // NoLoadout flag: skip the free starter weapon (players buy everything)
 
+	// unlimitedAmmo mirrors the room's UnlimitedAmmo flag (room_setting bit 0x2). The client
+	// enforces infinite gun ammo itself (reload is a pure relay), but GLOO WALLS are server-tracked
+	// and consumed via cmd 112 — so we must also skip the gloo deduction here, else the wall count
+	// still drains despite "unlimited ammo". See gloo.go handlePlaceIcewall.
+	unlimitedAmmo bool
+
 	// Raw custom-room bitfields, echoed verbatim into JoinMatchRes (cmd 100) so the CLIENT applies
 	// its own client-side flags (UnlimitedAmmo / NoHud / NoAuxAim / NoSkill / FriendDmg / …) that the
 	// server can't enforce. 0 => a normal (non-custom) match, i.e. vanilla rules.
@@ -69,8 +75,11 @@ func (m *Match) loadMatchSettings(mid uint64) {
 	if w.Flags["noLoadout"] {
 		m.settings.noLoadout = true
 	}
+	if w.Flags["unlimitedAmmo"] {
+		m.settings.unlimitedAmmo = true
+	}
 	m.settings.roomSetting = w.RoomSetting   // echoed verbatim to the client in JoinMatchRes (cmd 100)
 	m.settings.roomSetting2 = w.RoomSetting2 // ""
-	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d maxHP=%d noLoadout=%t roomSetting=0x%x/0x%x economy=%v",
-		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.maxHP, m.settings.noLoadout, m.settings.roomSetting, m.settings.roomSetting2, m.settings.baseCoins)
+	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d maxHP=%d noLoadout=%t unlimitedAmmo=%t roomSetting=0x%x/0x%x economy=%v",
+		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.maxHP, m.settings.noLoadout, m.settings.unlimitedAmmo, m.settings.roomSetting, m.settings.roomSetting2, m.settings.baseCoins)
 }

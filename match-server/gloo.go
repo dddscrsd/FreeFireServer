@@ -191,24 +191,31 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 		return
 	}
 
-	// 1) DEDUCT one, unless infinite. cmd 112 DropInventoryRes SETS the client's stack to
-	//    the new count (client removes the item at 0).
+	// 1) DEDUCT one, unless infinite. UnlimitedAmmo (room_setting bit 0x2) covers gloo too: the
+	//    client already gives guns infinite ammo, but gloo walls are server-tracked, so we must
+	//    also skip the deduction here or the wall count still drains. cmd 112 DropInventoryRes SETS
+	//    the client's stack to the new count (client removes the item at 0).
+	infiniteGloo := cfg.infiniteGloo || s.match.settings.unlimitedAmmo
 	var autoSwitch uint32 // if the last gloo was thrown, the weapon to auto-switch the placer back to
-	if !cfg.infiniteGloo {
+	if !infiniteGloo {
 		newCount := glooCount - 1
 		if newCount == 0 {
 			delete(s.clientUIDs, glooUID)
 			s.clearEquip(message.SlotBuilding) // free slot 13
-			// No gloo walls left — plan to auto-switch the placer back to the weapon held before the gloo
-			// (the reference does this so the player isn't left holding an empty Building slot), but emit it
-			// AFTER the cmd 112 consume below so it overrides the client's own switch-to-fists on removal.
-			if s.heldBeforeGloo != 0 {
-				if _, ok := s.clientUIDs[s.heldBeforeGloo]; ok {
-					autoSwitch = s.heldBeforeGloo
-					s.itemOnHand = s.heldBeforeGloo
-				}
-				s.heldBeforeGloo = 0
+			// No gloo walls left — auto-switch the placer back to a real weapon so they aren't left
+			// holding the now-empty Building slot (which the client would otherwise resolve to fists).
+			// Prefer the gun held right before the gloo; if that was never captured or has since been
+			// dropped, fall back to their best remaining weapon. Emitted AFTER the cmd 112 consume
+			// below so it overrides the client's own switch-to-fists on removal.
+			target := s.heldBeforeGloo
+			if !s.isWeaponUID(target) { // 0 (never captured), dropped, or somehow a non-weapon
+				target = s.bestWeaponUID()
 			}
+			if target != 0 {
+				autoSwitch = target
+				s.itemOnHand = target
+			}
+			s.heldBeforeGloo = 0
 		} else {
 			it := s.clientUIDs[glooUID]
 			it.count = newCount
