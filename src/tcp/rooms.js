@@ -426,7 +426,7 @@ function broadcast(room, exceptId, cmd, typeName, obj) {
 }
 
 // --- *_NTF builders (each carries the full room_info so recipients full-refresh) ---
-function joinNtf(room, joiner) { return { join_player_list: [playerInfo(joiner)], room_info: toRoomInfo(room) }; }
+function joinNtf(room, joiner) { return { join_player_list: [playerInfo(joiner, room.map_id)], room_info: toRoomInfo(room) }; }
 function leaveNtf(room, leaver) { return { leaver_info: leaver ? playerInfo(leaver) : {}, room_info: toRoomInfo(room) }; }
 function kickNtf(room, target) { return { kick_player_info: playerInfo(target), room_info: toRoomInfo(room) }; }
 function setReadyNtf(room) { return { room_id: room.id, players: room.members.map(playerInfo) }; }

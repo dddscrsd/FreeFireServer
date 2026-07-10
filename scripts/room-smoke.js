@@ -83,21 +83,27 @@ async function main() {
   assert.strictEqual(listed.room_list.length, 1, 'one room listed');
   assert.strictEqual(listed.room_list[0].cur_member_num, 1, 'one member');
 
-  // 3) JOIN — Bob lands on the empty team 2; Alice gets JOIN_NTF(5) with room_info.
+  // 3) JOIN — Bob joins team 2. The JOIN(3) reply is a client no-op (handler returns null); the
+  //    joiner enters via JOIN_NTF(5), which must reach the joiner with itself in join_player_list.
   ctx = ctxFor(B);
-  const joined = await RoomJoin.handler({ room_id: roomId }, ctx);
+  const joinRet = await RoomJoin.handler({ room_id: roomId }, ctx);
   assert.strictEqual(ctx.ret, 0, 'join ret ok');
-  const allMembers = joined.groups.flatMap((g) => g.members.map((m) => m.account_id)).filter(Boolean);
+  assert.strictEqual(joinRet, null, 'JOIN(3) reply is fire-and-forget (client no-op)');
+  const joinedInfo = rooms.toRoomInfo(await rooms.get(roomId));
+  const allMembers = joinedInfo.groups.flatMap((g) => g.members.map((m) => m.account_id)).filter(Boolean);
   assert.deepStrictEqual(allMembers.sort(), [101, 202], 'both real members present (placeholders filtered)');
-  const bobTeam = joined.groups.find((g) => g.members.some((m) => m.account_id === 202)).id;
+  const bobTeam = joinedInfo.groups.find((g) => g.members.some((m) => m.account_id === 202)).id;
   assert.strictEqual(bobTeam, 2, 'Bob balanced onto team 2');
   let pushes = drainPushes();
-  assert.strictEqual(pushes.length, 1, 'join broadcasts to the 1 other member');
-  assert.strictEqual(pushes[0].target_account_id, 101, 'JOIN_NTF -> Alice');
-  assert.strictEqual(pushes[0].cmd, ECustomRoom.JOIN_NTF, 'cmd = JOIN_NTF(5)');
-  const jn = decodePush(pushes[0], 'tcp.RoomJoinNtf');
-  assert.strictEqual(jn.join_player_list[0].account_id, 202, 'JOIN_NTF names Bob');
+  // JOIN_NTF(5) goes to BOTH members: host refreshes, joiner enters (finds itself in join_player_list).
+  assert.strictEqual(pushes.length, 2, 'JOIN_NTF broadcast to both members (host + joiner)');
+  assert.ok(pushes.every((p) => p.cmd === ECustomRoom.JOIN_NTF), 'all pushes are JOIN_NTF(5)');
+  const toBob = pushes.find((p) => p.target_account_id === 202);
+  assert.ok(toBob, 'joiner (Bob) receives JOIN_NTF so he can enter the room');
+  const jn = decodePush(toBob, 'tcp.RoomJoinNtf');
+  assert.strictEqual(jn.join_player_list[0].account_id, 202, "joiner's JOIN_NTF contains himself in join_player_list (enter gate)");
   assert.strictEqual(Number(jn.room_info.id), roomId, 'JOIN_NTF carries room_info');
+  assert.ok(pushes.some((p) => p.target_account_id === 101), 'host also gets JOIN_NTF (refresh)');
 
   // 4) SET-READY — Bob readies up; Alice gets SETREADY_NTF(25) with the player list.
   ctx = ctxFor(B);
