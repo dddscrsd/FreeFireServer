@@ -2358,9 +2358,14 @@ message RoomCreateRuleDropDesc {
   string describe_key = 16;
 }
 
+// NOTE the tags: room_create_rules = 1, room_create_rule_drops = 2. The il2cpp field OFFSET
+// order is drops-then-rules, but the client's protobuf-net [ProtoMember] tags are the REVERSE:
+// verified empirically — a subcmd-32 reply with drops=1 makes the client parse our DropDesc
+// bytes as a RoomCreateRuleDesc and throw "Invalid wire-type" at EnumSerializer (RuleDesc.field2
+// game_mode is an enum; DropDesc.field2 suffix is a string). So rules MUST be tag 1.
 message RoomCreateRuleRes {
-  repeated RoomCreateRuleDropDesc room_create_rule_drops = 1;
-  repeated RoomCreateRuleDesc room_create_rules = 2;
+  repeated RoomCreateRuleDesc room_create_rules = 1;
+  repeated RoomCreateRuleDropDesc room_create_rule_drops = 2;
 }
 
 message RoomDismissNtf {
