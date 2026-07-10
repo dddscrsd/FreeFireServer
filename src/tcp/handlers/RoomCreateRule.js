@@ -72,6 +72,10 @@ async function handler(reqObj, ctx) {
 module.exports = {
   protocol: EProtocol.ROOM,               // 14
   subcmd: ECustomRoom.ROOM_CREATE_RULE,   // 32
-  resType: 'tcp.RoomCreateRuleRes',
+  // proto.RoomCreateRuleRes (package `proto`, from gen_proto.py) has the AUTHORITATIVE tag
+  // numbers — the DropDesc switch fields are DropPresetState enums at non-sequential tags
+  // (6/8/10/11/12/13/14/15/16/17/18/19), so hand-numbering them collides a string onto an enum
+  // tag and the client's protobuf-net throws Invalid wire-type. Always use the generated type.
+  resType: 'proto.RoomCreateRuleRes',
   handler
 };
