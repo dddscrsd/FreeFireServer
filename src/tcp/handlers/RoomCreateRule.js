@@ -7,15 +7,17 @@
 // Normal(room_type=1) / League(room_type=2) modes (Pet Rumble tab5 / Pet Mania tab3 bypass the
 // gate with client-baked rules, which is why only those worked). See docs/custom-room-design.md.
 //
-// The create dialog's mode list per room_type comes straight from room_create_rules
-// (GetModeIDListByRoomType -> m_ModeMapIdDic), so each creatable mode needs a descriptor whose
-// (map_id, game_mode) resolves to a name the client knows and non-empty members/spectators.
-// We advertise Clash Squad (map_id 1 Paradise + game_mode 15 = ContraSquad, mapConfigId 1015 —
-// matching GameOpeningInfo.js / matchstats.js) for both Normal and League, squad group mode.
+// The create dialog is FULLY server-driven: the mode list (GetModeIDListByRoomType), the map
+// grid (GetMapIDListByGameModeAndRoomType), members/spectators and the group toggles are ALL
+// built from this response — the client has no independent whitelist. So any self-consistent
+// ids populate the dialog; real ids only matter for correct on-screen NAMES. We advertise Clash
+// Squad: game_mode 15 (the client's squad-first CS mode) on map_id 11 = "Fight Club", the CS
+// arena whose name is baked in GetMapNameByMapId (map 1 is Paradise, a BR map). mapConfigId =
+// map_id*1000 + game_mode = 11015.
 const { EProtocol, ECustomRoom } = require('../protocol');
 
-const CS_MAP = 1;          // Paradise (GameOpeningInfo.js: map 1 + mode 15 => CS config row 1015)
-const CS_MODE = 15;        // JOKABEAPNPP_EGAMEMODE_CS
+const CS_MAP = 11;         // Fight Club — the CS arena (baked TXT map name); mapConfigId 11015
+const CS_MODE = 15;        // game_mode 15: client special-cases this as squad-first (Clash Squad)
 const GROUP_SQUAD = 3;     // group_mode: 0 Solo, 1 Duo, 3 Squad/Quad, 5 Hexa
 const ROOM_TYPE_CASUAL = 1;
 const ROOM_TYPE_LEAGUE = 2;
