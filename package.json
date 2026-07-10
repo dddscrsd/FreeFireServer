@@ -28,6 +28,7 @@
     "settle-smoke": "node scripts/settle-smoke.js",
     "leader-smoke": "node scripts/leader-smoke.js",
     "room-smoke": "node scripts/room-smoke.js",
+    "roomsettings-smoke": "node scripts/roomsettings-smoke.js",
     "lint": "eslint . --ext .js",
     "test": "echo \"No tests yet\" && exit 0"
   },
