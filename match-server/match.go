@@ -238,7 +238,7 @@ func (m *Match) removePlayer(s *session) {
 func (m *Match) admitFirst(s *session) {
 	m.loadMatchSettings(s.player.MatchID) // custom-room round count / economy (or defaults) — before the GRI/round setup
 	m.setupMatch(s)
-	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
+	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0, m.settings.roomSetting, m.settings.roomSetting2), "cmd=100 LGIGCGIDOKP result=0")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()),
 		fmt.Sprintf("cmd=101 GKBDLJFGGMI acc=%d ent=%d %q", s.player.AccountID, s.player.EntityID, s.player.Name))
 
@@ -302,7 +302,7 @@ func (m *Match) admitLater(s *session) {
 		m.retireBot()
 	}
 
-	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 join res (2nd+ player)")
+	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0, m.settings.roomSetting, m.settings.roomSetting2), "cmd=100 join res (2nd+ player)")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()), // the joiner's OWN entity FIRST (client adopts the first as its local player)
 		fmt.Sprintf("cmd=101 self ent=%d %q", s.player.EntityID, s.player.Name))
 	for _, p := range m.players {

@@ -51,7 +51,13 @@ func (w *Writer) U32List(v []uint32) {
 // deserializes in GLPOGGHMJAB. Field order matches LGIGCGIDOKP::UnSerialize.
 // result=0 is the success code (message::PHIFIIFMJKP); the rest are left at
 // their zero/empty defaults for now (lists empty, nested messages zeroed).
-func JoinMatchRes(result uint32) []byte {
+//
+// roomSetting / roomSetting2 are the RAW custom-room bitfields (ECustomRoomSetting /
+// ECustomRoomSetting2) — the same GPKHLEAADHL / OJIHIKIAFAI fields the in-match settings
+// message carries. Echoing the host's packed values here lets the client apply its
+// CLIENT-SIDE flags (UnlimitedAmmo / NoHud / NoAuxAim / NoSkill / FriendDmg / …) at join,
+// which the server can't enforce. 0/0 for a normal (non-custom) match => vanilla rules.
+func JoinMatchRes(result, roomSetting, roomSetting2 uint32) []byte {
 	w := &Writer{}
 	w.U32(result)                    // MBBDNIBDPME  (join result enum)
 	w.U64(1)                         // DGCJANAMDBJ
@@ -79,8 +85,8 @@ func JoinMatchRes(result uint32) []byte {
 	w.I16(0)      // GJGPMHJJOCE : List<i32>  (count=0)
 	w.I16(0)      // KBCPCCKGGBE : List<u32>  (count=0)
 	w.I16(0)      // KELMCBLFFDC : List<msg>  (count=0)
-	w.U32(0)      // GPKHLEAADHL
-	w.U32(0)      // OJIHIKIAFAI
+	w.U32(roomSetting)  // GPKHLEAADHL  (ECustomRoomSetting  — raw room_setting bitfield)
+	w.U32(roomSetting2) // OJIHIKIAFAI  (ECustomRoomSetting2 — raw room_setting2 bitfield)
 	w.Bool(true)  // FEAMHOEGDAG
 	w.Bool(false) // OEFEABKDIFM
 	w.Bool(false) // NBFOFDCIFOG

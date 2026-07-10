@@ -16,6 +16,12 @@ type matchSettings struct {
 	baseCoins   []uint32 // per-round base income (economy.go csRoundBaseCoins by default)
 	maxHP       uint16   // per-player max/full HP (player.go maxHP by default)
 	noLoadout   bool     // NoLoadout flag: skip the free starter weapon (players buy everything)
+
+	// Raw custom-room bitfields, echoed verbatim into JoinMatchRes (cmd 100) so the CLIENT applies
+	// its own client-side flags (UnlimitedAmmo / NoHud / NoAuxAim / NoSkill / FriendDmg / …) that the
+	// server can't enforce. 0 => a normal (non-custom) match, i.e. vanilla rules.
+	roomSetting  uint32 // ECustomRoomSetting  (GPKHLEAADHL)
+	roomSetting2 uint32 // ECustomRoomSetting2 (OJIHIKIAFAI)
 }
 
 func defaultMatchSettings() matchSettings {
@@ -24,10 +30,12 @@ func defaultMatchSettings() matchSettings {
 
 // wireSettings mirrors the JSON the lobby writes to match:<id>:settings.
 type wireSettings struct {
-	RoundCount uint8           `json:"round_count"`
-	MaxHP      uint16          `json:"max_hp"`
-	Economy    []uint32        `json:"economy"`
-	Flags      map[string]bool `json:"flags"`
+	RoundCount   uint8           `json:"round_count"`
+	MaxHP        uint16          `json:"max_hp"`
+	Economy      []uint32        `json:"economy"`
+	Flags        map[string]bool `json:"flags"`
+	RoomSetting  uint32          `json:"room_setting"`  // raw ECustomRoomSetting  bitfield (echoed to the client)
+	RoomSetting2 uint32          `json:"room_setting2"` // raw ECustomRoomSetting2 bitfield
 }
 
 // loadMatchSettings seeds m.settings with the defaults, then (if the bus is up and this is a real
@@ -61,6 +69,8 @@ func (m *Match) loadMatchSettings(mid uint64) {
 	if w.Flags["noLoadout"] {
 		m.settings.noLoadout = true
 	}
-	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d maxHP=%d noLoadout=%t economy=%v",
-		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.maxHP, m.settings.noLoadout, m.settings.baseCoins)
+	m.settings.roomSetting = w.RoomSetting   // echoed verbatim to the client in JoinMatchRes (cmd 100)
+	m.settings.roomSetting2 = w.RoomSetting2 // ""
+	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d maxHP=%d noLoadout=%t roomSetting=0x%x/0x%x economy=%v",
+		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.maxHP, m.settings.noLoadout, m.settings.roomSetting, m.settings.roomSetting2, m.settings.baseCoins)
 }

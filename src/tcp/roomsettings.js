@@ -90,6 +90,8 @@ function decodeRoomSettings(room) {
   return {
     flags: decodeFlags(rs, rs2),
     indices,
+    roomSetting: rs >>> 0,   // raw bitfields, echoed verbatim to the client in JoinMatchRes (cmd 100)
+    roomSetting2: rs2 >>> 0, //   so it applies its own client-side flags (UnlimitedAmmo/NoHud/…)
     roundCount: resolve(TABLES.roundNum, indices.roundNum),    // CS round count (undefined = default)
     maxHP: resolve(TABLES.playerHP, indices.playerHP),         // HP (undefined = default)
     maxEP: resolve(TABLES.playerEP, indices.playerEP),

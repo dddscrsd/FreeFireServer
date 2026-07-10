@@ -38,9 +38,13 @@ async function handler(reqObj, ctx) {
       if (s.roundCount) payload.round_count = s.roundCount;
       if (s.maxHP) payload.max_hp = s.maxHP;
       if (Array.isArray(s.economyTable)) payload.economy = s.economyTable;
+      // Pass the RAW bitfields too: the match server echoes them into JoinMatchRes (cmd 100) so the
+      // client applies its own client-side flags (UnlimitedAmmo/NoHud/NoAuxAim/NoSkill/FriendDmg/…).
+      if (s.roomSetting) payload.room_setting = s.roomSetting;
+      if (s.roomSetting2) payload.room_setting2 = s.roomSetting2;
       const bus = getBus();
       if (bus) await bus.setKey(`match:${matchId}:settings`, JSON.stringify(payload), 3600);
-      ctx.logger.info(`[room] START settings match=${matchId} rounds=${s.roundCount || 'default'} hp=${s.maxHP || 'default'} flags=${Object.entries(s.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none'}`);
+      ctx.logger.info(`[room] START settings match=${matchId} rounds=${s.roundCount || 'default'} hp=${s.maxHP || 'default'} rs=0x${(s.roomSetting || 0).toString(16)}/0x${(s.roomSetting2 || 0).toString(16)} flags=${Object.entries(s.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none'}`);
     } catch (e) {
       ctx.logger.warn(`[room] start settings write match=${matchId}: ${e.message}`);
     }
