@@ -158,12 +158,16 @@ services:
     command: ["node", "src/servers/settlement.js"]
     depends_on: [redis, postgres]
 
-  # Matchmaker service — the SINGLE processor of the shared Redis queue (every gateway
-  # feeds it). Forms matches, allocates a fleet instance, and pushes each SussNtf via
-  # gw.push. Run exactly ONE (no replicas): it reads/claims the whole queue.
+  # Matchmaker service — processor of the shared Redis queue (every gateway feeds it).
+  # Forms matches, allocates a fleet instance, and pushes each SussNtf via gw.push.
+  # HA: replicas elect a leader via a Redis lease (mm:leader) — exactly one is ACTIVE and
+  # the rest stand by, taking over automatically on failure. Set MATCHMAKER_REPLICAS>=2
+  # for no-SPOF failover; the default 1 keeps single-instance behaviour.
   matchmaker:
     <<: *node
     command: ["node", "src/servers/matchmaker.js"]
+    deploy:
+      replicas: ${MATCHMAKER_REPLICAS:-1}
     depends_on: [redis, postgres]
 
   # Match instance — addressed DIRECTLY by the client (allocated by the matchmaker),

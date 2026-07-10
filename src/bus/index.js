@@ -175,6 +175,34 @@ class Bus {
   hlen(key) { return this.pub.hlen(key); }
   incr(key) { return this.pub.incr(key); }
 
+  // --- distributed lock (leader election) -----------------------------------
+  // A single-holder lease: SET key=token NX PX ttl succeeds for exactly one caller;
+  // the holder RENEWs (extends the TTL) and RELEASEs, both compare-and-set on the token
+  // (Lua so the check+act is atomic) so a caller can never renew/free a lock it has lost.
+  // Used by the matchmaker service to run N replicas with one ACTIVE processor + instant
+  // failover: if the holder dies the lease simply expires and a standby acquires it.
+
+  /** Acquire the lock iff free. Returns true if THIS token now holds it. */
+  async acquireLock(key, token, ttlMs) {
+    return (await this.pub.set(key, token, 'PX', ttlMs, 'NX')) === 'OK';
+  }
+
+  /** Extend the lease iff we still hold it (compare-and-set). Returns true if renewed. */
+  async renewLock(key, token, ttlMs) {
+    const r = await this.pub.eval(
+      "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end",
+      1, key, token, ttlMs);
+    return r === 1;
+  }
+
+  /** Release the lock iff we hold it (so a lost lock isn't stolen back). */
+  async releaseLock(key, token) {
+    const r = await this.pub.eval(
+      "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+      1, key, token);
+    return r === 1;
+  }
+
   /** Decode an envelope's inner payload into a plain object of the given type. */
   static payload(env, payloadType) {
     return decode(payloadType, env.payload);

@@ -26,6 +26,7 @@
     "backfill-friends": "node scripts/backfill-friends.js",
     "repo-smoke": "node scripts/repo-smoke.js",
     "settle-smoke": "node scripts/settle-smoke.js",
+    "leader-smoke": "node scripts/leader-smoke.js",
     "lint": "eslint . --ext .js",
     "test": "echo \"No tests yet\" && exit 0"
   },
