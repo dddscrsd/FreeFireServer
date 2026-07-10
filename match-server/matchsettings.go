@@ -9,15 +9,17 @@ import (
 // matchSettings is the per-match CS config. Defaults are the standard ruleset (the package consts /
 // economy.go); a CUSTOM ROOM overrides them — the lobby decodes the host's room_setting/room_setting2
 // and writes match:<id>:settings to Redis (see src/tcp/handlers/RoomStart.js), which we read at the
-// first join. Absent / no-bus / unset field => the default is kept. (maxHP + gameplay flags: TODO.)
+// first join. Absent / no-bus / unset field => the default is kept.
 type matchSettings struct {
 	maxRound    uint8    // CS match length (GRI MaxRound)
 	roundsToWin uint8    // wins to end the match = (maxRound+1)/2
 	baseCoins   []uint32 // per-round base income (economy.go csRoundBaseCoins by default)
+	maxHP       uint16   // per-player max/full HP (player.go maxHP by default)
+	noLoadout   bool     // NoLoadout flag: skip the free starter weapon (players buy everything)
 }
 
 func defaultMatchSettings() matchSettings {
-	return matchSettings{maxRound: maxRound, roundsToWin: roundsToWin, baseCoins: csRoundBaseCoins}
+	return matchSettings{maxRound: maxRound, roundsToWin: roundsToWin, baseCoins: csRoundBaseCoins, maxHP: maxHP}
 }
 
 // wireSettings mirrors the JSON the lobby writes to match:<id>:settings.
@@ -53,6 +55,12 @@ func (m *Match) loadMatchSettings(mid uint64) {
 	if len(w.Economy) > 0 {
 		m.settings.baseCoins = w.Economy
 	}
-	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d economy=%v",
-		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.baseCoins)
+	if w.MaxHP > 0 {
+		m.settings.maxHP = w.MaxHP
+	}
+	if w.Flags["noLoadout"] {
+		m.settings.noLoadout = true
+	}
+	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d maxHP=%d noLoadout=%t economy=%v",
+		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.maxHP, m.settings.noLoadout, m.settings.baseCoins)
 }

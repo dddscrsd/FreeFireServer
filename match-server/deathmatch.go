@@ -222,11 +222,11 @@ func (m *Match) stepKnock(now time.Time) {
 func (m *Match) reviveAll() {
 	for _, p := range m.players {
 		m.life[p.entityID] = lifeAlive
-		m.hp[p.entityID] = maxHP
+		m.hp[p.entityID] = m.settings.maxHP
 	}
 	if m.botEntity != 0 {
 		m.life[m.botEntity] = lifeAlive
-		m.hp[m.botEntity] = maxHP
+		m.hp[m.botEntity] = m.settings.maxHP
 	}
 	m.knock = map[uint32]*knockState{}
 	m.rescues = map[uint32]*rescueState{}

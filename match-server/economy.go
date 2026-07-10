@@ -9,8 +9,10 @@ package main
 // override the whole table + event bonuses via cs_advanced_setting (a later phase); until then a
 // per-Match override just swaps these numbers.
 
-// csRoundBaseCoins is the per-round BASE income (index 0 = round 1). Rounds past the table award the
-// LAST value — i.e. round 7 onward is fixed at 3000 (confirmed with the user).
+// csRoundBaseCoins: table[0] is the STARTING money (seeded before round 1); table[i>=1] is the base
+// income EARNED at the END of round i. So a player starts round 1 with 500, then earns 900 at the
+// end of round 1, 1100 at the end of round 2, ... Rounds past the table earn the LAST value — i.e.
+// round 7 onward is fixed at 3000 (confirmed with the user).
 var csRoundBaseCoins = []uint32{500, 900, 1100, 1700, 2100, 2400, 3000}
 
 const (
@@ -22,20 +24,29 @@ const (
 	csFirstBloodBonus uint32 = 100  // event: got the round's first kill (TODO: not tracked yet)
 )
 
-// csBaseCoins returns the base income for a 1-based round from `table` (a custom room's economy
-// preset, or csRoundBaseCoins when nil/empty), holding the last table value for rounds beyond it
-// (e.g. round 7+ => 3000 with the default table).
-func csBaseCoins(round int, table []uint32) uint32 {
+// csStartingCoins is the money a player begins the match with = the economy table's FIRST entry.
+func csStartingCoins(table []uint32) uint32 {
+	if len(table) == 0 {
+		table = csRoundBaseCoins
+	}
+	return table[0]
+}
+
+// csRoundIncome is the base coins EARNED at the END of a 1-based round from `table` (a custom room's
+// economy preset, or csRoundBaseCoins when nil/empty). Since table[0] is the STARTING money, round R
+// earns table[R] (round 1 -> table[1] = 900), holding the last table value for rounds beyond it
+// (round 7+ => 3000 with the default table).
+func csRoundIncome(round int, table []uint32) uint32 {
 	if len(table) == 0 {
 		table = csRoundBaseCoins
 	}
 	if round < 1 {
 		round = 1
 	}
-	if round > len(table) {
-		round = len(table)
+	if round >= len(table) {
+		return table[len(table)-1]
 	}
-	return table[round-1]
+	return table[round]
 }
 
 // csLossBonus is the loss-side round bonus for a team that just lost, given its consecutive-loss

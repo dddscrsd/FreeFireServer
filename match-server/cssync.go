@@ -39,7 +39,7 @@ func (m *Match) priPayload() []byte {
 		}
 		onHand := uint64(p.itemOnHand)<<32 | uint64(p.heldWeaponData()) // remote pawn's held gun (PRIHPBlock field 4)
 		ents = append(ents, message.PRIEntity{RepID: p.repID, Block: message.PRIHPBlock(message.PRIState{
-			CurHP: m.entityHP(p.entityID), MaxHP: maxHP, Coins: coins, EarnedCoin: uint16(p.award), Score: score,
+			CurHP: m.entityHP(p.entityID), MaxHP: m.settings.maxHP, Coins: coins, EarnedCoin: uint16(p.award), Score: score,
 			VestDur: p.vestDur, HelmetDur: p.helmetDur, ItemOnHand: onHand, Faction: p.faction,
 			Kills: capByte(m.kills[p.entityID]), Deaths: capByte(m.deaths[p.entityID]),
 			FireState: fireState, Sighting: uint32(sighting), CurEP: byte(p.ep), Damage: m.damage[p.entityID],
@@ -48,7 +48,7 @@ func (m *Match) priPayload() []byte {
 	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {
 		botScore := message.PackScore(m.teamScore[1], m.teamScore[0]) // the bot is team 2
 		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(message.PRIState{
-			CurHP: m.entityHP(m.botEntity), MaxHP: maxHP, Score: botScore, Faction: botFaction,
+			CurHP: m.entityHP(m.botEntity), MaxHP: m.settings.maxHP, Score: botScore, Faction: botFaction,
 			Kills: capByte(m.kills[m.botEntity]), Deaths: capByte(m.deaths[m.botEntity]), Damage: m.damage[m.botEntity],
 		})})
 	}
@@ -101,7 +101,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 	before := s.equipSnapshot() // capture the pre-reset slot map so remotes clear any old back-mounted weapons
 
 	if resetCoins {
-		s.coins = startingCoins
+		s.coins = csStartingCoins(s.match.settings.baseCoins) // start-of-match wallet = economy table[0]
 	}
 	// Snapshot the client's current items so cmd 327 can DELETE them before we re-add. Do
 	// NOT reset uidCounter (keep it monotonic) so the fresh USP's unique can't collide with
@@ -120,28 +120,43 @@ func (s *session) giveLoadout(resetCoins bool) {
 	uspUID := s.nextUID()
 	medkitID := s.nextUID()
 	uspMag := loadedMagFor(uspData, SkinForWeapon(uspData, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
+	// NoLoadout custom-room flag (room_setting bit 0x8): skip the free starter USP — the player
+	// spawns with fists + medkits only and must BUY every weapon from the shop.
+	noLoadout := s.match.settings.noLoadout
 	s.equipment = []message.Equipment{
-		{Slot: message.SlotMelee, Data: 0, Unique: 0},                // fist (melee slot must always exist)
-		{Slot: message.SlotSecondary, Data: uspData, Unique: uspUID}, // USP
+		{Slot: message.SlotMelee, Data: 0, Unique: 0}, // fist (melee slot must always exist)
 	}
-	s.weapons = map[byte]csWeapon{
-		message.SlotSecondary: {slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo},
-	}
-	s.clientUIDs = map[uint32]lootItem{ // seed with the USP + medkits; giveAmmoStacks adds the ammo stacks
-		uspUID:   {unique: uspUID, data: uspData, count: 1, runtime: uspMag},
+	s.weapons = map[byte]csWeapon{}
+	s.clientUIDs = map[uint32]lootItem{ // medkits always; the USP is added below unless NoLoadout
 		medkitID: {unique: medkitID, data: medkitData, count: 2, runtime: 2},
 	}
-	s.itemOnHand = uspUID
+	if !noLoadout {
+		s.equipment = append(s.equipment, message.Equipment{Slot: message.SlotSecondary, Data: uspData, Unique: uspUID}) // USP
+		s.weapons[message.SlotSecondary] = csWeapon{slot: message.SlotSecondary, data: uspData, unique: uspUID, ammo: pistolAmmo}
+		s.clientUIDs[uspUID] = lootItem{unique: uspUID, data: uspData, count: 1, runtime: uspMag}
+	}
+	if noLoadout {
+		s.itemOnHand = 0 // no gun -> hold fists (melee slot)
+	} else {
+		s.itemOnHand = uspUID
+	}
 	s.attachments = nil // fresh loadout: forget the old weapons' mounts (the cmd 327 wipe below drops them client-side too)
 	s.sendVar(packet.CmdPRISync, s.match.priPayload(), 1)
 	s.clearArmor() // the loadout wipe (cmd 327) drops the client's armor too — clear the durability bars
 	// Max the starter USP's attachments too (magazine/muzzle) so its ammo is full and it
 	// matches bought guns; the attachment items ride the cmd 174 below, then cmd 124 mounts them.
-	uspAttach, uspEquips := s.buildWeaponAttachments(uspUID, uspData)
-	inv := append([]message.InvItem{
-		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}, // USP weapon
+	// medkits ride the cmd 174 always; the USP (+ its ammo reserve + maxed attachments) only when
+	// the player gets a free loadout (NoLoadout skips it).
+	inv := []message.InvItem{
 		{Unique: medkitID, Data: medkitData, Count: 2, Runtime: 2}, // 2x medkits (Runtime = stack count for the HUD)
-	}, s.giveAmmoStacks(pistolAmmo)...) // pistol-ammo reserve as one combined stack (see giveAmmoStacks)
+	}
+	var uspAttach []message.InvItem
+	var uspEquips []attachEquip
+	if !noLoadout {
+		uspAttach, uspEquips = s.buildWeaponAttachments(uspUID, uspData)
+		inv = append(inv, message.InvItem{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}) // USP weapon
+		inv = append(inv, s.giveAmmoStacks(pistolAmmo)...)                                            // pistol-ammo reserve as one combined stack (see giveAmmoStacks)
+	}
 	if cfg.infiniteGloo { // testing: seed gloo walls so placing needs no shop trip
 		glooUID := s.nextUID()
 		s.equipment = append(s.equipment, message.Equipment{Slot: message.SlotBuilding, Data: glooDataID, Unique: glooUID})

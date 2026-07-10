@@ -131,14 +131,14 @@ func (s *session) stepHeal(now time.Time) {
 	}
 	if want > s.healApplied {
 		hp += uint16((want - s.healApplied) * medkitPerStep)
-		if hp > maxHP {
-			hp = maxHP
+		if hp > m.settings.maxHP {
+			hp = m.settings.maxHP
 		}
 		m.hp[s.entityID] = hp
 		s.healApplied = want
 		s.sendVar(packet.CmdPRISync, message.PRIHealHP(s.repID, hp), 1)
 	}
-	if s.healApplied >= medkitSteps || hp >= maxHP {
+	if s.healApplied >= medkitSteps || hp >= m.settings.maxHP {
 		s.healActive = false
 	}
 }

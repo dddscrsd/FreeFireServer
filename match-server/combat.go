@@ -22,23 +22,23 @@ func (m *Match) initHP() {
 	m.damage = map[uint32]uint32{}
 	m.rescues = map[uint32]*rescueState{}
 	for _, p := range m.players {
-		m.hp[p.entityID] = maxHP
+		m.hp[p.entityID] = m.settings.maxHP
 		m.life[p.entityID] = lifeAlive
 		p.playerPos = p.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
 	}
 	if m.botEntity != 0 {
-		m.hp[m.botEntity] = maxHP
+		m.hp[m.botEntity] = m.settings.maxHP
 		m.life[m.botEntity] = lifeAlive
 	}
 }
 
-// entityHP returns an entity's current HP (maxHP if untracked / not yet seeded). It reads the
-// match's shared HP map, so it is a Match method — any entity, human or bot, keyed by id.
+// entityHP returns an entity's current HP (the match's full HP if untracked / not yet seeded). It
+// reads the match's shared HP map, so it is a Match method — any entity, human or bot, keyed by id.
 func (m *Match) entityHP(entity uint32) uint16 {
 	if hp, ok := m.hp[entity]; ok {
 		return hp
 	}
-	return maxHP
+	return m.settings.maxHP
 }
 
 // handleTakeDamage handles cmd 106 (RUDP_TAKE_DAMAGE): the shooter's client reports a

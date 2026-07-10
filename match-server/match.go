@@ -294,7 +294,7 @@ func (m *Match) admitLater(s *session) {
 	m.addPlayer(s)
 	s.player.SpawnPos, s.player.SpawnFace = m.arena.spawnFor(s.faction)
 	s.playerPos = s.player.SpawnPos
-	m.hp[s.entityID] = maxHP
+	m.hp[s.entityID] = m.settings.maxHP
 	m.life[s.entityID] = lifeAlive
 
 	// The bot was only a 1-human filler; a 2nd human retires it so the humans face each other (§2).
@@ -356,7 +356,7 @@ func (s *session) startCSMatch() {
 func (m *Match) run() {
 	defer matchManager.reap(m) // remove this match from the registry when the loop exits
 	s := m.s
-	coins := uint32(startingCoins)
+	coins := csStartingCoins(m.settings.baseCoins) // wallet seed = economy table[0] (default 500)
 	if cfg.unlimitedMoneyTest {
 		coins = 9999
 	}
@@ -644,7 +644,7 @@ func (m *Match) enterCancel(now time.Time) {
 func (m *Match) spawnFallbackBot() {
 	m.botEntity = botEntityID
 	m.bot = botPlayer(m.s.player, m.botEntity)
-	m.hp[m.botEntity] = maxHP
+	m.hp[m.botEntity] = m.settings.maxHP
 	m.life[m.botEntity] = lifeAlive
 	m.broadcastData(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, m.serverTick()),
 		fmt.Sprintf("cmd=101 BOT fallback ent=%#x (MATCH_BOT: no players found)", m.botEntity))
@@ -756,7 +756,7 @@ func (m *Match) endFight(now time.Time) {
 	// Per-player round coins — the REAL CS economy (economy.go), replacing the old flat formula:
 	// running balance += base[round] + a win/loss event (loss stacks with the team's streak) +
 	// per-kill. base[round] holds 3000 from round 7 on. (First-blood bonus: TODO, not tracked yet.)
-	base := csBaseCoins(m.round, m.settings.baseCoins)
+	base := csRoundIncome(m.round, m.settings.baseCoins)
 	for _, p := range m.players {
 		aw := base + csKillBonus*p.roundKills.Swap(0)
 		if p.team == winnerTeam {
