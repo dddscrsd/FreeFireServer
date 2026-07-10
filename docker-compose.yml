@@ -106,6 +106,8 @@ services:
   live:
     <<: *node
     command: ["node", "src/servers/live.js"]
+    deploy:
+      replicas: ${LIVE_REPLICAS:-1}
     labels:
       - traefik.enable=true
       - traefik.http.routers.live.rule=Host(`${LIVE_DOMAIN}`)
@@ -115,6 +117,8 @@ services:
   login:
     <<: *node
     command: ["node", "src/servers/login.js"]
+    deploy:
+      replicas: ${LOGIN_REPLICAS:-1}
     labels:
       - traefik.enable=true
       - traefik.http.routers.login.rule=Host(`${LOGIN_DOMAIN}`)
@@ -124,6 +128,8 @@ services:
   main:
     <<: *node
     command: ["node", "src/servers/main.js"]
+    deploy:
+      replicas: ${MAIN_REPLICAS:-1}
     labels:
       - traefik.enable=true
       - traefik.http.routers.main.rule=Host(`${MAIN_DOMAIN}`)
@@ -135,6 +141,8 @@ services:
   gateway:
     <<: *node
     command: ["node", "src/servers/tcp.js"]
+    deploy:
+      replicas: ${GATEWAY_REPLICAS:-1}
     labels:
       - traefik.enable=true
       - traefik.tcp.routers.gateway.rule=HostSNI(`*`)
