@@ -449,7 +449,12 @@ func (m *Match) stream() {
 // tick. It is SendUnreliable + plaintext (no per-connection seq), so the same packet fans to all.
 // Replaces serverTimeLoop.
 func (m *Match) streamClock() {
-	tick := uint32(time.Since(m.matchStart).Seconds() * 30)
+	// The client's CS server clock is CurrentServerTime = FixedDeltaTime × (localTick − anchor)
+	// (KEPDHPAAHGP::OLAPLOIAMKM @0x1b38390), and cmd 1000 re-anchors it to THIS tick. So the tick MUST
+	// use the same scale as the cmd-101 anchor (serverTick = seconds / clientFixedDelta ≈ ×30.303) — a
+	// bare ×30 makes the client clock run ~1% slow, so its interpolated SafeZone circle lags behind our
+	// real-time damage radius and the player takes damage while still visibly inside the zone.
+	tick := uint32(time.Since(m.matchStart).Seconds() / clientFixedDelta)
 	pkt := &packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdSyncServerTime, Flags: 0, Payload: message.SyncServerTime(tick)}
 	for _, p := range m.players {
 		if p.out != nil {

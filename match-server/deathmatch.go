@@ -44,7 +44,14 @@ func (m *Match) deathPos(entity uint32) message.Vec3 {
 // the outcome (downOrKill). A knocked/dead victim or a decided round ignores further damage. attacker
 // 0 is an environment (out-of-zone) hit.
 func (m *Match) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8) {
-	if m.roundOver || m.lifeOf(victim) != lifeAlive {
+	if m.roundOver {
+		return
+	}
+	if m.lifeOf(victim) == lifeKnocked {
+		m.damageKnocked(victim, attacker, dmg) // downed players still take real damage (finish / zone)
+		return
+	}
+	if m.lifeOf(victim) != lifeAlive {
 		return
 	}
 	cur, ok := m.hp[victim]
@@ -80,6 +87,32 @@ func (m *Match) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8)
 	log.Printf("[mm-udp] TAKE_DAMAGE victim=%#x dmg=%d -> HP=%d", victim, dmg, cur)
 	if cur == 0 {
 		m.downOrKill(victim, attacker, bodyPart)
+	}
+}
+
+// damageKnocked drains a KNOCKED player's bleed pool by EXTERNAL damage — enemy fire finishing a
+// downed target, or the safe zone — which the alive-path applyDamage would otherwise ignore (it early-
+// returns for non-alive victims, so a downed player only ever lost HP to the bleed timer). The pool
+// (ks.hp, mirrored into m.hp for the PRI stream) drops by dmg; emptying it finalizes the knock into a
+// cmd-107 death, crediting the original knocker (ks.killer). attacker 0 = zone/environment.
+func (m *Match) damageKnocked(victim, attacker uint32, dmg uint16) {
+	ks, ok := m.knock[victim]
+	if !ok {
+		return
+	}
+	if attacker != 0 && m.teamOf(attacker) != m.teamOf(victim) {
+		m.damage[attacker] += uint32(dmg) // scoreboard total damage (PRI field 31)
+	}
+	if dmg >= ks.hp {
+		ks.hp = 0
+		m.hp[victim] = 0
+		m.finalizeKnock(victim, ks)
+		return
+	}
+	ks.hp -= dmg
+	m.hp[victim] = ks.hp // PRI streams the draining bleed pool as the downed player's HP
+	if vs := m.sessionByEntity(victim); vs != nil {
+		vs.sendVar(packet.CmdPRISync, vs.match.priPayload(), 1) // eager: show the downed HP drop now
 	}
 }
 
