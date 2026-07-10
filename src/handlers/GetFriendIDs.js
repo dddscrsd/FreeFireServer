@@ -9,12 +9,12 @@
 'use strict';
 
 const { requireAccount } = require('./_shared');
+const { getRepo } = require('../db/repo');
 
-function handleGetFriendIDs(reqObj, ctx) {
+async function handleGetFriendIDs(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return { account_ids: [] };
-  const ids = (Array.isArray(account.friends) ? account.friends : []).map((f) => Number(f));
-  return { account_ids: ids };
+  return { account_ids: await getRepo().getFriendIds(account.uid) };
 }
 
 module.exports = {

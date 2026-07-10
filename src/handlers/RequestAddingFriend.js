@@ -22,11 +22,7 @@ async function handleRequestAddingFriend(reqObj, ctx) {
   const addee = reqObj.addee;
   if (!adder || !addee) return {};
 
-  const target = Number(addee) === Number(account.uid) ? account : await getRepo().getById(addee);
-  if (!target) return {};
-  target.requests = target.requests || [];
-  if (!target.requests.includes(adder)) target.requests.push(adder);
-  await getRepo().save(target);
+  await getRepo().addRequest(addee, adder);
   ctx.logger.info(`[ported_2] RequestAddingFriend ${adder} -> ${addee}`);
 
   // Real-time push: if the addee is ONLINE (presence), tell whichever gateway holds

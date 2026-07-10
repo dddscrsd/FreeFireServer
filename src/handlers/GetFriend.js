@@ -18,12 +18,9 @@ const { getBus } = require('../bus/instance');
 async function handler(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
-  const friendIds = Array.isArray(account.friends) ? account.friends : [];
   const now = Math.floor(Date.now() / 1000);
 
-  const ids = friendIds
-    .map((fid) => (typeof fid === 'object' ? fid.account_id || fid.uid : fid))
-    .filter(Boolean);
+  const ids = await getRepo().getFriendIds(account.uid);
   const accts = await getRepo().getByIds(ids);
 
   // Cross-layer presence: the TCP gateway (a DIFFERENT process) writes presence:<uid>

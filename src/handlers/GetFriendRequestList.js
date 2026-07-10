@@ -13,7 +13,7 @@ async function handleGetFriendRequestList(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
 
-  const reqUids = (Array.isArray(account.requests) ? account.requests : []).filter(Boolean);
+  const reqUids = await getRepo().getRequestIds(account.uid);
   const infos = (await getRepo().getByIds(reqUids)).map((other) => buildAccountInfoBasic(other));
   ctx.logger.info(`[ported_0] GetFriendRequestList uid=${account.uid} count=${infos.length}`);
   return { infos };

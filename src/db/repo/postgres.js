@@ -205,6 +205,64 @@ class PostgresRepo {
     }
   }
 
+  // --- friends / friend-requests (relational; canonical over the state blob) --------
+  // Friendships are stored BOTH ways ((a,b) and (b,a)) so "friends of X" is a single
+  // indexed lookup, and adding/removing is atomic → the two sides can never desync
+  // (the old blob mirrored two docs by hand and could).
+
+  async getFriendIds(uid) {
+    if (!uid) return [];
+    const { rows } = await this.pool.query('SELECT b FROM friendships WHERE a = $1', [uid]);
+    return rows.map((r) => Number(r.b));
+  }
+
+  async getRequestIds(uid) {
+    if (!uid) return [];
+    const { rows } = await this.pool.query('SELECT from_id FROM friend_requests WHERE target_id = $1', [uid]);
+    return rows.map((r) => Number(r.from_id));
+  }
+
+  async addRequest(targetId, fromId) {
+    if (!targetId || !fromId || Number(targetId) === Number(fromId)) return;
+    await this.pool.query(
+      'INSERT INTO friend_requests (target_id, from_id, created_at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING',
+      [targetId, fromId, Date.now()]
+    );
+  }
+
+  async removeRequest(targetId, fromId) {
+    if (!targetId || !fromId) return;
+    await this.pool.query('DELETE FROM friend_requests WHERE target_id = $1 AND from_id = $2', [targetId, fromId]);
+  }
+
+  // Establish a mutual friendship and clear any pending request between the two, atomically.
+  async addFriendship(a, b) {
+    if (!a || !b || Number(a) === Number(b)) return;
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        'INSERT INTO friendships (a,b,created_at) VALUES ($1,$2,$3),($2,$1,$3) ON CONFLICT DO NOTHING',
+        [a, b, Date.now()]
+      );
+      await client.query(
+        'DELETE FROM friend_requests WHERE (target_id=$1 AND from_id=$2) OR (target_id=$2 AND from_id=$1)',
+        [a, b]
+      );
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  async removeFriendship(a, b) {
+    if (!a || !b) return;
+    await this.pool.query('DELETE FROM friendships WHERE (a=$1 AND b=$2) OR (a=$2 AND b=$1)', [a, b]);
+  }
+
   async close() {
     if (this.pool.end) await this.pool.end();
   }

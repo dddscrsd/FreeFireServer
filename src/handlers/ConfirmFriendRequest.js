@@ -10,7 +10,7 @@
 
 'use strict';
 
-const { requireAccount, nowSecs, buildAccountInfoBasic } = require('./_shared');
+const { requireAccount, nowSecs, accountToPresence } = require('./_shared');
 const { getRepo } = require('../db/repo');
 const { getBus } = require('../bus/instance');
 const { lookup } = require('../protocol/protos');
@@ -23,32 +23,21 @@ async function handleConfirmFriendRequest(reqObj, ctx) {
   const adderId = Number(reqObj.adder || 0);
   if (!adderId) return {};
 
-  account.friends = Array.isArray(account.friends) ? account.friends : [];
-  account.requests = Array.isArray(account.requests) ? account.requests : [];
-  account.requests = account.requests.filter((r) => Number(r) !== adderId);
-  if (!account.friends.some((f) => Number(f) === adderId)) account.friends.push(adderId);
-  ctx.savePlayer();
+  // Establish the mutual friendship and clear the pending request, atomically (relational).
+  await getRepo().addFriendship(account.uid, adderId);
 
-  // Mirror the friendship onto the adder if they exist in our store.
-  const adder = await getRepo().getById(adderId);
-  if (adder) {
-    adder.friends = Array.isArray(adder.friends) ? adder.friends : [];
-    if (!adder.friends.some((f) => Number(f) === Number(account.uid))) {
-      adder.friends.push(Number(account.uid));
-      await getRepo().save(adder);
-    }
-  }
-
-  // Real-time: tell the adder (the original requester), if online, that we accepted —
-  // so we appear in their friend list live instead of only after a re-open. Carries
-  // OUR AccountInfoBasic (the shape the working REQUEST_NTF uses). Best-effort; the
+  // Real-time: tell the adder (the original requester), if online, that we accepted — so
+  // we appear in their friend list live instead of only after a re-open. The client's
+  // CONFIRM_NTF handler (OnMsgFriend_ConfirmAdd) decodes the content as
+  // AccountInfoWithPresence and builds the new-friend row STRAIGHT from it (no re-fetch),
+  // so it MUST be that type — AccountInfoBasic silently mis-parses. Best-effort; the
   // friendship is already persisted mutually, so a missed push just means "on reopen".
   try {
     const bus = getBus();
     if (bus && (await bus.getNode(adderId))) {
-      const T = lookup('AccountInfoBasic');
+      const T = lookup('AccountInfoWithPresence');
       if (T) {
-        const content = Buffer.from(T.encode(T.fromObject(buildAccountInfoBasic(account))).finish());
+        const content = Buffer.from(T.encode(T.fromObject(accountToPresence(account, nowSecs()))).finish());
         await bus.publishPS('gw.push', 'GatewayPush', {
           target_account_id: adderId,
           protocol: EProtocol.FRIEND,
@@ -62,7 +51,7 @@ async function handleConfirmFriendRequest(reqObj, ctx) {
     ctx.logger.warn(`[ported_9] confirm push failed: ${e.message}`);
   }
 
-  const friend = adder;
+  const friend = await getRepo().getById(adderId);
   if (!friend) return { account_id: adderId, update_time: nowSecs() };
 
   const si = friend.selected_items || {};

@@ -37,5 +37,50 @@ module.exports = {
   async settleMatchResult() {
     throw new Error('settleMatchResult requires the Postgres backend (set DATABASE_URL)');
   },
+
+  // --- friends / friend-requests (blob-backed; mirrors the pre-relational behaviour) --
+  async getFriendIds(uid) {
+    const a = player.getById(uid);
+    return a && Array.isArray(a.friends) ? a.friends.map(Number) : [];
+  },
+  async getRequestIds(uid) {
+    const a = player.getById(uid);
+    return a && Array.isArray(a.requests) ? a.requests.map(Number) : [];
+  },
+  async addRequest(targetId, fromId) {
+    if (!targetId || !fromId || Number(targetId) === Number(fromId)) return;
+    const t = player.getById(targetId);
+    if (!t) return;
+    t.requests = Array.isArray(t.requests) ? t.requests : [];
+    if (!t.requests.some((r) => Number(r) === Number(fromId))) { t.requests.push(Number(fromId)); player.save(t); }
+  },
+  async removeRequest(targetId, fromId) {
+    const t = player.getById(targetId);
+    if (!t || !Array.isArray(t.requests)) return;
+    const before = t.requests.length;
+    t.requests = t.requests.filter((r) => Number(r) !== Number(fromId));
+    if (t.requests.length !== before) player.save(t);
+  },
+  async addFriendship(a, b) {
+    if (!a || !b || Number(a) === Number(b)) return;
+    for (const [self, other] of [[a, b], [b, a]]) {
+      const acc = player.getById(self);
+      if (!acc) continue;
+      acc.friends = Array.isArray(acc.friends) ? acc.friends : [];
+      acc.requests = Array.isArray(acc.requests) ? acc.requests.filter((r) => Number(r) !== Number(other)) : [];
+      if (!acc.friends.some((f) => Number(f) === Number(other))) acc.friends.push(Number(other));
+      player.save(acc);
+    }
+  },
+  async removeFriendship(a, b) {
+    if (!a || !b) return;
+    for (const [self, other] of [[a, b], [b, a]]) {
+      const acc = player.getById(self);
+      if (!acc || !Array.isArray(acc.friends)) continue;
+      acc.friends = acc.friends.filter((f) => Number(f) !== Number(other));
+      player.save(acc);
+    }
+  },
+
   async close() {}
 };
