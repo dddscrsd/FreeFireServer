@@ -391,6 +391,26 @@ async function switchSeat(account, req) {
   });
 }
 
+// START: the owner launches the match. Validates owner + WAITING, then FREES the room (delete +
+// clear membership) — the suss(16) the caller pushes moves every member into the game, so keeping
+// the room would orphan an "already in room" state after the match (return-to-room is a later
+// phase). Returns the room SNAPSHOT (members + mode) for the caller to build the per-member handoff.
+async function startMatch(ownerId, roomId) {
+  const bus = getBus();
+  if (!bus) throw new RoomError(ECustomRoomErr.NOROOM);
+  ownerId = Number(ownerId); roomId = Number(roomId);
+  return withRoomLock(bus, roomId, async () => {
+    const room = await loadRoom(bus, roomId);
+    if (!room) throw new RoomError(ECustomRoomErr.NOROOM);
+    if (room.owner !== ownerId) throw new RoomError(ECustomRoomErr.NOTOWNER);
+    if (room.state !== ROOM_STATE.WAITING) throw new RoomError(ECustomRoomErr.ROOMINGAME);
+    await deleteRoom(bus, room.id);
+    for (const m of room.members) if (m.account_id) await bus.hdel(MEMBERS_KEY, String(m.account_id));
+    logger.info(`[room] START id=${room.id} owner=${ownerId} members=${room.members.length} -> launch + free room`);
+    return { room };
+  });
+}
+
 async function get(roomId) {
   const bus = getBus();
   return bus ? loadRoom(bus, Number(roomId)) : null;
@@ -468,7 +488,7 @@ async function handleDisconnect(accountId) {
 
 module.exports = {
   ROOM_STATE,
-  create, list, join, leave, kick, change, setReady, switchSeat, get, roomIdOf,
+  create, list, join, leave, kick, change, setReady, switchSeat, startMatch, get, roomIdOf,
   toRoomInfo, toBasicInfo, playerInfo,
   pushToAccount, broadcast,
   joinNtf, leaveNtf, kickNtf, setReadyNtf, dismissNtf, runOp, handleDisconnect,

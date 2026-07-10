@@ -223,4 +223,12 @@ async function formMatch(entries) {
   }
 }
 
-module.exports = { enqueue, cancel, queueSize, startService, stopService };
+// nextMatchId mints a globally-unique, restart-safe match id (shared counter with the
+// matchmaker, so room matches and queued matches never collide).
+async function nextMatchId() { const bus = getBus(); return bus ? bus.incr(SEQ_KEY) : 0; }
+
+// buildPrepareToken / staticAddr / nextMatchId are exported so the custom-room START handoff
+// (src/tcp/handlers/RoomStart.js) reuses the SAME match machinery (token + fleet addr + id) the
+// matchmaker uses — it just pushes the SussNtf under the ROOM protocol to the room's members
+// instead of pulling from the shared queue.
+module.exports = { enqueue, cancel, queueSize, startService, stopService, buildPrepareToken, staticAddr, nextMatchId };

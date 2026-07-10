@@ -172,7 +172,18 @@ async function main() {
   assert.strictEqual(await rooms.get(roomId), null, 'room dismissed when owner leaves');
   assert.strictEqual(await rooms.roomIdOf(101), 0, 'Alice membership cleared');
 
-  console.log('room-smoke OK: create/list/join(balance)/ready/change(opaque)/kick/dismiss + error paths');
+  // 10) START (op level) — owner launches; the room is FREED (deleted + membership cleared) so
+  //     the handoff moves everyone into the match without orphaning an "already in room" state.
+  const startRoom = await rooms.create(A, { room_name: 'Start', map_id: 1, game_mode: 15, group_mode: 3, max_member_num: 8, room_type: 1 });
+  let notOwner = false;
+  try { await rooms.startMatch(999999, startRoom.id); } catch (e) { notOwner = e.code === ECustomRoomErr.NOTOWNER; }
+  assert.ok(notOwner, 'non-owner start -> NOTOWNER');
+  const startRes = await rooms.startMatch(A.uid, startRoom.id);
+  assert.strictEqual(startRes.room.id, startRoom.id, 'startMatch returns the room snapshot for the handoff');
+  assert.strictEqual(await rooms.get(startRoom.id), null, 'room deleted on start (freed)');
+  assert.strictEqual(await rooms.roomIdOf(A.uid), 0, 'host membership cleared on start');
+
+  console.log('room-smoke OK: create/list/join(enter)/ready/switchseat/change/kick/dismiss/start + error paths');
 }
 
 main().catch((e) => { console.error('room-smoke FAILED:', e.stack || e); process.exit(1); });
