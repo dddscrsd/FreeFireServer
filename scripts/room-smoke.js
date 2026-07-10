@@ -64,8 +64,15 @@ async function main() {
   assert.strictEqual(ctx.ret, 0, 'create ret ok');
   assert.ok(created.id > 0, 'room got an id');
   assert.strictEqual(Number(created.owner), 101, 'owner is Alice');
-  assert.strictEqual(created.groups[0].members[0].account_id, 101, 'Alice on team 1');
+  assert.strictEqual(created.groups[0].members[0].account_id, 101, 'Alice on team 1 seat 0');
   assert.strictEqual(created.state, rooms.ROOM_STATE.WAITING, 'state waiting');
+  // slot grid: both teams emitted, each padded to per-team capacity (8/2=4) with empty seats.
+  assert.strictEqual(created.groups.length, 2, 'both teams emitted');
+  assert.strictEqual(created.groups[0].members.length, 4, 'team 1 padded to 4 seats');
+  assert.strictEqual(created.groups[1].members.length, 4, 'team 2 padded to 4 seats');
+  assert.ok(created.groups[1].members.every((m) => !m.account_id), 'team 2 all empty seats (account_id 0)');
+  assert.strictEqual(created.owner_online, true, 'owner_online true (no offline hint)');
+  assert.strictEqual(created.enough_room_card, true, 'enough_room_card true (no out-of-cards hint)');
   assert.strictEqual(drainPushes().length, 0, 'create broadcasts nothing');
   const roomId = created.id;
 
@@ -78,8 +85,8 @@ async function main() {
   ctx = ctxFor(B);
   const joined = await RoomJoin.handler({ room_id: roomId }, ctx);
   assert.strictEqual(ctx.ret, 0, 'join ret ok');
-  const allMembers = joined.groups.flatMap((g) => g.members.map((m) => m.account_id));
-  assert.deepStrictEqual(allMembers.sort(), [101, 202], 'both members present');
+  const allMembers = joined.groups.flatMap((g) => g.members.map((m) => m.account_id)).filter(Boolean);
+  assert.deepStrictEqual(allMembers.sort(), [101, 202], 'both real members present (placeholders filtered)');
   const bobTeam = joined.groups.find((g) => g.members.some((m) => m.account_id === 202)).id;
   assert.strictEqual(bobTeam, 2, 'Bob balanced onto team 2');
   let pushes = drainPushes();

@@ -86,15 +86,22 @@ function memberFromAccount(account, groupId, role = ROLE_MEMBER) {
 function playerInfo(m) {
   return {
     group_id: m.group_id, account_id: m.account_id, nickname: m.nickname,
-    head_pic: m.head_pic || 0, banner_id: m.banner_id || 0, ready: !!m.ready,
+    head_pic: m.head_pic || 0, banner_id: m.banner_id || 0, ready: true,
     role: m.role || ROLE_MEMBER, rank: m.rank || 0, ranking_points: 0,
     cs_rank: m.cs_rank || 0, cs_ranking_points: 0
   };
 }
 
-// Project the record onto tcp.RoomInfo (grouping members into their teams).
+// Project the record onto tcp.RoomInfo. The client renders ONE team panel per RoomGroupInfo and
+// ONE seat per members[] entry — UIRoomBaseController::RefreshUIData -> SetViewData, seats ==
+// group.members.Count with NO client-side padding; a RoomPlayerInfo{account_id:0} draws an EMPTY
+// seat (SetUIData). So we emit ALL teams and PAD each members[] to the per-team capacity with
+// account_id:0 placeholders, else only the host's seat shows and the empty slots are missing.
 function toRoomInfo(room) {
+  const maxMembers = room.max_member_num || DEFAULT_MAX_MEMBERS;
+  const perTeam = Math.max(1, Math.ceil(maxMembers / NUM_TEAMS));
   const byGroup = new Map();
+  for (let g = 1; g <= NUM_TEAMS; g += 1) byGroup.set(g, []); // always emit every team
   for (const m of room.members) {
     const g = m.group_id || 1;
     if (!byGroup.has(g)) byGroup.set(g, []);
@@ -102,7 +109,11 @@ function toRoomInfo(room) {
   }
   const groups = [...byGroup.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([gid, members]) => ({ id: gid, name: `Team ${gid}`, abbr_name: `T${gid}`, members }));
+    .map(([gid, members]) => {
+      const seats = members.slice();
+      while (seats.length < perTeam) seats.push({ account_id: 0, group_id: gid }); // empty seat
+      return { id: gid, name: `Team ${gid}`, abbr_name: `T${gid}`, members: seats };
+    });
   return {
     id: room.id, name: room.name, owner: room.owner,
     map_id: room.map_id, game_mode: room.game_mode, group_mode: room.group_mode,
@@ -113,6 +124,10 @@ function toRoomInfo(room) {
     room_setting: room.room_setting || 0, room_setting2: room.room_setting2 || 0,
     is_cs_advanced: !!room.is_cs_advanced,
     cs_advanced_setting: Buffer.from(room.cs_advanced_b64 || '', 'base64'),
+    // Both feed UIRoomBaseController::RefreshSystemHint (owner_online checked FIRST):
+    // owner_online=false -> "owner offline"; owner_online=true & enough_room_card=false ->
+    // "out of room cards". Set both true so the SystemHintLabel stays hidden.
+    enough_room_card: true,
     owner_online: true
   };
 }

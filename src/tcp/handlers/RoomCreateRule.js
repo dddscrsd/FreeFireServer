@@ -11,12 +11,11 @@
 // grid (GetMapIDListByGameModeAndRoomType), members/spectators and the group toggles are ALL
 // built from this response — the client has no independent whitelist. So any self-consistent
 // ids populate the dialog; real ids only matter for correct on-screen NAMES. We advertise Clash
-// Squad: game_mode 15 (the client's squad-first CS mode) on map_id 11 = "Fight Club", the CS
-// arena whose name is baked in GetMapNameByMapId (map 1 is Paradise, a BR map). mapConfigId =
-// map_id*1000 + game_mode = 11015.
+// Squad: game_mode 15 (the client's squad-first CS mode) on map_id 1 (Bermuda) — the ONLY map
+// our match implementation runs CS on. mapConfigId = map_id*1000 + game_mode = 1015.
 const { EProtocol, ECustomRoom } = require('../protocol');
 
-const CS_MAP = 11;         // Fight Club — the CS arena (baked TXT map name); mapConfigId 11015
+const CS_MAP = 1;          // Bermuda — the CS map our match server runs; mapConfigId 1015
 const CS_MODE = 15;        // game_mode 15: client special-cases this as squad-first (Clash Squad)
 const GROUP_SQUAD = 3;     // group_mode: 0 Solo, 1 Duo, 3 Squad/Quad, 5 Hexa
 const ROOM_TYPE_CASUAL = 1;
