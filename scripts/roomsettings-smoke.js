@@ -41,15 +41,15 @@ assert.strictEqual(s.flags.noHud, true, 'NoHud 0x10');
 assert.strictEqual(s.flags.noAuxAim, true, 'NoAuxAim 0x4000');
 assert.strictEqual(s.flags.noBomb, false, 'NoBomb 0x2 unset');
 
-// values are undefined until the CSV tables are populated
-assert.strictEqual(s.roundCount, undefined, 'roundCount undefined until CSV table filled');
+// values resolve from the CSV tables (keyed by the packed value = CSV Key, 1-based)
+assert.strictEqual(s.roundCount, 13, 'roundNum value 2 -> 13 rounds (CSV Key 2)');
+assert.strictEqual(s.maxHP, 50, 'playerHP value 3 -> 50 HP (CSV Key 3)');
+assert.deepStrictEqual(s.economyTable, [500, 900, 1100, 1700, 2100, 2400, 3000], 'initCoin value 1 -> default economy table (CSV Key 1)');
 
-// once populated, index -> value resolves (simulate the CSV load: index 0=7,1=9,2=13,3=21)
-rooms.TABLES.roundNum = [7, 9, 13, 21];
-rooms.TABLES.playerHP = [100, 150, 200, 250, 300, 350, 400, 450];
-const s2 = rooms.decodeRoomSettings({ room_setting: rs, room_setting2: rs2 });
-assert.strictEqual(s2.roundCount, 13, 'roundNum index 2 -> 13 rounds (from filled table)');
-assert.strictEqual(s2.maxHP, 250, 'playerHP index 3 -> 250 HP (from filled table)');
-rooms.TABLES.roundNum = []; rooms.TABLES.playerHP = []; // reset (these were illustrative, not the real CSV)
+// an unset field (value 0) -> undefined -> match keeps its own default; flags default false
+const sDefault = rooms.decodeRoomSettings({ room_setting: 0, room_setting2: 0 });
+assert.strictEqual(sDefault.roundCount, undefined, 'unset roundNum (value 0) -> default');
+assert.strictEqual(sDefault.maxHP, undefined, 'unset HP -> default');
+assert.strictEqual(sDefault.flags.unlimitedAmmo, false, 'unset flags -> false');
 
-console.log('roomsettings-smoke OK: bit extraction (indices + flags) + table resolution');
+console.log('roomsettings-smoke OK: bit extraction (indices + flags) + CSV table resolution');

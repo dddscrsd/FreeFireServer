@@ -42,18 +42,27 @@ const FLAG2 = {
   friendlyFire: 0x20, inGameChat: 0x800, shopFlow: 0x1000, useRandomMap: 0x2000, noAuxAim: 0x4000
 };
 
-// index -> value tables from CONFIG_ROOM_CREATE_RULE_HPEP. FILL from the extracted CSV (arrays
-// indexed by the packed index). Empty => value resolves to undefined (caller falls back to default).
+// value -> setting tables from CONFIG_ROOM_CREATE_RULE_HPEP. KEYED BY THE PACKED VALUE, which is the
+// CSV Key (1-based); value 0 = unset -> default (undefined). The 2-bit fields (roundNum/initCoin)
+// only reach Keys 1-3 / 1-2 in simple mode; wider Keys need advanced mode.
 const TABLES = {
-  roundNum: [],  // index -> CS round count (e.g. [7, 9, 13, ...])
-  playerHP: [],  // index -> HP
-  initCoin: [],  // index -> starting coins
-  revive: []     // index -> revive-rule id/loc
+  roundNum: { 1: 7, 2: 13, 3: 11, 4: 5, 5: 3 },                       // Type 4: CS round count
+  initCoin: {                                                          // Type 5: per-round base ECONOMY preset (';'-sep in CSV)
+    1: [500, 900, 1100, 1700, 2100, 2400, 3000],
+    2: [1500, 1700, 1900, 2100, 2300, 2500, 2700]
+  },
+  playerHP: { 1: 200, 2: 500, 3: 50, 4: 1 },                          // Type 0
+  playerEP: { 1: 0, 2: 50, 3: 200 },                                  // Type 1
+  playerSpeed: { 1: 1.0, 2: 0.5, 3: 1.25, 4: 2.0 },                   // Type 2 (move-speed multiplier)
+  playerJump: { 1: 1.0, 2: 2.0, 3: 4.0 },                             // Type 3 (jump-height multiplier)
+  fightClubRound: { 1: 9, 2: 11, 3: 13 },                             // Type 6
+  revive: { 1: '1;1', 2: '1;0', 3: '0;1', 4: '0;0' }                  // Type 7: revivePoint;reviveCard flags
 };
 
 const idxOf = (v, [start, width]) => ((v >>> start) & ((1 << width) - 1));
 const hasFlag = (v, mask) => (v & mask) !== 0;
-const resolve = (table, i) => (Array.isArray(table) && i >= 0 && i < table.length ? table[i] : undefined);
+// table is KEYED BY THE PACKED VALUE (= CSV Key); value 0 (unset) -> undefined -> match keeps default.
+const resolve = (table, v) => (v ? table[v] : undefined);
 
 function decodeIndices(rs, rs2) {
   const out = {};
@@ -81,9 +90,12 @@ function decodeRoomSettings(room) {
   return {
     flags: decodeFlags(rs, rs2),
     indices,
-    roundCount: resolve(TABLES.roundNum, indices.roundNum),
-    maxHP: resolve(TABLES.playerHP, indices.playerHP),
-    initCoin: resolve(TABLES.initCoin, indices.initCoin),
+    roundCount: resolve(TABLES.roundNum, indices.roundNum),    // CS round count (undefined = default)
+    maxHP: resolve(TABLES.playerHP, indices.playerHP),         // HP (undefined = default)
+    maxEP: resolve(TABLES.playerEP, indices.playerEP),
+    speedMul: resolve(TABLES.playerSpeed, indices.playerSpeed),
+    jumpMul: resolve(TABLES.playerJump, indices.playerJump),
+    economyTable: resolve(TABLES.initCoin, indices.initCoin),  // per-round base coin table (undefined = default)
     revive: resolve(TABLES.revive, indices.revive),
     isCsAdvanced: !!(room && room.is_cs_advanced)
   };
