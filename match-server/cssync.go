@@ -141,7 +141,7 @@ func (s *session) giveLoadout(resetCoins bool) {
 	inv := append([]message.InvItem{
 		{Unique: uspUID, Data: uspData, Count: 1, Runtime: uspMag}, // USP weapon
 		{Unique: medkitID, Data: medkitData, Count: 2, Runtime: 2}, // 2x medkits (Runtime = stack count for the HUD)
-	}, s.giveAmmoStacks(pistolAmmo)...) // pistol-ammo reserve as 30-round stacks
+	}, s.giveAmmoStacks(pistolAmmo)...) // pistol-ammo reserve as one combined stack (see giveAmmoStacks)
 	if cfg.infiniteGloo { // testing: seed gloo walls so placing needs no shop trip
 		glooUID := s.nextUID()
 		s.equipment = append(s.equipment, message.Equipment{Slot: message.SlotBuilding, Data: glooDataID, Unique: glooUID})
@@ -192,11 +192,11 @@ func (s *session) reissueLoadout() {
 			Runtime: loadedMagFor(w.data, SkinForWeapon(w.data, s.player.Slots)), // full magazine (incl. auto-magazine boost)
 		})
 	}
-	// Refill every ammo stack the player still holds back to a full 30 (ammo is decoupled from
-	// weapons now the reserve is split into stacks); re-sending the same unique upserts the count.
+	// Refill every ammo reserve the player still holds back to its full total (one combined
+	// stack per type now); re-sending the same unique upserts the count.
 	for uid, it := range s.clientUIDs {
 		if isAmmoData(it.data) {
-			inv = append(inv, message.InvItem{Unique: uid, Data: it.data, Count: ammoStack})
+			inv = append(inv, message.InvItem{Unique: uid, Data: it.data, Count: ammoReserveTotal(it.data)})
 		}
 	}
 	// Refresh medkits to 2 EVERY round (a survivor keeps its loadout, so it never re-gets them

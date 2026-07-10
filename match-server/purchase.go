@@ -98,11 +98,11 @@ const (
 	itemMushroom        = 709
 )
 
-// ammoStack is the rounds per ammo stack. A weapon's reserve is issued as SEVERAL stacks of
-// this size (not one big stack) so dropping ammo drops ONE stack, not the whole reserve.
+// ammoStack is the base per-magazine unit; a weapon's reserve is ammoStackCount of these,
+// but issued as ONE combined stack (see ammoReserveTotal / giveAmmoStacks).
 const ammoStack = 30
 
-// ammoStackCount is how many ammoStack-round stacks a weapon's ammo type is issued.
+// ammoStackCount is the reserve multiplier for a weapon's ammo type (× ammoStack rounds).
 func ammoStackCount(ammo uint32) int {
 	switch ammo {
 	case 203, 204: // sniper / shotgun carry fewer
@@ -112,22 +112,26 @@ func ammoStackCount(ammo uint32) int {
 	}
 }
 
+// ammoReserveTotal is a weapon's full spare-ammo reserve for the given ammo type, issued as
+// ONE inventory stack (NOT split). The client's reload consume-loop (NPCNMJAGIKI::JBKGGOOPEIN)
+// is BUGGY across multiple stacks of the same ammo type: it OVERWRITES the per-stack "consumed"
+// out-var instead of accumulating, so a reload spanning more than one stack drains every stack
+// but refills the magazine by only the LAST stack's amount ("drains ammo but the clip isn't
+// full"). One stack makes that loop run exactly once. Trade-off: dropping ammo now drops the
+// whole reserve, not a single 30-round stack.
+func ammoReserveTotal(ammo uint32) uint32 { return uint32(ammoStackCount(ammo)) * ammoStack }
+
 // isAmmoData reports whether a DataID is an ammo type (201 rifle, 202 pistol, 203 sniper,
-// 204 shotgun, 205 SMG) — used to refill ammo stacks between rounds.
+// 204 shotgun, 205 SMG) — used to refill the ammo reserve between rounds.
 func isAmmoData(data uint32) bool { return data >= 201 && data <= 205 }
 
-// giveAmmoStacks issues ammoStackCount(ammo) stacks of ammoStack rounds of the given ammo
-// type, each as its own InvItem + unique tracked in clientUIDs, and returns the InvItems. The
-// split is what lets a player drop a single stack instead of the whole reserve.
+// giveAmmoStacks issues a weapon's full spare-ammo reserve as ONE InvItem + unique tracked in
+// clientUIDs, and returns it (a one-element slice so callers can spread it into a cmd 174).
 func (s *session) giveAmmoStacks(ammo uint32) []message.InvItem {
-	n := ammoStackCount(ammo)
-	inv := make([]message.InvItem, 0, n)
-	for i := 0; i < n; i++ {
-		uid := s.nextUID()
-		inv = append(inv, message.InvItem{Unique: uid, Data: ammo, Count: ammoStack})
-		s.trackItem(lootItem{unique: uid, data: ammo, count: ammoStack})
-	}
-	return inv
+	total := ammoReserveTotal(ammo)
+	uid := s.nextUID()
+	s.trackItem(lootItem{unique: uid, data: ammo, count: total})
+	return []message.InvItem{{Unique: uid, Data: ammo, Count: total}}
 }
 
 // handleCSPurchase handles cmd 408: a buy request `[u16 qty][u16 itemId][u16 flag]`.
