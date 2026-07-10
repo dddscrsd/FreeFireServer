@@ -43,6 +43,7 @@ func (m *Match) priPayload() []byte {
 			VestDur: p.vestDur, HelmetDur: p.helmetDur, ItemOnHand: onHand, Faction: p.faction,
 			Kills: capByte(m.kills[p.entityID]), Deaths: capByte(m.deaths[p.entityID]),
 			FireState: fireState, Sighting: uint32(sighting), CurEP: byte(p.ep), Damage: m.damage[p.entityID],
+			SpeedScale: m.settings.speedScale, JumpScale: m.settings.jumpScale, // custom-room move/jump multipliers (0 = omit)
 		})})
 	}
 	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {
@@ -50,6 +51,7 @@ func (m *Match) priPayload() []byte {
 		ents = append(ents, message.PRIEntity{RepID: botRepID, Block: message.PRIHPBlock(message.PRIState{
 			CurHP: m.entityHP(m.botEntity), MaxHP: m.settings.maxHP, Score: botScore, Faction: botFaction,
 			Kills: capByte(m.kills[m.botEntity]), Deaths: capByte(m.deaths[m.botEntity]), Damage: m.damage[m.botEntity],
+			SpeedScale: m.settings.speedScale, JumpScale: m.settings.jumpScale,
 		})})
 	}
 	return message.SyncPRI(ents)

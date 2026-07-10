@@ -42,9 +42,12 @@ async function handler(reqObj, ctx) {
       // client applies its own client-side flags (UnlimitedAmmo/NoHud/NoAuxAim/NoSkill/FriendDmg/…).
       if (s.roomSetting) payload.room_setting = s.roomSetting;
       if (s.roomSetting2) payload.room_setting2 = s.roomSetting2;
+      // Move-speed / jump-height multipliers -> PRI fields 50/52 (percent-encoded match-side).
+      if (s.speedMul) payload.speed_mul = s.speedMul;
+      if (s.jumpMul) payload.jump_mul = s.jumpMul;
       const bus = getBus();
       if (bus) await bus.setKey(`match:${matchId}:settings`, JSON.stringify(payload), 3600);
-      ctx.logger.info(`[room] START settings match=${matchId} rounds=${s.roundCount || 'default'} hp=${s.maxHP || 'default'} rs=0x${(s.roomSetting || 0).toString(16)}/0x${(s.roomSetting2 || 0).toString(16)} flags=${Object.entries(s.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none'}`);
+      ctx.logger.info(`[room] START settings match=${matchId} rounds=${s.roundCount || 'default'} hp=${s.maxHP || 'default'} speed=${s.speedMul || 'default'} jump=${s.jumpMul || 'default'} rs=0x${(s.roomSetting || 0).toString(16)}/0x${(s.roomSetting2 || 0).toString(16)} flags=${Object.entries(s.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none'}`);
     } catch (e) {
       ctx.logger.warn(`[room] start settings write match=${matchId}: ${e.message}`);
     }
