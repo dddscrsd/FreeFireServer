@@ -111,8 +111,10 @@ async function main() {
   assert.strictEqual(ctx.ret, 0, 'setready ret ok');
   assert.strictEqual((await rooms.get(roomId)).members.find((m) => m.account_id === 202).ready, true, 'Bob is ready in store');
   pushes = drainPushes();
-  assert.strictEqual(pushes[0].cmd, ECustomRoom.SETREADY_NTF, 'cmd = SETREADY_NTF(25)');
-  assert.strictEqual(pushes[0].target_account_id, 101, 'SETREADY_NTF -> Alice');
+  // broadcast to EVERYONE (toggler included) — subcmd 24 reply is a no-op.
+  assert.strictEqual(pushes.length, 2, 'SETREADY_NTF to both members');
+  assert.ok(pushes.every((p) => p.cmd === ECustomRoom.SETREADY_NTF), 'cmd = SETREADY_NTF(25)');
+  assert.deepStrictEqual(pushes.map((p) => p.target_account_id).sort(), [101, 202], 'SETREADY_NTF -> Alice + Bob');
 
   // 4b) SWITCH SEAT — Bob (team 2 seat 0) moves to team 1 seat 2 (wire: to_room_pos=team, to_group_pos=seat).
   ctx = ctxFor(B);
@@ -138,15 +140,18 @@ async function main() {
   // 5) CHANGE — owner edits settings; stored OPAQUE; Bob gets CHANGE_NTF(14)=RoomInfo.
   ctx = ctxFor(A);
   const blob = Buffer.from([1, 2, 3, 4]);
-  const changed = await RoomChange.handler({ room_id: roomId, room_setting: 0x4000000, room_setting2: 32, cs_advanced_setting: blob }, ctx);
+  const changeRet = await RoomChange.handler({ room_id: roomId, room_setting: 0x4000000, room_setting2: 32, cs_advanced_setting: blob }, ctx);
   assert.strictEqual(ctx.ret, 0, 'change ret ok');
-  assert.strictEqual(changed.room_setting, 0x4000000, 'room_setting updated');
-  assert.strictEqual(changed.is_cs_advanced, true, 'advanced inferred from blob');
+  assert.strictEqual(changeRet, null, 'CHANGE(13) reply is a client no-op');
   const stored = await rooms.get(roomId);
+  assert.strictEqual(stored.room_setting, 0x4000000, 'room_setting updated');
+  assert.strictEqual(stored.is_cs_advanced, true, 'advanced inferred from blob');
   assert.strictEqual(Buffer.from(stored.cs_advanced_b64, 'base64').toString('hex'), '01020304', 'blob stored opaque');
   pushes = drainPushes();
-  assert.strictEqual(pushes[0].cmd, ECustomRoom.CHANGE_NTF, 'cmd = CHANGE_NTF(14)');
-  assert.strictEqual(pushes[0].target_account_id, 202, 'CHANGE_NTF -> Bob');
+  // CHANGE_NTF to EVERYONE incl. the owner who changed it.
+  assert.strictEqual(pushes.length, 2, 'CHANGE_NTF to both members');
+  assert.ok(pushes.every((p) => p.cmd === ECustomRoom.CHANGE_NTF), 'cmd = CHANGE_NTF(14)');
+  assert.deepStrictEqual(pushes.map((p) => p.target_account_id).sort(), [101, 202], 'CHANGE_NTF -> owner + Bob');
 
   // 6) Non-owner change is rejected (NOTOWNER).
   ctx = ctxFor(B);
@@ -159,7 +164,8 @@ async function main() {
   assert.strictEqual(ctx.ret, 0, 'kick ret ok');
   assert.strictEqual((await rooms.get(roomId)).members.length, 1, 'only Alice left');
   pushes = drainPushes();
-  assert.ok(pushes.some((p) => p.target_account_id === 202 && p.cmd === ECustomRoom.KICK_NTF), 'KICK_NTF -> Bob');
+  assert.ok(pushes.some((p) => p.target_account_id === 202 && p.cmd === ECustomRoom.KICK_NTF), 'KICK_NTF -> the kicked (Bob)');
+  assert.ok(pushes.some((p) => p.target_account_id === 101 && p.cmd === ECustomRoom.KICK_NTF), 'KICK_NTF -> the OWNER too (host roster syncs)');
 
   // 8) Errors: join a missing room, and Bob (kicked) can no longer be in a room.
   ctx = ctxFor(B);
@@ -172,16 +178,18 @@ async function main() {
   assert.strictEqual(await rooms.get(roomId), null, 'room dismissed when owner leaves');
   assert.strictEqual(await rooms.roomIdOf(101), 0, 'Alice membership cleared');
 
-  // 10) START (op level) — owner launches; the room is FREED (deleted + membership cleared) so
-  //     the handoff moves everyone into the match without orphaning an "already in room" state.
+  // 10) START (op level) — owner launches; the room + membership are KEPT ALIVE (WAITING) so
+  //     players re-enter it after the match via ROOM/12 (no "match doesn't exist" popup).
   const startRoom = await rooms.create(A, { room_name: 'Start', map_id: 1, game_mode: 15, group_mode: 3, max_member_num: 8, room_type: 1 });
   let notOwner = false;
   try { await rooms.startMatch(999999, startRoom.id); } catch (e) { notOwner = e.code === ECustomRoomErr.NOTOWNER; }
   assert.ok(notOwner, 'non-owner start -> NOTOWNER');
   const startRes = await rooms.startMatch(A.uid, startRoom.id);
-  assert.strictEqual(startRes.room.id, startRoom.id, 'startMatch returns the room snapshot for the handoff');
-  assert.strictEqual(await rooms.get(startRoom.id), null, 'room deleted on start (freed)');
-  assert.strictEqual(await rooms.roomIdOf(A.uid), 0, 'host membership cleared on start');
+  assert.strictEqual(startRes.room.id, startRoom.id, 'startMatch returns the room for the handoff');
+  const afterStart = await rooms.get(startRoom.id);
+  assert.ok(afterStart, 'room PERSISTS after start (return-to-room)');
+  assert.strictEqual(afterStart.state, rooms.ROOM_STATE.WAITING, 'room stays WAITING (host can START again on return)');
+  assert.strictEqual(await rooms.roomIdOf(A.uid), startRoom.id, 'host STAYS a member (re-enters via ROOM/12 after the match)');
 
   console.log('room-smoke OK: create/list/join(enter)/ready/switchseat/change/kick/dismiss/start + error paths');
 }

@@ -10,8 +10,10 @@ const rooms = require('../rooms');
 async function handler(reqObj, ctx) {
   return rooms.runOp(ctx, async () => {
     const { room } = await rooms.change(ctx.account, reqObj);
-    rooms.broadcast(room, ctx.account.uid, ECustomRoom.CHANGE_NTF, 'tcp.RoomInfo', rooms.toRoomInfo(room));
-    return rooms.toRoomInfo(room);
+    // ALL members incl. the owner (CHANGE(13) is a client no-op, so the owner needs the NTF to
+    // see its own settings change). CHANGE_NTF(14) carries a bare RoomInfo.
+    rooms.broadcast(room, null, ECustomRoom.CHANGE_NTF, 'tcp.RoomInfo', rooms.toRoomInfo(room));
+    return null; // CHANGE(13) reply is a client no-op
   });
 }
 

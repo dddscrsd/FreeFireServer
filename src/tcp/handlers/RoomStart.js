@@ -6,7 +6,11 @@
 // GameFacade.GameServer* from the suss and connects to server_addr with that member's
 // prepare_token (LoadMPWaitingGame). We reuse the matchmaker's token/fleet/match-id helpers, so a
 // room match is just a matchmaker match whose players come from the room instead of the queue.
-// match_mode 6 = the CS ranking/waiting HUD (same value the matchmaker forces).
+//
+// match_mode = 3 is REQUIRED (NOT 6): GameFacade::IsCustomRoom() == (GameServerMatchMode == 3), so
+// 3 tags the match as a CUSTOM ROOM — it drives the custom-room result screen and the room-aware
+// post-match return (the lobby re-queries ROOM/12 to re-enter the room) and keeps the match out of
+// the ranked-CS stat pool. game_mode stays 15 (CS), so IsCSMode() + CS gameplay are unchanged.
 const { EProtocol, ECustomRoom } = require('../protocol');
 const rooms = require('../rooms');
 const matchmaker = require('../matchmaker');
@@ -14,7 +18,7 @@ const fleet = require('../fleet');
 const { getRepo } = require('../../db/repo');
 
 const MATCH_SECRET = '00112233445566778899aabbccddeeff'; // 16-byte TEA key; must match the match server (main.go secretHex)
-const ROOM_MATCH_MODE = 6; // GameFacade.GameServerMatchMode 6 = CS ranking/waiting HUD
+const ROOM_MATCH_MODE = 3; // GameFacade.GameServerMatchMode 3 = CUSTOM ROOM (IsCustomRoom); NOT 6 (ranked CS)
 
 async function handler(reqObj, ctx) {
   return rooms.runOp(ctx, async () => {

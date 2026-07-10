@@ -8,8 +8,9 @@ const rooms = require('../rooms');
 async function handler(reqObj, ctx) {
   return rooms.runOp(ctx, async () => {
     const { room } = await rooms.setReady(ctx.account, !!reqObj.ready);
-    rooms.broadcast(room, ctx.account.uid, ECustomRoom.SETREADY_NTF, 'tcp.RoomSetReadyNtf', rooms.setReadyNtf(room));
-    return {}; // empty ack under SETREADY(24)
+    // ALL members incl. the toggler (SETREADY(24) is a client no-op reply).
+    rooms.broadcast(room, null, ECustomRoom.SETREADY_NTF, 'tcp.RoomSetReadyNtf', rooms.setReadyNtf(room));
+    return null; // SETREADY(24) reply is a client no-op
   });
 }
 

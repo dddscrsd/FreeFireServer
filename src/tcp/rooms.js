@@ -391,10 +391,13 @@ async function switchSeat(account, req) {
   });
 }
 
-// START: the owner launches the match. Validates owner + WAITING, then FREES the room (delete +
-// clear membership) — the suss(16) the caller pushes moves every member into the game, so keeping
-// the room would orphan an "already in room" state after the match (return-to-room is a later
-// phase). Returns the room SNAPSHOT (members + mode) for the caller to build the per-member handoff.
+// START: the owner launches the match. Validates owner + WAITING and returns the room (members +
+// mode) for the caller to build the per-member handoff. The room + membership are KEPT ALIVE: on
+// lobby re-entry after the match each member's client re-queries ROOM/12 (RequestRoomInfo, gated
+// on m_CurrentRoomInfo!=null) and re-materializes the room from our RoomInfo answer — deleting it
+// made that query fail ("This match doesn't exist" popup + stuck on lobby). The room stays WAITING
+// so the host can START again. (Room state during the match / hiding it from the list is polish;
+// there's no match-end signal to flip it, so we keep it joinable for now.)
 async function startMatch(ownerId, roomId) {
   const bus = getBus();
   if (!bus) throw new RoomError(ECustomRoomErr.NOROOM);
@@ -404,9 +407,7 @@ async function startMatch(ownerId, roomId) {
     if (!room) throw new RoomError(ECustomRoomErr.NOROOM);
     if (room.owner !== ownerId) throw new RoomError(ECustomRoomErr.NOTOWNER);
     if (room.state !== ROOM_STATE.WAITING) throw new RoomError(ECustomRoomErr.ROOMINGAME);
-    await deleteRoom(bus, room.id);
-    for (const m of room.members) if (m.account_id) await bus.hdel(MEMBERS_KEY, String(m.account_id));
-    logger.info(`[room] START id=${room.id} owner=${ownerId} members=${room.members.length} -> launch + free room`);
+    logger.info(`[room] START id=${room.id} owner=${ownerId} members=${room.members.length} -> launch (room kept alive)`);
     return { room };
   });
 }
