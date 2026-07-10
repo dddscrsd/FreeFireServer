@@ -150,6 +150,14 @@ services:
     command: ["node", "src/servers/settlement.js"]
     depends_on: [redis, postgres]
 
+  # Matchmaker service — the SINGLE processor of the shared Redis queue (every gateway
+  # feeds it). Forms matches, allocates a fleet instance, and pushes each SussNtf via
+  # gw.push. Run exactly ONE (no replicas): it reads/claims the whole queue.
+  matchmaker:
+    <<: *node
+    command: ["node", "src/servers/matchmaker.js"]
+    depends_on: [redis, postgres]
+
   # Match instance — addressed DIRECTLY by the client (allocated by the matchmaker),
   # never behind Traefik. Scale into a fleet by adding match-2, match-3 … on other ports.
   match:

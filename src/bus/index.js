@@ -167,6 +167,14 @@ class Bus {
     return this.pub.zrangebyscore('matchservers', cutoff, '+inf');
   }
 
+  // Generic Redis helpers backing the SHARED matchmaker queue (a hash) + the global
+  // match-id counter. Kept generic so the matchmaker owns its own key conventions.
+  hset(key, field, val) { return this.pub.hset(key, field, val); }
+  hdel(key, ...fields) { return this.pub.hdel(key, ...fields); }
+  hgetall(key) { return this.pub.hgetall(key); }
+  hlen(key) { return this.pub.hlen(key); }
+  incr(key) { return this.pub.incr(key); }
+
   /** Decode an envelope's inner payload into a plain object of the given type. */
   static payload(env, payloadType) {
     return decode(payloadType, env.payload);
