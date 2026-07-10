@@ -202,9 +202,15 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 			it.count = newCount
 			s.clientUIDs[glooUID] = it
 		}
-		out = append(out, outPkt{packet.CmdDropInventory,
+		// cmd 112 (DropInventoryRes) carries NO entity id -> the client applies it to its LOCAL
+		// inventory, so it MUST go ONLY to the thrower. Broadcasting it (as this did) desynced any
+		// OTHER player who happened to hold an item with the SAME unique as this gloo — item uniques
+		// are per-session (nextUID), so they collide across players, and the collided item got set
+		// to the gloo's new count / removed. Sent before the broadcast below so the thrower still
+		// sees the consume before the auto-switch (cmd 108) that overrides the empty-slot fists swap.
+		s.sendDataLog(packet.CmdDropInventory,
 			message.DropInventoryRes(glooUID, newCount, 0),
-			fmt.Sprintf("cmd=112 gloo consume uid=%d -> %d left", glooUID, newCount)})
+			fmt.Sprintf("cmd=112 gloo consume uid=%d -> %d left (thrower only)", glooUID, newCount))
 		if autoSwitch != 0 { // after the consume: switch the placer's hand back to their last weapon (all clients)
 			out = append(out, outPkt{packet.CmdChangeHeldItem,
 				message.ChangeInventoryOnHand(s.player.EntityID, autoSwitch),
