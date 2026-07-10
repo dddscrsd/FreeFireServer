@@ -22,16 +22,20 @@ const (
 	csFirstBloodBonus uint32 = 100  // event: got the round's first kill (TODO: not tracked yet)
 )
 
-// csBaseCoins returns the base income for a 1-based round, holding the last table value for rounds
-// beyond the table (round 7+ => 3000).
-func csBaseCoins(round int) uint32 {
+// csBaseCoins returns the base income for a 1-based round from `table` (a custom room's economy
+// preset, or csRoundBaseCoins when nil/empty), holding the last table value for rounds beyond it
+// (e.g. round 7+ => 3000 with the default table).
+func csBaseCoins(round int, table []uint32) uint32 {
+	if len(table) == 0 {
+		table = csRoundBaseCoins
+	}
 	if round < 1 {
 		round = 1
 	}
-	if round > len(csRoundBaseCoins) {
-		round = len(csRoundBaseCoins)
+	if round > len(table) {
+		round = len(table)
 	}
-	return csRoundBaseCoins[round-1]
+	return table[round-1]
 }
 
 // csLossBonus is the loss-side round bonus for a team that just lost, given its consecutive-loss

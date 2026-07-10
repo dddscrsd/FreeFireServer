@@ -33,6 +33,7 @@ type Match struct {
 	round      int               // 1-based CS round
 	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
 	lossStreak [2]uint8          // consecutive rounds LOST per team (drives the CS loss-bonus ladder)
+	settings   matchSettings     // per-match CS config (round count / economy); defaults + custom-room overrides
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
 	arena      csArena           // spawn city for the current round (re-picked each round)
@@ -235,6 +236,7 @@ func (m *Match) removePlayer(s *session) {
 // draw the zone, and start the match loop. m.arena/round/bot are the match's — set once here. Later
 // players (Step 5b) are admitted onto the already-running loop instead of running this.
 func (m *Match) admitFirst(s *session) {
+	m.loadMatchSettings(s.player.MatchID) // custom-room round count / economy (or defaults) — before the GRI/round setup
 	m.setupMatch(s)
 	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()),
@@ -429,11 +431,11 @@ func (m *Match) stream() {
 	// phase (fixed deadline), so it doesn't re-fire the client's phase-change handler each tick.
 	state, stateDeadline := m.matchState()
 	s.sendVar(packet.CmdPRISync, m.priPayload(), 1)
-	s.sendVar(packet.CmdGRISync, message.CSGRIInit(maxRound, uint8(m.round-1)), 1) // fields 1,2 (round config)
+	s.sendVar(packet.CmdGRISync, message.CSGRIInit(m.settings.maxRound, uint8(m.round-1)), 1) // fields 1,2 (round config)
 	s.sendVar(packet.CmdGRISync, message.CSGRIMatchState(state, stateDeadline), 1) // field 5 (waiting/cancel overlay)
 	s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
 	point := 0
-	if m.teamScore[0] == roundsToWin-1 || m.teamScore[1] == roundsToWin-1 {
+	if m.teamScore[0] == m.settings.roundsToWin-1 || m.teamScore[1] == m.settings.roundsToWin-1 {
 		point = 1 // next round is the decider
 	}
 	s.sendVar(packet.CmdGRISync, message.CSGRIMatchPoint(uint8(point)), 1)
@@ -754,7 +756,7 @@ func (m *Match) endFight(now time.Time) {
 	// Per-player round coins — the REAL CS economy (economy.go), replacing the old flat formula:
 	// running balance += base[round] + a win/loss event (loss stacks with the team's streak) +
 	// per-kill. base[round] holds 3000 from round 7 on. (First-blood bonus: TODO, not tracked yet.)
-	base := csBaseCoins(m.round)
+	base := csBaseCoins(m.round, m.settings.baseCoins)
 	for _, p := range m.players {
 		aw := base + csKillBonus*p.roundKills.Swap(0)
 		if p.team == winnerTeam {
@@ -767,7 +769,7 @@ func (m *Match) endFight(now time.Time) {
 	}
 	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d)", m.round, winnerTeam, m.teamScore[0], m.teamScore[1])
 
-	if m.teamScore[0] >= roundsToWin || m.teamScore[1] >= roundsToWin || m.round >= maxRound {
+	if m.teamScore[0] >= m.settings.roundsToWin || m.teamScore[1] >= m.settings.roundsToWin || m.round >= int(m.settings.maxRound) {
 		m.matchWon = localWon
 		m.winnerTeam = winnerTeam                    // the per-player cmd 103 rank reads this so each side gets its OWN win/lose
 		m.enter(now, phMatchEndPause, matchEndPause) // pause on the final kill, then cmd 103

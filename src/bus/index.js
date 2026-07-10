@@ -171,6 +171,10 @@ class Bus {
   // match-id counter. Kept generic so the matchmaker owns its own key conventions.
   hset(key, field, val) { return this.pub.hset(key, field, val); }
   hget(key, field) { return this.pub.hget(key, field); }
+  // Plain string key with a TTL — the room START handoff writes match:<id>:settings for the
+  // match server to read at match creation.
+  setKey(key, val, ttlSec) { return this.pub.set(key, val, 'EX', ttlSec); }
+  getKey(key) { return this.pub.get(key); }
   hdel(key, ...fields) { return this.pub.hdel(key, ...fields); }
   hgetall(key) { return this.pub.hgetall(key); }
   hlen(key) { return this.pub.hlen(key); }

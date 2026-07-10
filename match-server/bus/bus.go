@@ -217,6 +217,16 @@ func (b *Bus) GetNode(accountID int64) (string, error) {
 	return node, err
 }
 
+// Get reads a plain string key, returning "" on redis.Nil (missing). Used to pull the
+// per-match custom-room settings the room START handoff wrote at match:<id>:settings.
+func (b *Bus) Get(key string) (string, error) {
+	v, err := b.rdb.Get(b.ctx, key).Result()
+	if err == redis.Nil {
+		return "", nil
+	}
+	return v, err
+}
+
 // RegisterServer advertises this instance in the match-server fleet registry (a Redis
 // sorted set "matchservers" scored by heartbeat time), so the matchmaker can allocate
 // whole matches to a LIVE instance. addr is the PUBLIC host:port the client dials for

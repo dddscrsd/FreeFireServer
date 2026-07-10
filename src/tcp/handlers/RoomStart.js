@@ -13,8 +13,10 @@
 // the ranked-CS stat pool. game_mode stays 15 (CS), so IsCSMode() + CS gameplay are unchanged.
 const { EProtocol, ECustomRoom } = require('../protocol');
 const rooms = require('../rooms');
+const roomsettings = require('../roomsettings');
 const matchmaker = require('../matchmaker');
 const fleet = require('../fleet');
+const { getBus } = require('../../bus/instance');
 const { getRepo } = require('../../db/repo');
 
 const MATCH_SECRET = '00112233445566778899aabbccddeeff'; // 16-byte TEA key; must match the match server (main.go secretHex)
@@ -25,6 +27,23 @@ async function handler(reqObj, ctx) {
     const { room } = await rooms.startMatch(ctx.account.uid, reqObj.room_id);
     const matchId = await matchmaker.nextMatchId();
     const serverAddr = fleet.pickServer() || matchmaker.staticAddr();
+
+    // Decode the host's simple-mode room_setting/room_setting2 and hand them to the match server via
+    // Redis (match:<id>:settings), so it applies the round count / HP / economy / flags for THIS
+    // match. Best-effort: the match keeps its const defaults when this is absent or a field is unset.
+    // (Advanced-mode cs_advanced_setting is not decoded yet — a later phase.)
+    try {
+      const s = roomsettings.decodeRoomSettings(room);
+      const payload = { flags: s.flags };
+      if (s.roundCount) payload.round_count = s.roundCount;
+      if (s.maxHP) payload.max_hp = s.maxHP;
+      if (Array.isArray(s.economyTable)) payload.economy = s.economyTable;
+      const bus = getBus();
+      if (bus) await bus.setKey(`match:${matchId}:settings`, JSON.stringify(payload), 3600);
+      ctx.logger.info(`[room] START settings match=${matchId} rounds=${s.roundCount || 'default'} hp=${s.maxHP || 'default'} flags=${Object.entries(s.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none'}`);
+    } catch (e) {
+      ctx.logger.warn(`[room] start settings write match=${matchId}: ${e.message}`);
+    }
 
     for (const m of room.members) {
       if (!m.account_id) continue;
