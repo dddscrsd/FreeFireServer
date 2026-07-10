@@ -47,6 +47,7 @@ func (m *Match) publishResult() {
 			Deaths:    int32(m.deaths[p.entityID]),
 			Win:       win,
 			Xp:        xp,
+			Damage:    int32(m.damage[p.entityID]),
 		})
 	}
 	eventBus.Publish("match.result", &pb.MatchResult{MatchId: matchID, Players: players})

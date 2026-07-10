@@ -11,7 +11,7 @@ const logger = require('../logger');
 const { Bus } = require('../bus');
 const { getRepo } = require('../db/repo');
 const { EProtocol, EStats } = require('../tcp/protocol');
-const { buildTeammates, buildStatsRes } = require('../tcp/matchstats');
+const { buildStatsRes } = require('../tcp/matchstats');
 
 const GROUP = 'settlement';
 
@@ -41,11 +41,10 @@ async function pushMatchStats(mr, repo, bus) {
   await Promise.all(mr.players.map(async (pr) => {
     accts[pr.account_id] = await repo.getById(pr.account_id).catch(() => null);
   }));
-  const teammates = buildTeammates(mr.players, accts);
   let pushed = 0;
   for (const pr of mr.players) {
     if (!(await bus.getNode(pr.account_id))) continue; // offline -> nothing to show
-    const content = buildStatsRes(pr, teammates, accts[pr.account_id], mr.match_id, mr.players.length);
+    const content = buildStatsRes(pr, mr.players, accts, mr.match_id);
     if (!content) continue;
     await bus.publishPS('gw.push', 'GatewayPush', {
       target_account_id: pr.account_id,

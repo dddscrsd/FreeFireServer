@@ -42,6 +42,7 @@ message PlayerResult {
   bool  win         = 5;
   int32 rank_points = 6;
   int32 xp          = 7;
+  int32 damage      = 8; // total damage dealt (scoreboard + MVP selection)
 }
 
 // "match.result" — match → settlement worker, gateway. Settlement is idempotent

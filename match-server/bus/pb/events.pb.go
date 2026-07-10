@@ -237,6 +237,7 @@ type PlayerResult struct {
 	Win           bool                   `protobuf:"varint,5,opt,name=win,proto3" json:"win,omitempty"`
 	RankPoints    int32                  `protobuf:"varint,6,opt,name=rank_points,json=rankPoints,proto3" json:"rank_points,omitempty"`
 	Xp            int32                  `protobuf:"varint,7,opt,name=xp,proto3" json:"xp,omitempty"`
+	Damage        int32                  `protobuf:"varint,8,opt,name=damage,proto3" json:"damage,omitempty"` // total damage dealt (scoreboard + MVP selection)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -316,6 +317,13 @@ func (x *PlayerResult) GetRankPoints() int32 {
 func (x *PlayerResult) GetXp() int32 {
 	if x != nil {
 		return x.Xp
+	}
+	return 0
+}
+
+func (x *PlayerResult) GetDamage() int32 {
+	if x != nil {
+		return x.Damage
 	}
 	return 0
 }
@@ -1042,7 +1050,7 @@ const file_events_proto_rawDesc = "" +
 	"\n" +
 	"match_mode\x18\x05 \x01(\rR\tmatchMode\x12\x15\n" +
 	"\x06map_id\x18\x06 \x01(\tR\x05mapId\x12\x12\n" +
-	"\x04city\x18\a \x01(\tR\x04city\"\xb4\x01\n" +
+	"\x04city\x18\a \x01(\tR\x04city\"\xcc\x01\n" +
 	"\fPlayerResult\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x03R\taccountId\x12\x14\n" +
@@ -1052,7 +1060,8 @@ const file_events_proto_rawDesc = "" +
 	"\x03win\x18\x05 \x01(\bR\x03win\x12\x1f\n" +
 	"\vrank_points\x18\x06 \x01(\x05R\n" +
 	"rankPoints\x12\x0e\n" +
-	"\x02xp\x18\a \x01(\x05R\x02xp\"U\n" +
+	"\x02xp\x18\a \x01(\x05R\x02xp\x12\x16\n" +
+	"\x06damage\x18\b \x01(\x05R\x06damage\"U\n" +
 	"\vMatchResult\x12\x19\n" +
 	"\bmatch_id\x18\x01 \x01(\tR\amatchId\x12+\n" +
 	"\aplayers\x18\x02 \x03(\v2\x11.bus.PlayerResultR\aplayers\"\x84\x01\n" +

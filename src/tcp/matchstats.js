@@ -3,15 +3,17 @@
 // Builds the tcp.MatchStatsRes the lobby shows after a match, from the settlement
 // worker's per-player MatchResult data.
 //
-// RE (client COW::UIModelMatch::UnpackMatchResult): MatchStatsRes.match_stats and
-// .income are NOT index-encoded arrays — they are nested SERIALIZED protos. The client
-// UnSerializes MatchStatsRes.match_stats as proto.MatchStats (self stats + a
-// `teammates` scoreboard) and MatchStatsRes.income as proto.MatchIncome (the rewards),
-// then drives the post-match result UI. We push it as protocol STATS / MATCHSTATS_NTF.
+// RE (client COW::UIModelMatch::UnpackMatchResult + UIProfileCSMatchResultController):
+// MatchStatsRes.match_stats / .income are NOT arrays — they are `bytes` holding NESTED
+// SERIALIZED protos. match_stats -> proto.MatchStats, income -> proto.MatchIncome. The
+// CS result UI reads TWO player lists from MatchStats: `teammates` (the LOCAL player's
+// team) and `opponents` (the enemy team) — NOT one combined list — plus per-team scores
+// in `teams_game_point` and the win/lose from `rank` (1 = win). Pushed as protocol
+// STATS / MATCHSTATS_NTF.
 const { lookup } = require('../protocol/protos');
 
-// One scoreboard row (proto.TeammateStats) per player. `deads` = deaths, `score` is a
-// simple kills-derived value until a real scoring model exists.
+// One proto.TeammateStats scoreboard row. `deads` = deaths; `score` is a simple
+// kills+damage proxy until a real scoring model exists.
 function teammateRow(pr, acct) {
   const a = acct || {};
   const si = a.selected_items || {};
@@ -21,46 +23,58 @@ function teammateRow(pr, acct) {
     kills: pr.kills | 0,
     deads: pr.deaths | 0,
     assists: 0,
-    score: (pr.kills | 0) * 100,
+    damage: pr.damage | 0,
+    score: (pr.kills | 0) * 100 + (pr.damage | 0),
     rank: pr.win ? 1 : 2,
     level: a.level || 1,
     avatar_id: si.avatar_id || 0,
     banner_id: si.banner_id || 0,
     head_pic: si.head_pic || 0,
-    clan_name: (a.clan && a.clan.name) || ''
+    clan_name: (a.clan && a.clan.name) || '',
+    show_rank: true
   };
 }
 
-// The shared scoreboard (one row per player), built once per match.
-function buildTeammates(players, accts) {
-  return players.map((pr) => teammateRow(pr, (accts || {})[pr.account_id]));
-}
-
-// The tcp.MatchStatsRes CONTENT bytes for ONE player: the nested proto.MatchStats
-// (their stats + the whole scoreboard) and proto.MatchIncome (their rewards).
-function buildStatsRes(pr, teammates, acct, matchId, playerCount) {
+// The tcp.MatchStatsRes CONTENT bytes for ONE player (pr). Splits ALL players into
+// `teammates` (same win outcome as pr = pr's team, self included) and `opponents` (the
+// other team) — this is a team-based mode (CS), so a shared win/lose IS the team.
+function buildStatsRes(pr, players, accts, matchId) {
   const MatchStatsRes = lookup('MatchStatsRes');
   const MatchStats = lookup('MatchStats');
   const MatchIncome = lookup('MatchIncome');
   if (!MatchStatsRes || !MatchStats || !MatchIncome) return null;
 
-  const a = acct || {};
+  const acctOf = (id) => (accts || {})[id] || {};
+  const a = acctOf(pr.account_id);
   const si = a.selected_items || {};
   const level = a.level || 1;
   const coinsAfter = a.coins || 0;
 
+  const sameTeam = (x) => (!!x.win) === (!!pr.win);
+  const teammates = players.filter(sameTeam).map((x) => teammateRow(x, acctOf(x.account_id)));
+  const opponents = players.filter((x) => !sameTeam(x)).map((x) => teammateRow(x, acctOf(x.account_id)));
+  // teams_game_point[0] = LEFT grid (teammates) score, [1] = RIGHT (opponents) — the
+  // client maps left=teammates / right=opponents, so this is viewer-relative kill totals.
+  const teamKills = (pred) => players.filter(pred).reduce((s, x) => s + (x.kills | 0), 0);
+
   const matchStats = Buffer.from(MatchStats.encode(MatchStats.fromObject({
     account_id: pr.account_id,
     kills: pr.kills | 0,
+    deaths: pr.deaths | 0,
+    damage: pr.damage | 0,
     rank: pr.win ? 1 : 2,
     ranking_points: pr.rank_points | 0,
     match_mode: 6,
-    player_count: playerCount,
+    player_count: players.length,
+    real_player_count: players.length,
     level,
     avatar_id: si.avatar_id || 0,
     banner_id: si.banner_id || 0,
     head_pic: si.head_pic || 0,
-    teammates
+    show_rank: true,
+    teams_game_point: [teamKills(sameTeam), teamKills((x) => !sameTeam(x))],
+    teammates,
+    opponents
   })).finish());
 
   const income = Buffer.from(MatchIncome.encode(MatchIncome.fromObject({
@@ -83,4 +97,4 @@ function buildStatsRes(pr, teammates, acct, matchId, playerCount) {
   })).finish());
 }
 
-module.exports = { buildTeammates, buildStatsRes };
+module.exports = { buildStatsRes };
