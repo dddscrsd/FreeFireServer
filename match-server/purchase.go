@@ -276,6 +276,19 @@ func (s *session) addPurchasedItem(item *message.ShopItem, qty uint32) (inv, att
 		}
 		s.itemOnHand = uid // switch to the newly bought weapon
 		s.weapons[place.slot] = csWeapon{slot: place.slot, data: item.ItemID, unique: uid, ammo: place.ammo}
+	} else if u, existing, dup := s.trackedByData(item.ItemID, 0); dup && !place.isArmor {
+		// STACKABLE consumable already held (gloo/medkit/grenade): MERGE the repeat buy into
+		// the existing stack — reuse its unique, sum the count — instead of allocating a SECOND
+		// data=X item. Duplicate same-data consumables desync count-based use: gloo's glooCount()
+		// picks one of the duplicates at random, decrements the wrong stack, hits 0 early, and
+		// clears SlotBuilding while walls remain. cmd 174 upserts by Unique (sets an existing
+		// unique's count), and a buy is server-authoritative (no client-side predictive item),
+		// so reusing the unique stays in sync. Armor is per-instance (durability, not a count) —
+		// never merged. The unique allocated above is simply left unused (a harmless id gap).
+		existing.count += qty
+		s.clientUIDs[u] = existing
+		uid = u
+		inv = []message.InvItem{{Unique: u, Data: item.ItemID, Count: existing.count, Runtime: existing.runtime}}
 	} else {
 		s.trackItem(lootItem{unique: uid, data: item.ItemID, count: qty, runtime: runtime})
 	}

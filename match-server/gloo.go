@@ -130,7 +130,19 @@ func (s *session) removeWallByID(id uint32) {
 }
 
 // glooCount returns the (uid, count) of the player's gloo stack (data 1201), or (0,0).
+// It PREFERS the gloo equipped in SlotBuilding — the stack the client is actually holding —
+// so a placement decrements the SAME stack the client consumes. The merge-on-add invariant
+// (purchase + pickup) keeps gloo to a single stack, but preferring the equipped one keeps
+// placement correct even if a stray duplicate ever slips through (a bare map scan would
+// otherwise return one at random, decrement the wrong stack, and desync the count).
 func (s *session) glooCount() (uid, count uint32) {
+	for _, e := range s.equipment {
+		if e.Slot == message.SlotBuilding {
+			if it, ok := s.clientUIDs[e.Unique]; ok && it.data == glooDataID {
+				return e.Unique, it.count
+			}
+		}
+	}
 	for u, it := range s.clientUIDs {
 		if it.data == glooDataID {
 			return u, it.count
