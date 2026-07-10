@@ -407,8 +407,32 @@ async function startMatch(ownerId, roomId) {
     if (!room) throw new RoomError(ECustomRoomErr.NOROOM);
     if (room.owner !== ownerId) throw new RoomError(ECustomRoomErr.NOTOWNER);
     if (room.state !== ROOM_STATE.WAITING) throw new RoomError(ECustomRoomErr.ROOMINGAME);
-    logger.info(`[room] START id=${room.id} owner=${ownerId} members=${room.members.length} -> launch (room kept alive)`);
+    // Flip to INGAME: hides the room from RoomList (list() filters WAITING) and makes join() reject
+    // with ROOMINGAME(6) while the match is on. reenter() flips it back to WAITING on return.
+    room.state = ROOM_STATE.INGAME;
+    await saveRoom(bus, room);
+    logger.info(`[room] START id=${room.id} owner=${ownerId} members=${room.members.length} -> launch (room INGAME, kept alive)`);
     return { room };
+  });
+}
+
+// reenter is called on the ROOM/12 poll — whose SOLE caller is the lobby's OnUIInit on re-entry
+// (RequestRoomInfo, gated on m_CurrentRoomInfo!=null), i.e. ALWAYS a post-match return. If the room
+// is INGAME (from START), flip it back to WAITING so the host can START again + it re-lists. Returns
+// the (possibly reopened) room, or null if gone.
+async function reenter(roomId) {
+  const bus = getBus();
+  if (!bus) return null;
+  roomId = Number(roomId);
+  return withRoomLock(bus, roomId, async () => {
+    const room = await loadRoom(bus, roomId);
+    if (!room) return null;
+    if (room.state === ROOM_STATE.INGAME) {
+      room.state = ROOM_STATE.WAITING;
+      await saveRoom(bus, room);
+      logger.info(`[room] REENTER id=${room.id} -> WAITING (match over, room reopened)`);
+    }
+    return room;
   });
 }
 
@@ -489,7 +513,7 @@ async function handleDisconnect(accountId) {
 
 module.exports = {
   ROOM_STATE,
-  create, list, join, leave, kick, change, setReady, switchSeat, startMatch, get, roomIdOf,
+  create, list, join, leave, kick, change, setReady, switchSeat, startMatch, reenter, get, roomIdOf,
   toRoomInfo, toBasicInfo, playerInfo,
   pushToAccount, broadcast,
   joinNtf, leaveNtf, kickNtf, setReadyNtf, dismissNtf, runOp, handleDisconnect,

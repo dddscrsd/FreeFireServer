@@ -188,8 +188,16 @@ async function main() {
   assert.strictEqual(startRes.room.id, startRoom.id, 'startMatch returns the room for the handoff');
   const afterStart = await rooms.get(startRoom.id);
   assert.ok(afterStart, 'room PERSISTS after start (return-to-room)');
-  assert.strictEqual(afterStart.state, rooms.ROOM_STATE.WAITING, 'room stays WAITING (host can START again on return)');
-  assert.strictEqual(await rooms.roomIdOf(A.uid), startRoom.id, 'host STAYS a member (re-enters via ROOM/12 after the match)');
+  assert.strictEqual(afterStart.state, rooms.ROOM_STATE.INGAME, 'room flipped to INGAME on start');
+  assert.strictEqual(await rooms.roomIdOf(A.uid), startRoom.id, 'host STAYS a member');
+  // INGAME room is hidden from the list + rejects joins with ROOMINGAME(6)
+  assert.strictEqual((await rooms.list({})).find((r) => r.id === startRoom.id), undefined, 'INGAME room not listed');
+  let inGame = false;
+  try { await rooms.join(B, { room_id: startRoom.id }); } catch (e) { inGame = e.code === ECustomRoomErr.ROOMINGAME; }
+  assert.ok(inGame, 'join an INGAME room -> ROOMINGAME(6)');
+  // 11) RE-ENTER (ROOM/12 poll on lobby re-entry after the match) reopens the room to WAITING.
+  const reentered = await rooms.reenter(startRoom.id);
+  assert.strictEqual(reentered.state, rooms.ROOM_STATE.WAITING, 'reenter flips INGAME -> WAITING (host can START again)');
 
   console.log('room-smoke OK: create/list/join(enter)/ready/switchseat/change/kick/dismiss/start + error paths');
 }
