@@ -32,6 +32,7 @@ type Match struct {
 	// Shared world state (moved off the session in Step 4a — the whole match sees ONE of each).
 	round      int               // 1-based CS round
 	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
+	lossStreak [2]uint8          // consecutive rounds LOST per team (drives the CS loss-bonus ladder)
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
 	arena      csArena           // spawn city for the current round (re-picked each round)
@@ -746,13 +747,20 @@ func (m *Match) endFight(now time.Time) {
 		winnerTeam = enemyTeamID
 		m.teamScore[1]++
 	}
-	// Per-player round coins: each player earns off THEIR OWN kills + a round bonus, plus a win
-	// bonus for the WINNING team's members (was m.s-only, so only player 1 got paid).
+	// Update team loss streaks (winner resets, loser increments) BEFORE computing the loss ladder.
+	winIdx := int(winnerTeam) - 1
+	m.lossStreak[winIdx] = 0
+	m.lossStreak[1-winIdx]++
+	// Per-player round coins — the REAL CS economy (economy.go), replacing the old flat formula:
+	// running balance += base[round] + a win/loss event (loss stacks with the team's streak) +
+	// per-kill. base[round] holds 3000 from round 7 on. (First-blood bonus: TODO, not tracked yet.)
+	base := csBaseCoins(m.round)
 	for _, p := range m.players {
-		aw := 500 * p.roundKills.Swap(0)
-		aw += 500 * (uint32(m.round) + 1)
+		aw := base + csKillBonus*p.roundKills.Swap(0)
 		if p.team == winnerTeam {
-			aw += 500 // win bonus
+			aw += csWinRoundBonus
+		} else {
+			aw += csLossBonus(m.lossStreak[p.team-1])
 		}
 		p.coins += aw
 		p.award = aw
