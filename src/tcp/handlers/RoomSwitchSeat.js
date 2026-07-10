@@ -5,19 +5,21 @@
 // to_group_pos = SEAT within team (0-based). to_role MEMBER=1 for a seat move.
 //
 // The client does NOT act on a subcmd-20 reply (it's in OnMsgCustomRoom's no-op default set);
-// the seat move is applied by broadcasting SWITCHSEAT_NTF(21) = tcp.RoomJoinNtf{room_info}, which
-// the client feeds to UpdateCurrentRoomInfo -> full grid re-render. So we ack subcmd 20 (ignored)
-// and push the updated RoomInfo as RoomJoinNtf(21) to EVERY member incl. the mover.
+// the move is applied by pushing the updated room. IMPORTANT: the SWITCHSEAT_NTF(21) case decodes
+// its payload as a BARE tcp.RoomInfo (NOT RoomJoinNtf) — verified in-client: a RoomJoinNtf here made
+// the client read its nested room_info (field 2) as RoomInfo.name (field 2) and join_player_list
+// (field 1, empty) as RoomInfo.id -> id=0 + garbled name + wiped room. So we send the full RoomInfo
+// directly, exactly like the CREATE(2)/ROOMINFO(12) path, which the client feeds to
+// UpdateCurrentRoomInfo -> full grid re-render. Sent to EVERY member incl. the mover.
 const { EProtocol, ECustomRoom } = require('../protocol');
 const rooms = require('../rooms');
 
 async function handler(reqObj, ctx) {
   return rooms.runOp(ctx, async () => {
     const { room } = await rooms.switchSeat(ctx.account, reqObj);
-    const ntf = { join_player_list: [], room_info: rooms.toRoomInfo(room) };
     // exceptId=null -> reaches all real members (none has account_id 0), including the mover,
-    // which needs the NTF since subcmd 20 alone doesn't move its own seat.
-    rooms.broadcast(room, null, ECustomRoom.SWITCHSEAT_NTF, 'tcp.RoomJoinNtf', ntf);
+    // which needs this since subcmd 20 alone doesn't move its own seat.
+    rooms.broadcast(room, null, ECustomRoom.SWITCHSEAT_NTF, 'tcp.RoomInfo', rooms.toRoomInfo(room));
     return {}; // ack under SWITCHSEAT(20) (client ignores it, harmless)
   });
 }
