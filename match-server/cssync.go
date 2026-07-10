@@ -199,6 +199,22 @@ func (s *session) reissueLoadout() {
 			inv = append(inv, message.InvItem{Unique: uid, Data: it.data, Count: ammoStack})
 		}
 	}
+	// Refresh medkits to 2 EVERY round (a survivor keeps its loadout, so it never re-gets them
+	// via giveLoadout — used kits would stay gone). The cmd 174 handler upserts by unique, so
+	// re-sending the tracked medkit unique resets its stack to 2; allocate one if none is tracked.
+	medUID := uint32(0)
+	for uid, it := range s.clientUIDs {
+		if it.data == medkitData {
+			medUID = uid
+			break
+		}
+	}
+	if medUID == 0 {
+		medUID = s.nextUID()
+	}
+	s.clientUIDs[medUID] = lootItem{unique: medUID, data: medkitData, count: 2, runtime: 2}
+	inv = append(inv, message.InvItem{Unique: medUID, Data: medkitData, Count: 2, Runtime: 2})
+
 	equip := append([]message.Equipment(nil), s.equipment...)
 	onHand := s.itemOnHand
 	if len(inv) == 0 {

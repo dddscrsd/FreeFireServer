@@ -158,6 +158,12 @@ func (s *session) dispatch(p *packet.Packet) {
 			log.Printf("[mm-udp] dispatch panic: %v", r)
 		}
 	}()
+	if p.Cmd == packet.CmdAck { // the client ACKing one of OUR reliable sends -> stop retransmitting it
+		if seq, ok := parseAckSeq(p.Payload); ok {
+			s.out.onAck(seq)
+		}
+		return
+	}
 	if packet.IsReliable(p.Cmd, p.SendOption) {
 		s.ack(p.SeqID)
 	}
