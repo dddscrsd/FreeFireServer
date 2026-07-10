@@ -12,6 +12,12 @@
 // STATS / MATCHSTATS_NTF.
 const { lookup } = require('../protocol/protos');
 
+// JOKABEAPNPP_EGAMEMODE_CS (message.proto). The client casts MatchStats.game_mode to
+// this enum and ONLY fills the MVP screen's stat labels/values when it == CS — otherwise
+// UIHudMatchResultMVPShowController.SetData returns early and the labels stay at their
+// prefab placeholders ("DSDSA"/0). Our matches are Clash Squad.
+const EGAMEMODE_CS = 15;
+
 // One proto.TeammateStats scoreboard row. `deads` = deaths; `score` is a simple
 // kills+damage proxy until a real scoring model exists.
 function teammateRow(pr, acct) {
@@ -27,6 +33,7 @@ function teammateRow(pr, acct) {
     score: (pr.kills | 0) * 100 + (pr.damage | 0),
     rank: pr.win ? 1 : 2,
     level: a.level || 1,
+    role: a.role,
     avatar_id: si.avatar_id || 0,
     banner_id: si.banner_id || 0,
     head_pic: si.head_pic || 0,
@@ -65,9 +72,11 @@ function buildStatsRes(pr, players, accts, matchId) {
     rank: pr.win ? 1 : 2,
     ranking_points: pr.rank_points | 0,
     match_mode: 6,
+    game_mode: EGAMEMODE_CS, // gates the MVP screen (SetData) — 0 => placeholder labels
     player_count: players.length,
     real_player_count: players.length,
     level,
+    role: pr.role,
     avatar_id: si.avatar_id || 0,
     banner_id: si.banner_id || 0,
     head_pic: si.head_pic || 0,
