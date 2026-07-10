@@ -67,6 +67,13 @@ async function handler(reqObj, ctx) {
         game_mode: room.game_mode,
         group_mode: room.group_mode,
         match_mode: ROOM_MATCH_MODE,
+        // Night/dawn visual style: the client reads MatchmakingSussNtf.level_visual_style into
+        // GameFacade.LevelVisualStyle (OnMsgHasLatestGameInfo @0x1b68c04); bit 0 = night, which
+        // SceneGraphics reads to enable the global BRNIGHT_ON shader keyword (world darkening).
+        // NOTE: this ONLY darkens the world — the SKYBOX is owned by the client's EnvWeather
+        // controller (per-map night weather preset), which no server field can drive on a generic
+        // CS map, so the skybox stays daytime unless the map itself ships a night preset.
+        level_visual_style: room.level_visual_style || 0,
         difficulty: 0,
         use_cache: false,
         first_login: false
