@@ -51,5 +51,5 @@ func SyncRegionActivities(activities []string, styleA, styleB, styleC string, po
 // map's jump pads / invisible boxes appear. (If a map ever needs live region events, populate the
 // activity list instead.)
 func SyncRegionActivitiesDefault() []byte {
-	return SyncRegionActivities(nil, "DEFAULT", "", "", RegionActivityPool{})
+	return SyncRegionActivities([]string{"DEFAULT"}, "https://foices.github.io/minhas_resources/irei_salvar_angola_dessa_crise.png", "", "", RegionActivityPool{})
 }
