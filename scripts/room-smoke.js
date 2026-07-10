@@ -44,6 +44,7 @@ const RoomSetReady = require('../src/tcp/handlers/RoomSetReady');
 const RoomChange = require('../src/tcp/handlers/RoomChange');
 const RoomKick = require('../src/tcp/handlers/RoomKick');
 const RoomLeave = require('../src/tcp/handlers/RoomLeave');
+const RoomSwitchSeat = require('../src/tcp/handlers/RoomSwitchSeat');
 
 const quietLog = { info() {}, warn() {}, error(m) { console.error(m); } };
 const A = { uid: 101, nickname: 'Alice', selected_items: { head_pic: 900, banner_id: 5 } };
@@ -73,6 +74,7 @@ async function main() {
   assert.ok(created.groups[1].members.every((m) => !m.account_id), 'team 2 all empty seats (account_id 0)');
   assert.strictEqual(created.owner_online, true, 'owner_online true (no offline hint)');
   assert.strictEqual(created.enough_room_card, true, 'enough_room_card true (no out-of-cards hint)');
+  assert.deepStrictEqual(created.groups[0].members[0].available_maps, [1], 'host seat advertises the room map (white name, not gray/offline)');
   assert.strictEqual(drainPushes().length, 0, 'create broadcasts nothing');
   const roomId = created.id;
 
@@ -105,6 +107,27 @@ async function main() {
   pushes = drainPushes();
   assert.strictEqual(pushes[0].cmd, ECustomRoom.SETREADY_NTF, 'cmd = SETREADY_NTF(25)');
   assert.strictEqual(pushes[0].target_account_id, 101, 'SETREADY_NTF -> Alice');
+
+  // 4b) SWITCH SEAT — Bob (team 2 seat 0) moves to team 1 seat 2 (wire: to_room_pos=team, to_group_pos=seat).
+  ctx = ctxFor(B);
+  await RoomSwitchSeat.handler({ room_id: roomId, to_room_pos: 0, to_group_pos: 2, to_role: 1 }, ctx);
+  assert.strictEqual(ctx.ret, 0, 'switchseat ret ok');
+  const afterMove = await rooms.get(roomId);
+  const bobRec = afterMove.members.find((m) => m.account_id === 202);
+  assert.strictEqual(bobRec.group_id, 1, 'Bob moved to team 1');
+  assert.strictEqual(bobRec.seat, 2, 'Bob at seat 2');
+  const moveInfo = rooms.toRoomInfo(afterMove);
+  const team1 = moveInfo.groups.find((g) => g.id === 1);
+  assert.strictEqual(team1.members[0].account_id, 101, 'host still seat 0');
+  assert.strictEqual(team1.members[2].account_id, 202, 'Bob rendered at team 1 seat 2');
+  assert.strictEqual(team1.members[1].account_id, 0, 'seat 1 empty between them');
+  pushes = drainPushes();
+  assert.ok(pushes.some((p) => p.cmd === ECustomRoom.SWITCHSEAT_NTF), 'SWITCHSEAT_NTF(21) broadcast');
+  assert.ok(pushes.some((p) => p.target_account_id === 101), 'switch broadcast reaches the other member');
+  // occupied-seat rejection: Alice cannot take Bob's seat (team 1 seat 2)
+  ctx = ctxFor(A);
+  await RoomSwitchSeat.handler({ room_id: roomId, to_room_pos: 0, to_group_pos: 2, to_role: 1 }, ctx);
+  assert.strictEqual(ctx.ret, ECustomRoomErr.SEATOCCUPIED, 'switch to an occupied seat -> SEATOCCUPIED');
 
   // 5) CHANGE — owner edits settings; stored OPAQUE; Bob gets CHANGE_NTF(14)=RoomInfo.
   ctx = ctxFor(A);

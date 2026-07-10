@@ -68,7 +68,7 @@ async function withRoomLock(bus, roomId, fn) {
 
 // --- record <-> proto -------------------------------------------------------
 
-function memberFromAccount(account, groupId, role = ROLE_MEMBER) {
+function memberFromAccount(account, groupId, seat, role = ROLE_MEMBER) {
   const sel = account.selected_items || {};
   return {
     account_id: Number(account.uid || account.account_id || 0),
@@ -77,18 +77,23 @@ function memberFromAccount(account, groupId, role = ROLE_MEMBER) {
     banner_id: sel.banner_id || 0,
     role,
     group_id: groupId,
+    seat,               // 0-based seat index within the team (SWITCHSEAT targets this)
     ready: false,
     rank: account.rank || 0,
     cs_rank: account.cs_rank || 0
   };
 }
 
-function playerInfo(m) {
+function playerInfo(m, mapId) {
   return {
     group_id: m.group_id, account_id: m.account_id, nickname: m.nickname,
     head_pic: m.head_pic || 0, banner_id: m.banner_id || 0, ready: true,
     role: m.role || ROLE_MEMBER, rank: m.rank || 0, ranking_points: 0,
-    cs_rank: m.cs_rank || 0, cs_ranking_points: 0
+    cs_rank: m.cs_rank || 0, cs_ranking_points: 0,
+    // A FILLED seat's name is drawn GRAY (NAME_WARNING — reads as "offline") unless its
+    // available_maps CONTAINS RoomInfo.map_id (UIRoomPlayerItemController::SetUIData @0x2bc0ce0).
+    // Advertise the room's map so connected members render white/normal.
+    available_maps: mapId ? [mapId] : []
   };
 }
 
@@ -100,20 +105,20 @@ function playerInfo(m) {
 function toRoomInfo(room) {
   const maxMembers = room.max_member_num || DEFAULT_MAX_MEMBERS;
   const perTeam = Math.max(1, Math.ceil(maxMembers / NUM_TEAMS));
-  const byGroup = new Map();
-  for (let g = 1; g <= NUM_TEAMS; g += 1) byGroup.set(g, []); // always emit every team
-  for (const m of room.members) {
-    const g = m.group_id || 1;
-    if (!byGroup.has(g)) byGroup.set(g, []);
-    byGroup.get(g).push(playerInfo(m));
+  const groups = [];
+  for (let gid = 1; gid <= NUM_TEAMS; gid += 1) {
+    const seats = Array.from({ length: perTeam }, () => ({ account_id: 0, group_id: gid })); // empty seats
+    for (const m of room.members) {
+      if ((m.group_id || 1) !== gid) continue;
+      // place each member at its explicit seat; fall back to the first free seat if unset/taken.
+      let s = (typeof m.seat === 'number' && m.seat >= 0 && m.seat < perTeam && seats[m.seat].account_id === 0)
+        ? m.seat
+        : seats.findIndex((x) => x.account_id === 0);
+      if (s < 0 || s >= perTeam) s = 0;
+      seats[s] = playerInfo(m, room.map_id);
+    }
+    groups.push({ id: gid, name: `Team ${gid}`, abbr_name: `T${gid}`, members: seats });
   }
-  const groups = [...byGroup.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([gid, members]) => {
-      const seats = members.slice();
-      while (seats.length < perTeam) seats.push({ account_id: 0, group_id: gid }); // empty seat
-      return { id: gid, name: `Team ${gid}`, abbr_name: `T${gid}`, members: seats };
-    });
   return {
     id: room.id, name: room.name, owner: room.owner,
     map_id: room.map_id, game_mode: room.game_mode, group_mode: room.group_mode,
@@ -145,7 +150,7 @@ function toBasicInfo(room) {
 }
 
 // Assign a joiner to the emptier team (ties -> team 1) so CS rooms stay balanced without
-// requiring the seat-switch op (SWITCHSEAT, a later phase).
+// requiring the seat-switch op.
 function pickTeam(room) {
   const counts = new Array(NUM_TEAMS).fill(0);
   for (const m of room.members) { const i = (m.group_id || 1) - 1; if (i >= 0 && i < NUM_TEAMS) counts[i] += 1; }
@@ -154,7 +159,14 @@ function pickTeam(room) {
   return best + 1;
 }
 
-function genCode() { return String(Math.floor(100000 + Math.random() * 900000)); }
+function perTeamCap(room) { return Math.max(1, Math.ceil((room.max_member_num || DEFAULT_MAX_MEMBERS) / NUM_TEAMS)); }
+
+// Lowest free seat index (0-based) in a team, or -1 if the team is full.
+function freeSeat(room, groupId) {
+  const taken = new Set(room.members.filter((m) => (m.group_id || 1) === groupId).map((m) => m.seat));
+  for (let s = 0; s < perTeamCap(room); s += 1) if (!taken.has(s)) return s;
+  return -1;
+}
 
 // --- operations (each returns a plain result; handlers do the wire) ---------
 
@@ -169,7 +181,7 @@ async function create(account, req) {
     id,
     name: req.room_name || `${account.nickname || 'Player'}'s room`,
     owner: accountId,
-    code: req.code || genCode(),
+    code: req.code || '', // only set a join code/password if the host actually provided one
     map_id: req.map_id || 0,
     game_mode: req.game_mode || 0,
     group_mode: req.group_mode || 0,
@@ -183,7 +195,7 @@ async function create(account, req) {
     room_setting2: req.room_setting2 || 0,
     is_cs_advanced: !!req.is_cs_advanced,
     cs_advanced_b64: Buffer.isBuffer(req.cs_advanced_setting) ? req.cs_advanced_setting.toString('base64') : '',
-    members: [memberFromAccount(account, 1, ROLE_MEMBER)], // owner seats on team 1
+    members: [memberFromAccount(account, 1, 0, ROLE_MEMBER)], // owner: team 1, seat 0
     createdAt: Date.now()
   };
   await saveRoom(bus, room);
@@ -228,11 +240,13 @@ async function join(account, req) {
     if (room.members.some((m) => m.account_id === accountId)) throw new RoomError(ECustomRoomErr.ALREADYINROOM);
     if (room.members.length >= room.max_member_num) throw new RoomError(ECustomRoomErr.REACHMAXMEMBERS);
 
-    const joiner = memberFromAccount(account, pickTeam(room), ROLE_MEMBER);
+    const groupId = pickTeam(room);
+    const seat = freeSeat(room, groupId);
+    const joiner = memberFromAccount(account, groupId, seat >= 0 ? seat : 0, ROLE_MEMBER);
     room.members.push(joiner);
     await saveRoom(bus, room);
     await bus.hset(MEMBERS_KEY, String(accountId), String(room.id));
-    logger.info(`[room] JOIN id=${room.id} uid=${accountId} team=${joiner.group_id} (${room.members.length}/${room.max_member_num})`);
+    logger.info(`[room] JOIN id=${room.id} uid=${accountId} team=${joiner.group_id} seat=${joiner.seat} (${room.members.length}/${room.max_member_num})`);
     return { room, joiner };
   });
 }
@@ -342,6 +356,41 @@ async function setReady(account, ready) {
   });
 }
 
+// Move the caller to a clicked EMPTY seat. WIRE FIELD NAMES ARE SWAPPED (confirmed by RE):
+// RoomSwitchSeatReq.to_room_pos = TEAM ordinal (0-based), to_group_pos = SEAT within team (0-based).
+async function switchSeat(account, req) {
+  const bus = getBus();
+  if (!bus) throw new RoomError(ECustomRoomErr.NOROOM);
+  const accountId = Number(account.uid || account.account_id || 0);
+  const roomId = Number(req.room_id || 0) || Number(await bus.hget(MEMBERS_KEY, String(accountId)) || 0);
+  if (!roomId) throw new RoomError(ECustomRoomErr.NOTINROOM);
+  const toTeam = Number(req.to_room_pos || 0);   // TEAM ordinal (0-based)
+  const toSeat = Number(req.to_group_pos || 0);  // SEAT within team (0-based)
+
+  return withRoomLock(bus, roomId, async () => {
+    const room = await loadRoom(bus, roomId);
+    if (!room) throw new RoomError(ECustomRoomErr.NOROOM);
+    if (room.state !== ROOM_STATE.WAITING) throw new RoomError(ECustomRoomErr.ROOMINGAME);
+    const m = room.members.find((x) => x.account_id === accountId);
+    if (!m) throw new RoomError(ECustomRoomErr.NOTINROOM);
+
+    const targetGroup = toTeam + 1; // groups are ordered 1..NUM_TEAMS, so ordinal -> group id
+    if (targetGroup < 1 || targetGroup > NUM_TEAMS || toSeat < 0 || toSeat >= perTeamCap(room)) {
+      throw new RoomError(ECustomRoomErr.CANNOTSWITCHSEAT);
+    }
+    // target seat must be free (ignore the mover so re-clicking its own seat is a harmless no-op)
+    const occupied = room.members.some(
+      (x) => x.account_id !== accountId && (x.group_id || 1) === targetGroup && x.seat === toSeat);
+    if (occupied) throw new RoomError(ECustomRoomErr.SEATOCCUPIED);
+
+    m.group_id = targetGroup;
+    m.seat = toSeat;
+    await saveRoom(bus, room);
+    logger.info(`[room] SWITCHSEAT id=${room.id} uid=${accountId} -> team=${targetGroup} seat=${toSeat}`);
+    return { room, moved: m };
+  });
+}
+
 async function get(roomId) {
   const bus = getBus();
   return bus ? loadRoom(bus, Number(roomId)) : null;
@@ -419,7 +468,7 @@ async function handleDisconnect(accountId) {
 
 module.exports = {
   ROOM_STATE,
-  create, list, join, leave, kick, change, setReady, get, roomIdOf,
+  create, list, join, leave, kick, change, setReady, switchSeat, get, roomIdOf,
   toRoomInfo, toBasicInfo, playerInfo,
   pushToAccount, broadcast,
   joinNtf, leaveNtf, kickNtf, setReadyNtf, dismissNtf, runOp, handleDisconnect,
