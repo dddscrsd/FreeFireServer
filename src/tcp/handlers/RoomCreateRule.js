@@ -40,7 +40,7 @@ function csRule(roomType) {
 // baseline. drop_type=1 routes it into the client's CS drop list. loc_key/describe_key are the
 // preset's localization keys (label only — a wrong key mislabels the preset, it doesn't block).
 function csDrop(id, roomType) {
-  return {
+  const obj = {
     id,
     room_type: roomType,
     drop_type: 1,
@@ -57,12 +57,19 @@ function csDrop(id, roomType) {
     hide_hud: 0,
     revival: 0
   };
+
+  if (roomType == ROOM_TYPE_CASUAL) {
+    obj.loc_key = "CASUAL"
+    obj.describe_key = "The casual ruleset for matches."
+  }
+
+  return obj
 }
 
 async function handler(reqObj, ctx) {
   const res = {
     room_create_rules: [csRule(ROOM_TYPE_CASUAL), csRule(ROOM_TYPE_LEAGUE)],
-    room_create_rule_drops: [csDrop(1, ROOM_TYPE_CASUAL), csDrop(2, ROOM_TYPE_LEAGUE)]
+    room_create_rule_drops: [csDrop(1, ROOM_TYPE_CASUAL)]
   };
   ctx.logger.info(`[tcp] RoomCreateRule uid=${ctx.account.uid} -> ${res.room_create_rules.length} rules / ${res.room_create_rule_drops.length} drops`);
   return res;
