@@ -44,6 +44,7 @@ func (m *Match) priPayload() []byte {
 			Kills: capByte(m.kills[p.entityID]), Deaths: capByte(m.deaths[p.entityID]),
 			FireState: fireState, Sighting: uint32(sighting), CurEP: byte(p.ep), Damage: m.damage[p.entityID],
 			SpeedScale: m.settings.speedScale, JumpScale: m.settings.jumpScale, // custom-room move/jump multipliers (0 = omit)
+			ObCount: m.obCount(p.entityID), // spectators watching this player -> OB_COUNT badge (field 14)
 		})})
 	}
 	if m.botEntity != 0 && m.entityHP(m.botEntity) > 0 {

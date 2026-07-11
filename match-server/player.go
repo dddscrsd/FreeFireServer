@@ -95,7 +95,8 @@ func resolvePlayer(tok string) joinPlayer {
 	if claims.AccountID != 0 {
 		p.AccountID = claims.AccountID
 	}
-	p.MatchID = claims.MatchID // shared match id (settlement idempotency key)
+	p.MatchID = claims.MatchID   // shared match id (settlement idempotency key)
+	p.PreferTeam = claims.Team   // custom-room team (1/2); 0 => allocSlot balance-fills
 	if claims.Role != 0 {
 		p.Role = claims.Role
 	}

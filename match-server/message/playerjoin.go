@@ -40,7 +40,10 @@ type PlayerInfo struct {
 	// it into Player.BattleFlagID; NONZERO is what lets it plant a flag emote (send cmd 0x114). The flag's
 	// actual model resolves from the emote link_id, so any nonzero value enables all flag emotes. See [[cs-emotes]].
 	BattleFlag uint32
-	TeamIdx    uint8 // the player's index on the team
+	TeamIdx    uint8 // the player's index on the team (on-wire cmd-101 field CPDNBJNLAIM)
+	// PreferTeam is the custom-room team the host arranged (1 or 2), from the prepare_token. NOT
+	// serialized — it's a match-server placement hint consumed by allocSlot. 0 => server balance-fills.
+	PreferTeam uint8
 
 	// Spawn transform, written into the OGJKHJAFNHB sub-object of cmd 101
 	// (CCIKDFGDBAM position ×1000 / CCDDHEBKMGD facing ×100). This is the

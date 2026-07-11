@@ -78,7 +78,7 @@ async function queueSize() {
 // Build the prepare_token: an HS256 JWT carrying the player's identity and selected
 // cosmetics so the (separate-process) Go match-server can build cmd 101 PLAYER_JOIN
 // without sharing our account DB. Verified there with the same MATCH_JWT_SECRET.
-function buildPrepareToken(account, matchId) {
+function buildPrepareToken(account, matchId, team = 0) {
   const acc = account || {};
   const sel = acc.selected_items || {};
   const claims = {
@@ -87,6 +87,10 @@ function buildPrepareToken(account, matchId) {
     region: acc.region || '',
     role: acc.role || 0,
     mid: matchId,
+    // team: the custom-room team the host arranged (group_id 1 or 2). 0 = "server chooses" — the
+    // matchmaker/queue path passes nothing, so the match server keeps its balance-fill. A room passes
+    // the member's group_id so the match faction (entity-id hibyte + FACTION_ID) is deterministic.
+    team,
     show: {
       avatar: sel.avatar_id || 0,
       color: sel.skin_color || 0,

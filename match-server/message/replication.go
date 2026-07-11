@@ -284,6 +284,7 @@ type PRIState struct {
 	Damage             uint32
 	SpeedScale         uint16 // GAMEMODE_SPEEDSCALE (field 50), percent (mul*100); 0 = omit (default 1.0x)
 	JumpScale          uint16 // GAMEMODE_JUMPHEIGHTSCALE (field 52), percent (mul*100); 0 = omit
+	ObCount            byte   // OB_COUNT (field 14) — spectators watching this player (the "N watching" badge)
 }
 
 func PRIHPBlock(st PRIState) []byte {
@@ -304,7 +305,7 @@ func PRIHPBlock(st PRIState) []byte {
 		{RepU8, 11, 0},                    // STATUS
 		{RepU32, 12, uint64(st.Sighting)}, // SIGHTING_ID
 		{RepU8, 13, uint64(st.Kills)},     // CAMOUFLAGE_HP
-		{RepU8, 14, 0},                    // OB_COUNT
+		{RepU8, 14, uint64(st.ObCount)},   // OB_COUNT — spectator count above this player
 		{RepU16, 15, 0},                   // BUFF
 		{RepU64, 16, 0},                   // CAMOUFLAGE_HP
 		{RepU8, 17, 0},                    // LIKE_COUNT

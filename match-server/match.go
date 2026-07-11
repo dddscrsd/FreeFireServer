@@ -156,16 +156,20 @@ func newMatch(s *session) *Match {
 // bot isn't in m.players, so it doesn't skew the count: the 1st human -> team 1, the bot slot -> team
 // 2, and a 2nd human -> team 2 (opposite the 1st). (Was odd/even, which put both humans on team 1.)
 // entity id = team<<24 | slot; RepID = playerRepID + slot - 1.
-func (m *Match) allocSlot() (entityID, repID uint32, faction, team, idx, slot byte) {
+func (m *Match) allocSlot(prefer byte) (entityID, repID uint32, faction, team, idx, slot byte) {
 	m.nextSlot++
 	slot = m.nextSlot
 	var human [3]int // human[1], human[2] = humans currently on team 1 / team 2
 	for _, p := range m.players {
 		human[p.team]++
 	}
-	team = 1
-	if human[2] < human[1] {
-		team = 2
+	if prefer == 1 || prefer == 2 {
+		team = prefer // custom room: honor the host's arrangement (deterministic team)
+	} else {
+		team = 1 // matchmaker/queue: balance-fill the emptier team (tie -> team 1)
+		if human[2] < human[1] {
+			team = 2
+		}
 	}
 	faction = team - 1
 	idx = byte(human[team]) // 0-based index among CURRENT teammates (the retired bot isn't counted)
@@ -198,7 +202,7 @@ func (m *Match) retireBot() {
 // first human these ids equal the playerEntityID / playerRepID / localFaction constants the game
 // logic still reads (the switch to per-session ids is a later step); m.s stays the primary human.
 func (m *Match) addPlayer(s *session) {
-	s.entityID, s.repID, s.faction, s.team, s.player.TeamIdx, s.slot = m.allocSlot()
+	s.entityID, s.repID, s.faction, s.team, s.player.TeamIdx, s.slot = m.allocSlot(s.player.PreferTeam)
 	s.player.EntityID = s.entityID
 	m.players = append(m.players, s)
 	log.Printf("[mm-udp] roster+ slot=%d entity=%#08x rep=%d faction=%d team=%d (roster=%d) %v",
@@ -213,8 +217,11 @@ func (m *Match) removePlayer(s *session) {
 	if m.sessionByEntity(s.entityID) == nil {
 		return // already gone
 	}
-	m.broadcastData(packet.CmdPlayerQuitRes, message.PlayerAlternateQuit(s.entityID),
-		fmt.Sprintf("cmd=191 PLAYER_QUIT ent=%#x %q", s.entityID, s.player.Name))
+	// Tell the OTHERS "this player left" via cmd 102 (RUDP_PLAYER_QUIT) — the client removes just that
+	// entity. This was cmd 192 (PLAYER_QUIT_RES), the server's ack of the recipient's OWN quit, so every
+	// remaining client read it as "my quit was accepted" and left too — the mass disconnect.
+	m.broadcastData(packet.CmdPlayerQuit, message.PlayerAlternateQuit(s.entityID),
+		fmt.Sprintf("cmd=102 PLAYER_QUIT ent=%#x %q -> others", s.entityID, s.player.Name))
 	m.emitDeath(s.entityID, 0, 1, 0, 0, 2, m.deathPos(s.entityID), false, false)
 	kept := m.players[:0]
 	for _, p := range m.players {
@@ -284,8 +291,15 @@ func (m *Match) setupMatch(s *session) {
 	m.arena = choosePlayerSpawn(&s.player, m.arenasUsed)
 	m.arenasUsed[m.arena] = true
 	m.addPlayer(s)
+	// choosePlayerSpawn placed the first player at the LEFT fence (localFaction=0); once addPlayer has
+	// assigned the real faction (a room can put a team-2 player in first), re-anchor to the correct
+	// fence — matching admitLater. Skipped under the fixed-spawn test override (empty arena).
+	if cfg.spawn == nil {
+		s.player.SpawnPos, s.player.SpawnFace = m.arena.spawnFor(s.faction)
+		s.playerPos = s.player.SpawnPos
+	}
 	m.round = 1
-	m.allocSlot()
+	m.allocSlot(0) // reserve slot 2 for the filler bot (return discarded; only bumps nextSlot)
 	m.botEntity = 0
 }
 

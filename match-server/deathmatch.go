@@ -64,16 +64,26 @@ func (m *Match) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8)
 		cur -= dmg
 	}
 	m.hp[victim] = cur
+	weapon, _ := m.resolveKillWeapon(attacker) // for the hit-direction indicator + spectator relays
 	if attacker != 0 && m.teamOf(attacker) != m.teamOf(victim) {
 		m.damage[attacker] += uint32(dmg) // scoreboard total damage (PRI field 31)
+		// A spectator watching the SHOOTER sees the floating damage numbers (cmd 168) the shooter's own
+		// client renders locally — relay it so a dead teammate spectating the shooter sees them too.
+		for _, sp := range m.spectatorsOf(attacker) {
+			sp.sendData(packet.CmdShowDamage, message.ShowDamage(attacker, victim, dmg, uint32(weapon)))
+		}
 	}
 	if vs := m.sessionByEntity(victim); vs != nil {
 		vs.wearArmor(bodyPart, dmg) // client already reduced HP; we only track + stream the armor wear
 		// Forward a cmd-106 TakeDamage to the VICTIM so its client renders the hit-direction indicator
-		// (which way the shot came from). Sent only to the victim — the direction UI is theirs.
-		weapon, _ := m.resolveKillWeapon(attacker)
+		// (which way the shot came from).
 		vs.sendData(packet.CmdTakeDamage, message.TakeDamage(victim, attacker, uint32(weapon), dmg, int8(bodyPart)))
 		vs.sendVar(packet.CmdPRISync, vs.match.priPayload(), 1)
+	}
+	// A spectator watching the VICTIM also renders the hurt-direction arrow — the client orients it off
+	// the observed pawn (GetLocalPlayerOrObServer), so relay the same cmd 106 to each spectator.
+	for _, sp := range m.spectatorsOf(victim) {
+		sp.sendData(packet.CmdTakeDamage, message.TakeDamage(victim, attacker, uint32(weapon), dmg, int8(bodyPart)))
 	}
 	// Hit-reaction: tell EVERYONE to play the victim's flinch (cmd 1010) on this hit — the client
 	// self-throttles + gates it out when the victim is dying. No-attacker (zone) damage passes the
@@ -227,13 +237,41 @@ func (m *Match) emitDeath(victim, killer, weapon, weaponSkin, observe uint32, bo
 	// watched player's attachment mounts (cmd 124) so the spectator sees the same maxed attachments. Guarded:
 	// `observe` may be the bot (no session) and the victim may be the bot too.
 	if observe != 0 {
-		if watched := m.sessionByEntity(observe); watched != nil {
-			if spectator := m.sessionByEntity(victim); spectator != nil {
+		if spectator := m.sessionByEntity(victim); spectator != nil {
+			spectator.observing = observe // remember who this dead client watches (hit/damage relay + OB_COUNT)
+			if watched := m.sessionByEntity(observe); watched != nil {
 				watched.resendEquipTo(spectator)  // re-affirm the watched player's back-mounted weapons
 				watched.resendAttachTo(spectator) // + attachments (so a 2x scope isn't seen as the default 1x)
 			}
 		}
 	}
+}
+
+// spectatorsOf returns the live sessions currently spectating `entity` (dead teammates watching it).
+// Used to relay the watched pawn's hit-direction (cmd 106) + damage numbers (cmd 168) to them.
+func (m *Match) spectatorsOf(entity uint32) []*session {
+	var out []*session
+	for _, p := range m.players {
+		if p.observing == entity {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// obCount is how many sessions are spectating `entity` — the OB_COUNT (PRI field 14, u8) badge above
+// that player. Capped at 255.
+func (m *Match) obCount(entity uint32) byte {
+	n := 0
+	for _, p := range m.players {
+		if p.observing == entity {
+			n++
+		}
+	}
+	if n > 255 {
+		n = 255
+	}
+	return byte(n)
 }
 
 // stepKnock bleeds every KNOCKED player on run()'s tick: -knockBleedAmt on the cadence; at 0 the
@@ -259,6 +297,7 @@ func (m *Match) reviveAll() {
 	for _, p := range m.players {
 		m.life[p.entityID] = lifeAlive
 		m.hp[p.entityID] = m.settings.maxHP
+		p.observing = 0 // back alive -> no longer spectating (clears OB_COUNT + the relays)
 	}
 	if m.botEntity != 0 {
 		m.life[m.botEntity] = lifeAlive
@@ -313,6 +352,7 @@ func (m *Match) deadHumans() []*session {
 // client clears the pawn's dead flag + un-spectates (the dead client was watching a teammate). HP
 // comes from the still-bound PRI stream. Generalises the old 1v1 respawnLocalPlayer.
 func (m *Match) respawnPlayer(p *session) {
+	p.observing = 0 // cmd 388 un-spectates the client; drop the server-side focus to match
 	yaw := yawByte(p.player.SpawnFace)
 	m.broadcastData(packet.CmdNotifyRevive, message.NotifyRevive(p.entityID, p.player.SpawnPos, yaw),
 		fmt.Sprintf("cmd=388 revive ent=%#x pos=(%.1f,%.1f,%.1f) yaw=%d", p.entityID, p.player.SpawnPos.X, p.player.SpawnPos.Y, p.player.SpawnPos.Z, yaw))

@@ -49,6 +49,11 @@ type session struct {
 	team     byte
 	slot     byte
 
+	// observing is the entity this (dead) client is currently spectating (0 = alive / not spectating).
+	// Set from the cmd-107 spectate focus in emitDeath, cleared when the player comes back alive
+	// (reviveAll / respawnPlayer). Drives the spectator hit-marker + damage-number relays and OB_COUNT.
+	observing uint32
+
 	// prepare_token reassembly: a large token (many cosmetics) is split across cmd 439
 	// (JOIN_MATCH_PREPARE, [u32 chunkLen][chunk], the bigger half) and cmd 440
 	// (JOIN_MATCH_POST, the tail). prep439 buffers the 439 chunk; handleJoinMatchPost
