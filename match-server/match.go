@@ -236,6 +236,10 @@ func (m *Match) removePlayer(s *session) {
 	if m.s == s && len(m.players) > 0 {
 		m.s = m.players[0] // promote a survivor so run()'s primary reads stay valid
 	}
+	// Re-point anyone who was spectating the player who just left (the quitter is already out of
+	// m.players, so spectateFor picks a still-present live teammate). cmd 149 keeps their view + our
+	// OB_COUNT/relays in sync instead of stuck on the removed entity.
+	m.repointSpectators(s.entityID, 0)
 	log.Printf("[mm-udp] roster- slot=%d ent=%#x (roster=%d) %v", s.slot, s.entityID, len(m.players), s.remote)
 }
 

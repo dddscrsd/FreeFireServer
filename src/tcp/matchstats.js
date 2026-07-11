@@ -53,7 +53,9 @@ function buildStatsRes(pr, players, accts, matchId) {
 
   const acctOf = (id) => (accts || {})[id] || {};
   const a = acctOf(pr.account_id);
+  const role = a.role || 0;
   const si = a.selected_items || {};
+  const pve_primary_weapon_skin = Array.isArray(si.slots) ? si.slots[0] : 0;
   const level = a.level || 1;
   const coinsAfter = a.coins || 0;
 
@@ -71,12 +73,13 @@ function buildStatsRes(pr, players, accts, matchId) {
     damage: pr.damage | 0,
     rank: pr.win ? 1 : 2,
     ranking_points: pr.rank_points | 0,
-    match_mode: 6,
+    match_mode: 1,
     game_mode: EGAMEMODE_CS, // gates the MVP screen (SetData) — 0 => placeholder labels
     player_count: players.length,
     real_player_count: players.length,
     level,
     role: pr.role,
+    pve_primary_weapon_skin: pve_primary_weapon_skin,
     avatar_id: si.avatar_id || 0,
     banner_id: si.banner_id || 0,
     head_pic: si.head_pic || 0,

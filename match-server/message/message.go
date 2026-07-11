@@ -82,20 +82,20 @@ func JoinMatchRes(result, roomSetting, roomSetting2 uint32) []byte {
 	w.vec3i(0, 0, 0)
 	w.F32(0)
 	w.F32(0)
-	w.I16(0)      // GJGPMHJJOCE : List<i32>  (count=0)
-	w.I16(0)      // KBCPCCKGGBE : List<u32>  (count=0)
-	w.I16(0)      // KELMCBLFFDC : List<msg>  (count=0)
+	w.I16(0)            // GJGPMHJJOCE : List<i32>  (count=0)
+	w.I16(0)            // KBCPCCKGGBE : List<u32>  (count=0)
+	w.I16(0)            // KELMCBLFFDC : List<msg>  (count=0)
 	w.U32(roomSetting)  // GPKHLEAADHL  (ECustomRoomSetting  — raw room_setting bitfield)
 	w.U32(roomSetting2) // OJIHIKIAFAI  (ECustomRoomSetting2 — raw room_setting2 bitfield)
-	w.Bool(true)  // FEAMHOEGDAG
-	w.Bool(false) // OEFEABKDIFM
-	w.Bool(false) // NBFOFDCIFOG
-	w.Bool(false) // EHFODNFPJMM
-	w.Bool(false) // PLGGBGOCBCK
-	w.U32(0)      // DFEIAPMNJCK
-	w.Bool(false) // ECAGPHCIFFB
-	w.Bool(false) // NNMLDEJEJIM
-	w.Bool(false) // NALEHBGHPOP
+	w.Bool(true)        // FEAMHOEGDAG
+	w.Bool(false)       // OEFEABKDIFM
+	w.Bool(false)       // NBFOFDCIFOG
+	w.Bool(false)       // EHFODNFPJMM
+	w.Bool(false)       // PLGGBGOCBCK
+	w.U32(0)            // DFEIAPMNJCK
+	w.Bool(false)       // ECAGPHCIFFB
+	w.Bool(false)       // NNMLDEJEJIM
+	w.Bool(true)        // NALEHBGHPOP
 	// PGHKLEAHENK : EKHEMGJLHDC { string, string, bool, List<byte> }
 	w.Str("")
 	w.Str("")

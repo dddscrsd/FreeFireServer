@@ -65,6 +65,7 @@ const (
 	CmdDelContainer         = 228  // server -> client: OPNFJLJGPFC — RUDP_DEL_CONTAINER ([u16 containerID][u8 containerType])
 	CmdTakeDamage           = 106  // client -> server: hit report (victim u32, damage u16, attacker u32, ...); server applies HP
 	CmdShowDamage           = 168  // server -> client: RUDP_SHOW_DAMAGE — floating damage numbers; relayed to a spectator of the shooter
+	CmdSwitchObserve        = 149  // server -> client: RUDP_SWITCH_OBSERVE — re-point a spectator to a new target ([bool apply][u32 entity])
 	CmdWeaponAction         = 104  // client -> server: MFCMPPGIMNH — weapon action (u32 pid, u32 weapon, u32 tick, u32 actionType[2=START FIRE], f32 turn); relay to others for the fire visual
 	CmdStopFire             = 105  // client -> server: FCHFNBNCJLB — stop firing (u32 pid, u32 weapon, ...); relay to others
 	CmdReloadStart          = 133  // client -> server: DAGDONBPDDC — reload started (u32 pid, f32 time, bool, u32 weapon); relay to others

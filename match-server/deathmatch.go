@@ -244,6 +244,28 @@ func (m *Match) emitDeath(victim, killer, weapon, weaponSkin, observe uint32, bo
 				watched.resendAttachTo(spectator) // + attachments (so a 2x scope isn't seen as the default 1x)
 			}
 		}
+		// Anyone who was already spectating THIS now-dead player follows the chain to its new focus, so
+		// their OB_COUNT + hit/damage relays track the live pawn instead of the corpse.
+		m.repointSpectators(victim, observe)
+	}
+}
+
+// repointSpectators moves every session currently spectating `gone` to a fresh live target and tells
+// each client authoritatively via cmd 149 (RUDP_SWITCH_OBSERVE). `prefer` is the follow-the-chain
+// target (the dead player's own new focus); if it's 0 or no longer alive, each spectator falls back to
+// a live teammate of its own (spectateFor). Called when a watched player dies (emitDeath) or quits
+// (removePlayer) so the spectator experience — OB_COUNT badge + hit-marker/damage-number relays —
+// keeps following whoever the client is actually watching.
+func (m *Match) repointSpectators(gone, prefer uint32) {
+	for _, sp := range m.spectatorsOf(gone) {
+		target := prefer
+		if target == 0 || m.lifeOf(target) != lifeAlive {
+			target = m.spectateFor(sp.entityID)
+		}
+		sp.observing = target
+		if target != 0 {
+			sp.sendData(packet.CmdSwitchObserve, message.SwitchObserve(target))
+		}
 	}
 }
 
