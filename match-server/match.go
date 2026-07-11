@@ -251,6 +251,7 @@ func (m *Match) admitFirst(s *session) {
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
 	s.sendDataLog(packet.CmdSyncRegionActivities, message.SyncRegionActivitiesDefault(),
 		"cmd=176 SYNC_REGION_ACTIVITIES (DEFAULT) — trigger dynamic-prefab visibility (jump pads/boxes)")
+	s.sendData(packet.CmdInGameChat, message.SendInGameMessages([]string{"Apenas testando umas coisas aqui"}, "System"))
 	s.broadcastZone()      // draw the safe zone at the NEW city now that the player joined
 	m.broadcastZoneIndex() // name that city in the round-intro UI (cmd 457 per-player zone index)
 	s.startCSMatch()
@@ -436,7 +437,7 @@ func (m *Match) stream() {
 	state, stateDeadline := m.matchState()
 	s.sendVar(packet.CmdPRISync, m.priPayload(), 1)
 	s.sendVar(packet.CmdGRISync, message.CSGRIInit(m.settings.maxRound, uint8(m.round-1)), 1) // fields 1,2 (round config)
-	s.sendVar(packet.CmdGRISync, message.CSGRIMatchState(state, stateDeadline), 1) // field 5 (waiting/cancel overlay)
+	s.sendVar(packet.CmdGRISync, message.CSGRIMatchState(state, stateDeadline), 1)            // field 5 (waiting/cancel overlay)
 	s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
 	point := 0
 	if m.teamScore[0] == m.settings.roundsToWin-1 || m.teamScore[1] == m.settings.roundsToWin-1 {

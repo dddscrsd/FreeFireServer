@@ -100,6 +100,7 @@ const (
 	CmdSyncServerTime       = 1000 // server -> client: uint32 ServerGameTickCount; client clock = tick/30s (drives the CS timers)
 	CmdClientPos            = 1001 // client -> server: per-tick position/state update (carries the local player's world pos)
 	CmdClientPosV2          = 1012 // server -> client: UDP_PLAYER_STATE_SYNC_V2 — the remote-movement broadcast 1.70.1 actually applies (1001 downstream is ignored on this build)
+	CmdInGameChat           = 1030 // server -> client: apparently sends a chat message? unsure
 )
 
 var (
