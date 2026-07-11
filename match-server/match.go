@@ -33,6 +33,7 @@ type Match struct {
 	round      int               // 1-based CS round
 	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
 	lossStreak [2]uint8          // consecutive rounds LOST per team (drives the CS loss-bonus ladder)
+	firstBlood uint32            // entity that got THIS round's first cross-team kill (0 = none yet); reset each round in endFight
 	settings   matchSettings     // per-match CS config (round count / economy); defaults + custom-room overrides
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
@@ -767,16 +768,21 @@ func (m *Match) endFight(now time.Time) {
 	// running balance += base[round] + a win/loss event (loss stacks with the team's streak) +
 	// per-kill. base[round] holds 3000 from round 7 on. (First-blood bonus: TODO, not tracked yet.)
 	base := csRoundIncome(m.round, m.settings.baseCoins)
+	ev := m.settings.events // event bonuses: economy.go defaults, or the advanced room's overrides
 	for _, p := range m.players {
-		aw := base + csKillBonus*p.roundKills.Swap(0)
+		aw := base + ev.perKill*p.roundKills.Swap(0)
 		if p.team == winnerTeam {
-			aw += csWinRoundBonus
+			aw += ev.winRound
 		} else {
-			aw += csLossBonus(m.lossStreak[p.team-1])
+			aw += ev.lossBonus(m.lossStreak[p.team-1])
+		}
+		if p.entityID == m.firstBlood { // the human who drew first blood this round
+			aw += ev.firstBlood
 		}
 		p.coins += aw
 		p.award = aw
 	}
+	m.firstBlood = 0 // reset for the next round (endFight is the once-per-round funnel that resets roundKills too)
 	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d)", m.round, winnerTeam, m.teamScore[0], m.teamScore[1])
 
 	if m.teamScore[0] >= m.settings.roundsToWin || m.teamScore[1] >= m.settings.roundsToWin || m.round >= int(m.settings.maxRound) {

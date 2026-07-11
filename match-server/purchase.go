@@ -28,10 +28,12 @@ var weaponAmmo = map[uint32]uint32{
 	5: 204, 41: 204, // shotguns (M1014, M1887)
 }
 
-// armorSlot maps an armour DataID to its equipment slot.
+// armorSlot maps an armour DataID to its equipment slot. Covers every CS armour tier so a custom
+// room's advanced shop (which can stock lvl4) seeds durability via equipArmor; the default shop only
+// stocks lvl2/lvl3.
 var armorSlot = map[uint32]byte{
-	302: message.SlotVest, 303: message.SlotVest, // level 2 / level 3 vest
-	305: message.SlotHelmet, // level 2 helmet
+	302: message.SlotVest, 303: message.SlotVest, 309: message.SlotVest, // vest lvl2 / lvl3 / lvl4
+	305: message.SlotHelmet, 306: message.SlotHelmet, 310: message.SlotHelmet, // helmet lvl2 / lvl3 / lvl4
 }
 
 // buildingSlot maps a deployable "building" item (gloo/ice wall) DataID to its OWN loadout
@@ -57,6 +59,13 @@ type csItemPlacement struct {
 // (Primary1 vs Primary2 vs override) depends on live state, so it is left slotNone here
 // and resolved by pickPrimarySlot in addPurchasedItem.
 func placeItem(item *message.ShopItem) csItemPlacement {
+	// Advanced custom-room shop items carry a lobby-resolved SlotKind + Ammo (message.ShopItem), so
+	// placement needn't hardcode a per-gun map — this is what lets the host stock guns/armour tiers
+	// the legacy maps below never knew. Default CS + simple-mode rooms (no SlotKind) fall through to
+	// the original map-based logic, so their behaviour is byte-for-byte unchanged.
+	if item.SlotKind != "" {
+		return placeBySlotKind(item)
+	}
 	if ammo, ok := weaponAmmo[item.ItemID]; ok {
 		if ammo == 202 { // pistols equip in the secondary slot
 			return csItemPlacement{slot: message.SlotSecondary, ammo: ammo, isWeapon: true}
@@ -73,6 +82,33 @@ func placeItem(item *message.ShopItem) csItemPlacement {
 		return csItemPlacement{slot: message.SlotExplosive} // grenades share the explosive slot
 	}
 	return csItemPlacement{slot: slotNone} // consumables (repair kit, mushroom): no slot
+}
+
+// placeBySlotKind resolves placement for an ADVANCED custom-room shop item from its lobby-resolved
+// SlotKind (message.ShopItem.SlotKind). The lobby (src/tcp/csadvanced.js) already dropped anything
+// the match server can't place, so every reachable item maps to a real slot; the default arm is a
+// safety net (treated as a no-slot consumable, never a crash).
+func placeBySlotKind(item *message.ShopItem) csItemPlacement {
+	switch item.SlotKind {
+	case "secondary": // pistol
+		return csItemPlacement{slot: message.SlotSecondary, ammo: item.Ammo, isWeapon: true}
+	case "primary": // rifle / SMG / sniper / shotgun / LMG — concrete slot chosen live (pickPrimarySlot)
+		return csItemPlacement{slot: slotNone, ammo: item.Ammo, isWeapon: true, isPrimary: true}
+	case "melee": // sickle etc. — a weapon in the melee slot, no ammo/attachments
+		return csItemPlacement{slot: message.SlotMelee, isWeapon: true}
+	case "vest":
+		return csItemPlacement{slot: message.SlotVest, isArmor: true}
+	case "helmet":
+		return csItemPlacement{slot: message.SlotHelmet, isArmor: true}
+	case "grenade":
+		return csItemPlacement{slot: message.SlotExplosive}
+	case "building": // gloo wall -> its own Building slot (not the grenade slot)
+		return csItemPlacement{slot: message.SlotBuilding}
+	case "consumable": // repair kit / adrenaline / mushroom (mushroom takes the instant-EP path in handleCSPurchase)
+		return csItemPlacement{slot: slotNone}
+	default:
+		return csItemPlacement{slot: slotNone}
+	}
 }
 
 // pickPrimarySlot chooses the slot a newly bought primary weapon fills: an EMPTY
@@ -149,7 +185,7 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	if qty == 0 {
 		qty = 1
 	}
-	item, ok := shopItemByID(itemID)
+	item, ok := s.match.shopItemByID(itemID)
 	if !ok {
 		log.Printf("[mm-udp] cmd=408 buy of item %d not in catalogue — ignoring", itemID)
 		return
@@ -261,7 +297,9 @@ func (s *session) addPurchasedItem(item *message.ShopItem, qty uint32) (inv, att
 		mag := loadedMagFor(item.ItemID, SkinForWeapon(item.ItemID, s.player.Slots)) // loaded magazine (incl. auto-magazine boost)
 		inv[0].Runtime = mag
 		s.trackItem(lootItem{unique: uid, data: item.ItemID, count: 1, runtime: mag})
-		inv = append(inv, s.giveAmmoStacks(place.ammo)...) // reserve ammo as 30-round stacks
+		if place.ammo != 0 { // melee weapons (sickle) carry no ammo — don't issue a phantom data-0 stack
+			inv = append(inv, s.giveAmmoStacks(place.ammo)...) // reserve ammo as 30-round stacks
+		}
 		// Force-equip the best attachment for every slot the weapon supports — added as
 		// inventory items here so the follow-up cmd 124 can resolve them by unique (attachment.go).
 		attach, attachEquips = s.buildWeaponAttachments(uid, item.ItemID)

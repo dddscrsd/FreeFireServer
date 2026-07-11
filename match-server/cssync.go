@@ -244,8 +244,9 @@ func (s *session) reissueLoadout() {
 // sendCSShop sends the Contra Squad shop item list (cmd 407). The client's LOJA UI
 // reads this list when it opens during the buy phase.
 func (s *session) sendCSShop() {
-	s.sendDataLog(packet.CmdCSShop, message.CSShop(csShopItems, csShopTitle, false),
-		fmt.Sprintf("cmd=407 CSShop (%d items, %q)", len(csShopItems), csShopTitle))
+	cat := s.match.settings.shopCatalogue() // room's custom allow-list, or the default package catalogue
+	s.sendDataLog(packet.CmdCSShop, message.CSShop(cat, csShopTitle, false),
+		fmt.Sprintf("cmd=407 CSShop (%d items, %q)", len(cat), csShopTitle))
 	s.sendMushroomCount() // cmd 533: re-sync the mushroom "N/2" label to this round's count (0 after a round reset)
 }
 

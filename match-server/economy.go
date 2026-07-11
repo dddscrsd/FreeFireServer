@@ -21,7 +21,7 @@ const (
 	csKillBonus       uint32 = 200  // event: per kill this round
 	csLossStreak2     uint32 = 900  // event: 2 consecutive round losses
 	csLossStreak3     uint32 = 1500 // event: 3+ consecutive round losses
-	csFirstBloodBonus uint32 = 100  // event: got the round's first kill (TODO: not tracked yet)
+	csFirstBloodBonus uint32 = 100  // event: got the round's first kill (tracked via Match.firstBlood, awarded in endFight)
 )
 
 // csStartingCoins is the money a player begins the match with = the economy table's FIRST entry.
@@ -49,19 +49,39 @@ func csRoundIncome(round int, table []uint32) uint32 {
 	return table[round]
 }
 
-// csLossBonus is the loss-side round bonus for a team that just lost, given its consecutive-loss
+// csEvents are the per-match CS economy EVENT bonuses. The defaults (defaultCSEvents) are the consts
+// above — the same values a non-custom CS match uses; an ADVANCED custom room can override them
+// (once RoomCreateCSEco.csv is captured, see src/tcp/csadvanced.js). Held on matchSettings.events.
+type csEvents struct {
+	winRound    uint32 // won the round
+	perKill     uint32 // per kill this round
+	lossRound   uint32 // lost the round (base; the streak bonus stacks on top)
+	lossStreak2 uint32 // 2 consecutive round losses
+	lossStreak3 uint32 // 3+ consecutive round losses
+	firstBlood  uint32 // got the round's first cross-team kill (tracked via Match.firstBlood, awarded in endFight)
+}
+
+// defaultCSEvents is the standard ruleset (also what a non-custom CS match uses).
+func defaultCSEvents() csEvents {
+	return csEvents{
+		winRound: csWinRoundBonus, perKill: csKillBonus, lossRound: csLossRoundBonus,
+		lossStreak2: csLossStreak2, lossStreak3: csLossStreak3, firstBlood: csFirstBloodBonus,
+	}
+}
+
+// lossBonus is the loss-side round bonus for a team that just lost, given its consecutive-loss
 // streak (INCLUDING this round). The base loss bonus always applies; a 2- or 3-round losing streak
 // stacks its event bonus on top (the highest reached rung). NOTE: whether the streak REPLACES or
 // STACKS on the base loss bonus wasn't recoverable from the obfuscated client; we own the match
 // server, so this is our (stack, additive) choice per the user's "it adds the per-event amounts" —
 // tune here if a live buy-phase balance says otherwise.
-func csLossBonus(streak uint8) uint32 {
-	b := csLossRoundBonus
+func (e csEvents) lossBonus(streak uint8) uint32 {
+	b := e.lossRound
 	switch {
 	case streak >= 3:
-		b += csLossStreak3
+		b += e.lossStreak3
 	case streak == 2:
-		b += csLossStreak2
+		b += e.lossStreak2
 	}
 	return b
 }

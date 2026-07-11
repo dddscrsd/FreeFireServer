@@ -40,13 +40,19 @@ var csShopItems = []message.ShopItem{
 	{ItemID: 709, Price: 100, Filter: 4, Limitation: 2},  // mushroom (max 2/round)
 }
 
-// shopItemByID looks up a catalogue entry by its item id (the primary DataID the
-// client sends in a cmd 408 buy request).
-func shopItemByID(id uint32) (*message.ShopItem, bool) {
-	for i := range csShopItems {
-		if csShopItems[i].ItemID == id {
-			return &csShopItems[i], true
+// shopItemByIDIn looks up a catalogue entry by its item id (the primary DataID the client sends in a
+// cmd 408 buy request).
+func shopItemByIDIn(items []message.ShopItem, id uint32) (*message.ShopItem, bool) {
+	for i := range items {
+		if items[i].ItemID == id {
+			return &items[i], true
 		}
 	}
 	return nil, false
+}
+
+// shopItemByID validates a buy against THIS match's catalogue — the room's custom allow-list when set
+// (a host-banned gun is absent, so the buy is rejected), else the default package catalogue.
+func (m *Match) shopItemByID(id uint32) (*message.ShopItem, bool) {
+	return shopItemByIDIn(m.settings.shopCatalogue(), id)
 }

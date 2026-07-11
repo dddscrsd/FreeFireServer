@@ -21,18 +21,20 @@ const (
 	bodyChest uint8 = 2
 )
 
-// equipMaxDur is each armor DataID's full durability. Our shop stocks vest 302/303 + helmet 305 (see
-// purchase.go armorSlot); values from the reference EQUIP_MAX_DURABILITY.
+// equipMaxDur is each armor DataID's full durability. The default shop stocks vest 302/303 + helmet
+// 305 (see purchase.go armorSlot); a custom room's advanced shop can also stock lvl4 (309/310). lvl4
+// values extrapolate the tier progression — the exact number only sets the bar's drain rate (the
+// client owns the actual HP reduction), not correctness.
 var equipMaxDur = map[uint32]uint16{
-	301: 120, 302: 220, 303: 300, // vest lvl1 / lvl2 / lvl3
-	304: 120, 305: 220, 306: 300, // helmet lvl1 / lvl2 / lvl3
+	301: 120, 302: 220, 303: 300, 309: 400, // vest lvl1 / lvl2 / lvl3 / lvl4
+	304: 120, 305: 220, 306: 300, 310: 400, // helmet lvl1 / lvl2 / lvl3 / lvl4
 }
 
 // armorReduction is the fraction of HP damage each piece absorbs — used to back the absorbed amount
 // out of the net damage for the durability drop (the client owns the actual HP reduction).
 var armorReduction = map[uint32]float64{
-	301: 0.25, 302: 0.35, 303: 0.45, // vest
-	304: 0.30, 305: 0.40, 306: 0.50, // helmet
+	301: 0.25, 302: 0.35, 303: 0.45, 309: 0.55, // vest
+	304: 0.30, 305: 0.40, 306: 0.50, 310: 0.55, // helmet
 }
 
 // equipArmor records a bought vest/helmet + seeds its durability to full.

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"libmadoka/match-server/message"
 )
 
 // matchSettings is the per-match CS config. Defaults are the standard ruleset (the package consts /
@@ -36,10 +38,30 @@ type matchSettings struct {
 	// server can't enforce. 0 => a normal (non-custom) match, i.e. vanilla rules.
 	roomSetting  uint32 // ECustomRoomSetting  (GPKHLEAADHL)
 	roomSetting2 uint32 // ECustomRoomSetting2 (OJIHIKIAFAI)
+
+	// shopItems is the per-match buy-phase catalogue for an ADVANCED custom room (the host's allowed
+	// guns + prices, decoded from cs_advanced_setting lobby-side). nil => use the package csShopItems
+	// (default CS + simple-mode rooms). See shopCatalogue.
+	shopItems []message.ShopItem
+	// events are the CS economy event bonuses. Defaults = the economy.go consts; an advanced room
+	// can override them (once RoomCreateCSEco.csv is captured — see src/tcp/csadvanced.js ECO_STEP).
+	events csEvents
 }
 
 func defaultMatchSettings() matchSettings {
-	return matchSettings{maxRound: maxRound, roundsToWin: roundsToWin, baseCoins: csRoundBaseCoins, maxHP: maxHP}
+	return matchSettings{
+		maxRound: maxRound, roundsToWin: roundsToWin, baseCoins: csRoundBaseCoins, maxHP: maxHP,
+		events: defaultCSEvents(),
+	}
+}
+
+// shopCatalogue is the buy-phase item list for this match: the room's custom allow-list when set,
+// else the default package catalogue (csShopItems).
+func (s matchSettings) shopCatalogue() []message.ShopItem {
+	if s.shopItems != nil {
+		return s.shopItems
+	}
+	return csShopItems
 }
 
 // wireSettings mirrors the JSON the lobby writes to match:<id>:settings.
@@ -52,6 +74,30 @@ type wireSettings struct {
 	RoomSetting2 uint32          `json:"room_setting2"` // raw ECustomRoomSetting2 bitfield
 	SpeedMul     float64         `json:"speed_mul"`     // move-speed multiplier (1.0/0.5/1.25/2.0); 0 = default
 	JumpMul      float64         `json:"jump_mul"`      // jump-height multiplier (1.0/2.0/4.0); 0 = default
+
+	ShopItems []wireShopItem `json:"shop_items"` // advanced-room custom shop; absent => package catalogue
+	Events    *wireEvents    `json:"events"`     // pointer so absent (nil) is distinct from all-zero
+}
+
+// wireShopItem is one advanced-room shop entry as decoded by the lobby (src/tcp/csadvanced.js).
+type wireShopItem struct {
+	ItemID     uint32 `json:"item_id"`
+	Price      uint32 `json:"price"`
+	Filter     byte   `json:"filter"`
+	Limitation byte   `json:"limitation"`
+	Bonus      bool   `json:"bonus"`
+	Ammo       uint32 `json:"ammo"`       // weapon ammo DataID (0 for non-weapons)
+	SlotKind   string `json:"slot_kind"`  // loadout placement class (see message.ShopItem.SlotKind)
+}
+
+// wireEvents overrides the CS economy event bonuses. Absent (nil) keeps the economy.go consts.
+type wireEvents struct {
+	WinRound    uint32 `json:"win_round"`
+	PerKill     uint32 `json:"per_kill"`
+	LossRound   uint32 `json:"loss_round"`
+	LossStreak2 uint32 `json:"loss_streak2"`
+	LossStreak3 uint32 `json:"loss_streak3"`
+	FirstBlood  uint32 `json:"first_blood"`
 }
 
 // loadMatchSettings seeds m.settings with the defaults, then (if the bus is up and this is a real
@@ -102,6 +148,26 @@ func (m *Match) loadMatchSettings(mid uint64) {
 			m.settings.jumpScale = v
 		}
 	}
-	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d maxHP=%d noLoadout=%t unlimitedAmmo=%t speed=%d jump=%d roomSetting=0x%x/0x%x economy=%v",
-		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.maxHP, m.settings.noLoadout, m.settings.unlimitedAmmo, m.settings.speedScale, m.settings.jumpScale, m.settings.roomSetting, m.settings.roomSetting2, m.settings.baseCoins)
+	// Advanced-room custom shop: replace the whole catalogue (a gun the host banned is simply absent,
+	// so both cmd 407 and the buy validation drop it). The lobby already filtered out items the match
+	// server can't place, so every entry carries a usable SlotKind.
+	if len(w.ShopItems) > 0 {
+		out := make([]message.ShopItem, 0, len(w.ShopItems))
+		for _, it := range w.ShopItems {
+			out = append(out, message.ShopItem{
+				ItemID: it.ItemID, Price: it.Price, Filter: it.Filter,
+				Limitation: it.Limitation, Bonus: it.Bonus,
+				SlotKind: it.SlotKind, Ammo: it.Ammo,
+			})
+		}
+		m.settings.shopItems = out
+	}
+	if w.Events != nil {
+		m.settings.events = csEvents{
+			winRound: w.Events.WinRound, perKill: w.Events.PerKill, lossRound: w.Events.LossRound,
+			lossStreak2: w.Events.LossStreak2, lossStreak3: w.Events.LossStreak3, firstBlood: w.Events.FirstBlood,
+		}
+	}
+	log.Printf("[mm-udp] match %d custom-room settings: maxRound=%d roundsToWin=%d maxHP=%d noLoadout=%t unlimitedAmmo=%t speed=%d jump=%d roomSetting=0x%x/0x%x economy=%v shopItems=%d events=%+v",
+		mid, m.settings.maxRound, m.settings.roundsToWin, m.settings.maxHP, m.settings.noLoadout, m.settings.unlimitedAmmo, m.settings.speedScale, m.settings.jumpScale, m.settings.roomSetting, m.settings.roomSetting2, m.settings.baseCoins, len(m.settings.shopItems), m.settings.events)
 }

@@ -176,6 +176,9 @@ func (m *Match) creditDeath(victim, killer uint32) {
 	m.deaths[victim]++
 	if killer != 0 && m.teamOf(killer) != m.teamOf(victim) {
 		m.kills[killer]++
+		if m.firstBlood == 0 {
+			m.firstBlood = killer // first cross-team kill of the round -> the CS first-blood bonus (awarded in endFight)
+		}
 		if ks := m.sessionByEntity(killer); ks != nil {
 			ks.roundKills.Add(1)
 		}

@@ -1,0 +1,9 @@
+indexid,varname,comment,key,min,max,default,step,open,eventkey
+序号(注意从151开始),参数,注释,本地化,最小值,最大值,默认值,间隔,是否开放,EventLog用的KEY（用于Log生成）
+151,CS_PhasePrepareTime,购买时间,购买时间,5,50,22,1,false,phase_prepare_time
+152,CS_GainCashWinning,胜利方金额,T_27_Z_R__WIN_ECONOMY,0,5000,500,50,true,gain_cash_winning
+153,CS_GainCashKilling,击杀奖励,T_27_Z_R_KILL_ECONOMY,0,5000,200,50,true,gain_cash_killing
+154,CS_GainCashLosing,失败方金额,T_27_Z_R_LOSE_ECONOMY,0,5000,200,50,true,gain_cash_losing
+155,CS_GainCashLosingStreak_2,2连败补偿,T_27_Z_R_DUOLOSE_ECONOMY,0,5000,900,50,true,gain_cash_losing_streak_2
+156,CS_GainCashLosingStreak_3,3连败补偿,T_27_Z_R_TRDLOSE_ECONOMY,0,5000,1500,50,true,gain_cash_losing_streak_3
+157,CS_FirstBloodBonus,一血奖励,T_27_Z_R_FSTBLOOD,0,5000,100,50,true,first_blood_bonus
