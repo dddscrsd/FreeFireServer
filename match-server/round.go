@@ -54,6 +54,7 @@ func (m *Match) matchEnd() {
 			fmt.Sprintf("cmd=103 MatchEnd rank=%d %s ent=%#x final=%d-%d",
 				rank, result, p.entityID, m.teamScore[0], m.teamScore[1]))
 	}
+	m.publishResult() // durable settlement (match.result / match.ended) to the bus, if enabled
 }
 
 // yawByte encodes a horizontal facing vector as the cmd 388 yaw byte (0..255 = 0..360°,

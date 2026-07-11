@@ -41,7 +41,7 @@ func (s *session) stepEP(now time.Time) {
 		return // dead / knocked -> hold the buffer, don't drain
 	}
 	hp := m.hp[s.entityID]
-	if hp == 0 || hp >= maxHP {
+	if hp == 0 || hp >= m.settings.maxHP {
 		return
 	}
 	steps := int(now.Sub(s.epLast) / epInterval)
@@ -53,8 +53,8 @@ func (s *session) stepEP(now time.Time) {
 	if gain > s.ep {
 		gain = s.ep
 	}
-	if hp+gain > maxHP {
-		gain = maxHP - hp
+	if hp+gain > m.settings.maxHP {
+		gain = m.settings.maxHP - hp
 	}
 	if gain == 0 {
 		return

@@ -32,6 +32,8 @@ type Match struct {
 	// Shared world state (moved off the session in Step 4a — the whole match sees ONE of each).
 	round      int               // 1-based CS round
 	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
+	lossStreak [2]uint8          // consecutive rounds LOST per team (drives the CS loss-bonus ladder)
+	settings   matchSettings     // per-match CS config (round count / economy); defaults + custom-room overrides
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
 	arena      csArena           // spawn city for the current round (re-picked each round)
@@ -234,8 +236,9 @@ func (m *Match) removePlayer(s *session) {
 // draw the zone, and start the match loop. m.arena/round/bot are the match's — set once here. Later
 // players (Step 5b) are admitted onto the already-running loop instead of running this.
 func (m *Match) admitFirst(s *session) {
+	m.loadMatchSettings(s.player.MatchID) // custom-room round count / economy (or defaults) — before the GRI/round setup
 	m.setupMatch(s)
-	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 LGIGCGIDOKP result=0")
+	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0, m.settings.roomSetting, m.settings.roomSetting2), "cmd=100 LGIGCGIDOKP result=0")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()),
 		fmt.Sprintf("cmd=101 GKBDLJFGGMI acc=%d ent=%d %q", s.player.AccountID, s.player.EntityID, s.player.Name))
 
@@ -246,6 +249,9 @@ func (m *Match) admitFirst(s *session) {
 	}
 
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
+	s.sendDataLog(packet.CmdSyncRegionActivities, message.SyncRegionActivitiesDefault(),
+		"cmd=176 SYNC_REGION_ACTIVITIES (DEFAULT) — trigger dynamic-prefab visibility (jump pads/boxes)")
+	s.sendData(packet.CmdInGameChat, message.SendInGameMessages([]string{"Apenas testando umas coisas aqui"}, "System"))
 	s.broadcastZone()      // draw the safe zone at the NEW city now that the player joined
 	m.broadcastZoneIndex() // name that city in the round-intro UI (cmd 457 per-player zone index)
 	s.startCSMatch()
@@ -291,7 +297,7 @@ func (m *Match) admitLater(s *session) {
 	m.addPlayer(s)
 	s.player.SpawnPos, s.player.SpawnFace = m.arena.spawnFor(s.faction)
 	s.playerPos = s.player.SpawnPos
-	m.hp[s.entityID] = maxHP
+	m.hp[s.entityID] = m.settings.maxHP
 	m.life[s.entityID] = lifeAlive
 
 	// The bot was only a 1-human filler; a 2nd human retires it so the humans face each other (§2).
@@ -299,7 +305,7 @@ func (m *Match) admitLater(s *session) {
 		m.retireBot()
 	}
 
-	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0), "cmd=100 join res (2nd+ player)")
+	s.sendDataLog(packet.CmdJoinMatchRes, message.JoinMatchRes(0, m.settings.roomSetting, m.settings.roomSetting2), "cmd=100 join res (2nd+ player)")
 	s.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(s.player, m.serverTick()), // the joiner's OWN entity FIRST (client adopts the first as its local player)
 		fmt.Sprintf("cmd=101 self ent=%d %q", s.player.EntityID, s.player.Name))
 	for _, p := range m.players {
@@ -320,6 +326,8 @@ func (m *Match) admitLater(s *session) {
 		}
 	}
 	s.sendDataLog(packet.CmdJoinMatchFinished, message.JoinMatchFinished(), "cmd=130 JoinMatchFinished")
+	s.sendDataLog(packet.CmdSyncRegionActivities, message.SyncRegionActivitiesDefault(),
+		"cmd=176 SYNC_REGION_ACTIVITIES (DEFAULT) — trigger dynamic-prefab visibility (jump pads/boxes)")
 
 	for _, p := range m.players { // every already-present human learns the joiner
 		if p != s {
@@ -353,7 +361,7 @@ func (s *session) startCSMatch() {
 func (m *Match) run() {
 	defer matchManager.reap(m) // remove this match from the registry when the loop exits
 	s := m.s
-	coins := uint32(startingCoins)
+	coins := csStartingCoins(m.settings.baseCoins) // wallet seed = economy table[0] (default 500)
 	if cfg.unlimitedMoneyTest {
 		coins = 9999
 	}
@@ -428,11 +436,11 @@ func (m *Match) stream() {
 	// phase (fixed deadline), so it doesn't re-fire the client's phase-change handler each tick.
 	state, stateDeadline := m.matchState()
 	s.sendVar(packet.CmdPRISync, m.priPayload(), 1)
-	s.sendVar(packet.CmdGRISync, message.CSGRIInit(maxRound, uint8(m.round-1)), 1) // fields 1,2 (round config)
-	s.sendVar(packet.CmdGRISync, message.CSGRIMatchState(state, stateDeadline), 1) // field 5 (waiting/cancel overlay)
+	s.sendVar(packet.CmdGRISync, message.CSGRIInit(m.settings.maxRound, uint8(m.round-1)), 1) // fields 1,2 (round config)
+	s.sendVar(packet.CmdGRISync, message.CSGRIMatchState(state, stateDeadline), 1)            // field 5 (waiting/cancel overlay)
 	s.sendVar(packet.CmdGRISync, message.CSGRIPhase(phase, param), 1)
 	point := 0
-	if m.teamScore[0] == roundsToWin-1 || m.teamScore[1] == roundsToWin-1 {
+	if m.teamScore[0] == m.settings.roundsToWin-1 || m.teamScore[1] == m.settings.roundsToWin-1 {
 		point = 1 // next round is the decider
 	}
 	s.sendVar(packet.CmdGRISync, message.CSGRIMatchPoint(uint8(point)), 1)
@@ -442,7 +450,12 @@ func (m *Match) stream() {
 // tick. It is SendUnreliable + plaintext (no per-connection seq), so the same packet fans to all.
 // Replaces serverTimeLoop.
 func (m *Match) streamClock() {
-	tick := uint32(time.Since(m.matchStart).Seconds() * 30)
+	// The client's CS server clock is CurrentServerTime = FixedDeltaTime × (localTick − anchor)
+	// (KEPDHPAAHGP::OLAPLOIAMKM @0x1b38390), and cmd 1000 re-anchors it to THIS tick. So the tick MUST
+	// use the same scale as the cmd-101 anchor (serverTick = seconds / clientFixedDelta ≈ ×30.303) — a
+	// bare ×30 makes the client clock run ~1% slow, so its interpolated SafeZone circle lags behind our
+	// real-time damage radius and the player takes damage while still visibly inside the zone.
+	tick := uint32(time.Since(m.matchStart).Seconds() / clientFixedDelta)
 	pkt := &packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdSyncServerTime, Flags: 0, Payload: message.SyncServerTime(tick)}
 	for _, p := range m.players {
 		if p.out != nil {
@@ -641,7 +654,7 @@ func (m *Match) enterCancel(now time.Time) {
 func (m *Match) spawnFallbackBot() {
 	m.botEntity = botEntityID
 	m.bot = botPlayer(m.s.player, m.botEntity)
-	m.hp[m.botEntity] = maxHP
+	m.hp[m.botEntity] = m.settings.maxHP
 	m.life[m.botEntity] = lifeAlive
 	m.broadcastData(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, m.serverTick()),
 		fmt.Sprintf("cmd=101 BOT fallback ent=%#x (MATCH_BOT: no players found)", m.botEntity))
@@ -746,20 +759,27 @@ func (m *Match) endFight(now time.Time) {
 		winnerTeam = enemyTeamID
 		m.teamScore[1]++
 	}
-	// Per-player round coins: each player earns off THEIR OWN kills + a round bonus, plus a win
-	// bonus for the WINNING team's members (was m.s-only, so only player 1 got paid).
+	// Update team loss streaks (winner resets, loser increments) BEFORE computing the loss ladder.
+	winIdx := int(winnerTeam) - 1
+	m.lossStreak[winIdx] = 0
+	m.lossStreak[1-winIdx]++
+	// Per-player round coins — the REAL CS economy (economy.go), replacing the old flat formula:
+	// running balance += base[round] + a win/loss event (loss stacks with the team's streak) +
+	// per-kill. base[round] holds 3000 from round 7 on. (First-blood bonus: TODO, not tracked yet.)
+	base := csRoundIncome(m.round, m.settings.baseCoins)
 	for _, p := range m.players {
-		aw := 500 * p.roundKills.Swap(0)
-		aw += 500 * (uint32(m.round) + 1)
+		aw := base + csKillBonus*p.roundKills.Swap(0)
 		if p.team == winnerTeam {
-			aw += 500 // win bonus
+			aw += csWinRoundBonus
+		} else {
+			aw += csLossBonus(m.lossStreak[p.team-1])
 		}
 		p.coins += aw
 		p.award = aw
 	}
 	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d)", m.round, winnerTeam, m.teamScore[0], m.teamScore[1])
 
-	if m.teamScore[0] >= roundsToWin || m.teamScore[1] >= roundsToWin || m.round >= maxRound {
+	if m.teamScore[0] >= m.settings.roundsToWin || m.teamScore[1] >= m.settings.roundsToWin || m.round >= int(m.settings.maxRound) {
 		m.matchWon = localWon
 		m.winnerTeam = winnerTeam                    // the per-player cmd 103 rank reads this so each side gets its OWN win/lose
 		m.enter(now, phMatchEndPause, matchEndPause) // pause on the final kill, then cmd 103

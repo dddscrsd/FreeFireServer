@@ -15,14 +15,34 @@
 
 const net = require('net');
 const logger = require('../logger');
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { lookup } = require('../protocol/protos');
 const { CMD, INIT_ACK, decrypt, parseClientFrames, encodeServerFrame } = require('./framing');
 const tcpRouter = require('./router');
 const matchmaker = require('./matchmaker');
+const rooms = require('./rooms');
+const { getBus } = require('../bus/instance');
+const { Bus } = require('../bus');
 
 // account uid -> { socket, account, region, lastSeen }
 const sessions = new Map();
+
+// Cross-layer PRESENCE: while a client's notification channel is connected we write
+// presence:<uid> = this node to Redis (TTL-based) so OTHER processes (the HTTP tier,
+// the matchmaker) can tell who is online and where. Refreshed on a heartbeat so a
+// crashed gateway's keys expire; cleared on disconnect. Best-effort — a Redis blip
+// never touches the socket path.
+const PRESENCE_TTL_SEC = 45;
+const PRESENCE_REFRESH_MS = 20000;
+
+function markOnline(uid) {
+  const bus = getBus();
+  if (bus) bus.setPresence(uid, PRESENCE_TTL_SEC).catch((e) => logger.warn(`[tcp] presence set uid=${uid}: ${e.message}`));
+}
+function markOffline(uid) {
+  const bus = getBus();
+  if (bus) bus.clearPresence(uid).catch((e) => logger.warn(`[tcp] presence clear uid=${uid}: ${e.message}`));
+}
 
 function register(entry) {
   const prev = sessions.get(entry.account.uid);
@@ -39,31 +59,41 @@ function handleConnection(socket) {
 
   let buf = Buffer.alloc(0);
   let entry = null; // set once authenticated
+  // handleFrame awaits the DB on AUTH, so serialise per-connection processing to
+  // a promise chain — otherwise a second 'data' chunk could interleave reads and
+  // writes of buf/entry while the first is awaiting.
+  let queue = Promise.resolve();
 
   socket.on('data', (chunk) => {
-    buf = Buffer.concat([buf, chunk]);
-    let parsed;
-    try {
-      parsed = parseClientFrames(buf);
-    } catch (err) {
-      logger.error(`[tcp] frame parse error from ${peer}: ${err.message}`);
-      socket.destroy();
-      return;
-    }
-    buf = parsed.rest;
-    for (const f of parsed.frames) {
-      try {
-        entry = handleFrame(socket, f, entry, peer) || entry;
-      } catch (err) {
-        logger.error(`[tcp] handler error (cmd=${f.cmd}) from ${peer}: ${err.stack || err}`);
-      }
-    }
+    queue = queue
+      .then(async () => {
+        buf = Buffer.concat([buf, chunk]);
+        let parsed;
+        try {
+          parsed = parseClientFrames(buf);
+        } catch (err) {
+          logger.error(`[tcp] frame parse error from ${peer}: ${err.message}`);
+          socket.destroy();
+          return;
+        }
+        buf = parsed.rest;
+        for (const f of parsed.frames) {
+          try {
+            entry = (await handleFrame(socket, f, entry, peer)) || entry;
+          } catch (err) {
+            logger.error(`[tcp] handler error (cmd=${f.cmd}) from ${peer}: ${err.stack || err}`);
+          }
+        }
+      })
+      .catch((err) => logger.error(`[tcp] data processing error ${peer}: ${err.stack || err}`));
   });
 
   socket.on('close', () => {
     if (entry && sessions.get(entry.account.uid) && sessions.get(entry.account.uid).socket === socket) {
       sessions.delete(entry.account.uid);
       matchmaker.cancel(entry.account.uid);
+      rooms.handleDisconnect(entry.account.uid); // leave/dismiss any custom room + notify survivors
+      markOffline(entry.account.uid); // clear cross-layer presence
       logger.info(`[tcp] disconnected uid=${entry.account.uid} (${peer})`);
     } else {
       logger.info(`[tcp] disconnected ${entry ? 'uid=' + entry.account.uid + ' (stale) ' : '(unauth) '}${peer}`);
@@ -73,7 +103,7 @@ function handleConnection(socket) {
 }
 
 // Returns the (new) session entry when auth happens, else undefined.
-function handleFrame(socket, f, entry, peer) {
+async function handleFrame(socket, f, entry, peer) {
   // Heartbeat: echo a bare 0x02 so the client's 180s liveness timer resets.
   if (f.cmd === CMD.HEARTBEAT) {
     socket.write(INIT_ACK);
@@ -91,7 +121,7 @@ function handleFrame(socket, f, entry, peer) {
       socket.destroy();
       return;
     }
-    const account = token ? player.getByToken(token) : null;
+    const account = token ? await getRepo().getByToken(token) : null;
     if (!account) {
       logger.warn(`[tcp] ${peer}: unknown/expired token -> closing`);
       socket.destroy();
@@ -99,6 +129,7 @@ function handleFrame(socket, f, entry, peer) {
     }
     const newEntry = { socket, account, region: f.region, lastSeen: Date.now() };
     register(newEntry);
+    markOnline(account.uid); // publish cross-layer presence
     socket.write(INIT_ACK); // server init ack
     logger.info(`[tcp] authenticated uid=${account.uid} nickname="${account.nickname || ''}" region=${f.region} (${peer})`);
     return newEntry;
@@ -210,6 +241,18 @@ function notify(accountId, protocol, cmd, typeName, obj, ret) {
   return true;
 }
 
+/**
+ * Send a MessageNotify with PRE-ENCODED `content` bytes to a connected account.
+ * Used by the cross-layer push relay (gw.push): the publisher already built the exact
+ * TCP proto, so the gateway just wraps + frames it. False if not connected here.
+ */
+function notifyRaw(accountId, protocol, cmd, content, ret) {
+  const entry = sessions.get(accountId);
+  if (!entry) return false;
+  sendNotify(entry.socket, accountId, protocol, ret || 0, cmd, content || Buffer.alloc(0));
+  return true;
+}
+
 /** Encode a protobuf object of `typeName` and push it as command `cmd`. */
 function push(accountId, cmd, typeName, obj) {
   const T = lookup(typeName);
@@ -237,8 +280,59 @@ function kick(accountId, reasonPayload) {
 function isOnline(accountId) { return sessions.has(accountId); }
 function onlineCount() { return sessions.size; }
 
+// Refresh presence TTL for every locally-connected account in one pipeline, so a
+// live gateway keeps its uids marked online while a crashed one lets them expire.
+function startPresenceHeartbeat() {
+  const t = setInterval(() => {
+    const bus = getBus();
+    if (!bus || !sessions.size) return;
+    bus.refreshPresence([...sessions.keys()], PRESENCE_TTL_SEC).catch(() => {});
+  }, PRESENCE_REFRESH_MS);
+  if (t.unref) t.unref();
+  return t;
+}
+
+// Subscribe to cross-layer bus events (best-effort; no-op if the bus is disabled):
+//  - gw.push: another layer built a MessageNotify for a specific account -> relay it
+//    if that client is connected HERE (broadcast across gateways + local filter).
+//  - player.updated: a profile changed (usually via the HTTP tier) -> refresh the
+//    cached account IN PLACE so the matchmaker's prepare_token carries fresh cosmetics
+//    (the queue holds the same object reference, so Object.assign reaches it).
+function startBusSubscriptions() {
+  const bus = getBus();
+  if (!bus) return;
+
+  bus.subscribePS('gw.push', (env) => {
+    const m = Bus.payload(env, 'GatewayPush');
+    const target = Number(m.target_account_id);
+    if (!sessions.has(target)) return; // another node owns this client (or it's offline)
+    const content = Buffer.isBuffer(m.content) ? m.content : Buffer.from(m.content || []);
+    notifyRaw(target, m.protocol, m.cmd, content);
+    logger.info(`[tcp] relay gw.push -> uid=${target} protocol=${m.protocol} cmd=${m.cmd} (${content.length}B)`);
+  });
+
+  bus.subscribePS('player.updated', async (env) => {
+    const m = Bus.payload(env, 'PlayerUpdated');
+    const uid = Number(m.account_id);
+    const entry = sessions.get(uid);
+    if (!entry) return; // not connected here
+    try {
+      const fresh = await getRepo().getById(uid);
+      if (fresh) {
+        Object.assign(entry.account, fresh); // mutate in place — the matchmaker holds this ref
+        logger.info(`[tcp] refreshed cached account uid=${uid} (player.updated)`);
+      }
+    } catch (e) {
+      logger.warn(`[tcp] player.updated refresh uid=${uid}: ${e.message}`);
+    }
+  });
+  logger.info('[tcp] bus subscriptions up (gw.push, player.updated)');
+}
+
 function createGateway() {
+  startPresenceHeartbeat();
+  startBusSubscriptions();
   return net.createServer(handleConnection);
 }
 
-module.exports = { createGateway, notify, push, pushRaw, kick, isOnline, onlineCount, sessions };
+module.exports = { createGateway, notify, notifyRaw, push, pushRaw, kick, isOnline, onlineCount, sessions };

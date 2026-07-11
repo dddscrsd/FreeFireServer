@@ -32,7 +32,16 @@ function enumValues(fqn) {
 
 module.exports = {
   EProtocol: enumValues('tcp.EProtocol.Proto'),
+  EFriend: enumValues('tcp.EFriend.Proto'),
+  EPresence: enumValues('tcp.EPresence.Proto'),
+  EStats: enumValues('tcp.EStats.Proto'),
   EMatchmaking: enumValues('tcp.EMatchmaking.Proto'),
   EMatchmakingErr: enumValues('tcp.EMatchmaking.ErrCode'),
+  // Custom rooms ride EProtocol.ROOM (14). The subcmd + error enums are BOTH nested under
+  // tcp.ERoom (NOT tcp.ECustomRoom — verified against the loaded protos). enumValues strips
+  // the doubled "Proto_Proto_"/"ErrCode_ErrCode_" generator prefix to clean names (CREATE=2,
+  // JOIN=3, ROOMINFO=12, CHANGE=13, MATCHMAKINGSUSS_NTF=16, SETREADY=24, …).
+  ECustomRoom: enumValues('tcp.ERoom.Proto'),
+  ECustomRoomErr: enumValues('tcp.ERoom.ErrCode'),
   enumValues
 };

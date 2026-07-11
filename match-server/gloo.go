@@ -130,7 +130,19 @@ func (s *session) removeWallByID(id uint32) {
 }
 
 // glooCount returns the (uid, count) of the player's gloo stack (data 1201), or (0,0).
+// It PREFERS the gloo equipped in SlotBuilding — the stack the client is actually holding —
+// so a placement decrements the SAME stack the client consumes. The merge-on-add invariant
+// (purchase + pickup) keeps gloo to a single stack, but preferring the equipped one keeps
+// placement correct even if a stray duplicate ever slips through (a bare map scan would
+// otherwise return one at random, decrement the wrong stack, and desync the count).
 func (s *session) glooCount() (uid, count uint32) {
+	for _, e := range s.equipment {
+		if e.Slot == message.SlotBuilding {
+			if it, ok := s.clientUIDs[e.Unique]; ok && it.data == glooDataID {
+				return e.Unique, it.count
+			}
+		}
+	}
 	for u, it := range s.clientUIDs {
 		if it.data == glooDataID {
 			return u, it.count
@@ -179,32 +191,45 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 		return
 	}
 
-	// 1) DEDUCT one, unless infinite. cmd 112 DropInventoryRes SETS the client's stack to
-	//    the new count (client removes the item at 0).
+	// 1) DEDUCT one, unless infinite. UnlimitedAmmo (room_setting bit 0x2) covers gloo too: the
+	//    client already gives guns infinite ammo, but gloo walls are server-tracked, so we must
+	//    also skip the deduction here or the wall count still drains. cmd 112 DropInventoryRes SETS
+	//    the client's stack to the new count (client removes the item at 0).
+	infiniteGloo := cfg.infiniteGloo || s.match.settings.unlimitedAmmo
 	var autoSwitch uint32 // if the last gloo was thrown, the weapon to auto-switch the placer back to
-	if !cfg.infiniteGloo {
+	if !infiniteGloo {
 		newCount := glooCount - 1
 		if newCount == 0 {
 			delete(s.clientUIDs, glooUID)
 			s.clearEquip(message.SlotBuilding) // free slot 13
-			// No gloo walls left — plan to auto-switch the placer back to the weapon held before the gloo
-			// (the reference does this so the player isn't left holding an empty Building slot), but emit it
-			// AFTER the cmd 112 consume below so it overrides the client's own switch-to-fists on removal.
-			if s.heldBeforeGloo != 0 {
-				if _, ok := s.clientUIDs[s.heldBeforeGloo]; ok {
-					autoSwitch = s.heldBeforeGloo
-					s.itemOnHand = s.heldBeforeGloo
-				}
-				s.heldBeforeGloo = 0
+			// No gloo walls left — auto-switch the placer back to a real weapon so they aren't left
+			// holding the now-empty Building slot (which the client would otherwise resolve to fists).
+			// Prefer the gun held right before the gloo; if that was never captured or has since been
+			// dropped, fall back to their best remaining weapon. Emitted AFTER the cmd 112 consume
+			// below so it overrides the client's own switch-to-fists on removal.
+			target := s.heldBeforeGloo
+			if !s.isWeaponUID(target) { // 0 (never captured), dropped, or somehow a non-weapon
+				target = s.bestWeaponUID()
 			}
+			if target != 0 {
+				autoSwitch = target
+				s.itemOnHand = target
+			}
+			s.heldBeforeGloo = 0
 		} else {
 			it := s.clientUIDs[glooUID]
 			it.count = newCount
 			s.clientUIDs[glooUID] = it
 		}
-		out = append(out, outPkt{packet.CmdDropInventory,
+		// cmd 112 (DropInventoryRes) carries NO entity id -> the client applies it to its LOCAL
+		// inventory, so it MUST go ONLY to the thrower. Broadcasting it (as this did) desynced any
+		// OTHER player who happened to hold an item with the SAME unique as this gloo — item uniques
+		// are per-session (nextUID), so they collide across players, and the collided item got set
+		// to the gloo's new count / removed. Sent before the broadcast below so the thrower still
+		// sees the consume before the auto-switch (cmd 108) that overrides the empty-slot fists swap.
+		s.sendDataLog(packet.CmdDropInventory,
 			message.DropInventoryRes(glooUID, newCount, 0),
-			fmt.Sprintf("cmd=112 gloo consume uid=%d -> %d left", glooUID, newCount)})
+			fmt.Sprintf("cmd=112 gloo consume uid=%d -> %d left (thrower only)", glooUID, newCount))
 		if autoSwitch != 0 { // after the consume: switch the placer's hand back to their last weapon (all clients)
 			out = append(out, outPkt{packet.CmdChangeHeldItem,
 				message.ChangeInventoryOnHand(s.player.EntityID, autoSwitch),

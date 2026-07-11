@@ -1,0 +1,245 @@
+# Full stack: Traefik edge + the Node tier as four independent services + the Go
+# match instance + Postgres/Redis backing. Domains, secrets and DATABASE_URL come
+# from a .env next to this file (see .env.example). On the VPS, CI pushes images to
+# GHCR and this pulls them; locally, `docker compose up --build` builds from source.
+name: freefire
+
+# Shared config for the four Node services. Each overrides `command` + `labels`.
+x-node: &node
+  image: ghcr.io/foices/ff-node:latest
+  build:
+    context: .
+    dockerfile: docker/node.Dockerfile
+  restart: unless-stopped
+  environment:
+    NODE_ENV: production
+    REDIS_URL: redis://redis:6379
+    DATABASE_URL: ${DATABASE_URL:-}
+    MATCH_JWT_SECRET: ${MATCH_JWT_SECRET:?set MATCH_JWT_SECRET in .env}
+    SERVER_URL: ${SERVER_URL:-}
+    LIVE_DOMAIN: ${LIVE_DOMAIN:-}
+    LOGIN_DOMAIN: ${LOGIN_DOMAIN:-}
+    MAIN_DOMAIN: ${MAIN_DOMAIN:-}
+    TCP_PUBLIC_HOST: ${TCP_PUBLIC_HOST:-}
+    MATCH_PUBLIC_HOST: ${MATCH_PUBLIC_HOST:-}
+    # Match server port the login/matchmaker ADVERTISE to the client
+    # (config.protocol.gameServerPort in GetLoginData + the matchmaker's server_addr);
+    # MUST equal the match service's GAME_SERVER_PORT or the client dials a dead port.
+    GAME_SERVER_PORT: ${GAME_SERVER_PORT:-10100}
+    # Internal listen ports (config.ports.*). Traefik targets these same values.
+    LIVE_PORT: ${LIVE_PORT:-3000}
+    LOGIN_PORT: ${LOGIN_PORT:-3001}
+    MAIN_PORT: ${MAIN_PORT:-3002}
+    TCP_PORT: ${TCP_PORT:-10300}
+  depends_on: [redis]
+
+# Shared config for the two auth services (Discord-OAuth "fbconnect"). Each
+# overrides command + labels. Served over plain HTTP on the `web` entrypoint
+# because the auth domains are Cloudflare-PROXIED (CF terminates TLS and talks
+# HTTP to the origin) — the same as every other HTTP domain now. LOGIN_PORT comes
+# from AUTH_LOGIN_PORT so it doesn't collide with the game's LOGIN_PORT.
+x-auth: &auth
+  image: ghcr.io/foices/ff-auth:latest
+  build:
+    context: .
+    dockerfile: docker/auth.Dockerfile
+  restart: unless-stopped
+  environment:
+    NODE_ENV: production
+    TRUST_PROXY: "true"
+    CONNECT_PORT: ${CONNECT_PORT:-5000}
+    LOGIN_PORT: ${AUTH_LOGIN_PORT:-25565}
+    MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017}
+    DB_NAME: ${DB_NAME:-libmadoka_auth}
+    APP_ID: ${APP_ID:?set APP_ID in .env}
+    APP_SECRET: ${APP_SECRET:?set APP_SECRET in .env}
+    DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:?set DISCORD_CLIENT_ID in .env}
+    DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:?set DISCORD_CLIENT_SECRET in .env}
+    DISCORD_REDIRECT_URI: https://${AUTH_LOGIN_DOMAIN}/oauth/discord/callback
+    OAUTH_STATE_SECRET: ${OAUTH_STATE_SECRET:?set OAUTH_STATE_SECRET in .env}
+  depends_on: [mongo]
+
+services:
+  traefik:
+    image: traefik:v3.6
+    restart: unless-stopped
+    # Traefik's docker client otherwise negotiates an API version (1.24) older than
+    # the daemon accepts (min 1.40), so the provider fails and NO routers register
+    # (every request 404s). Pin it to a version the daemon supports.
+    environment:
+      DOCKER_API_VERSION: "1.40"
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      # Gateway listens on TCP_PORT (the notification-channel port handed to the
+      # client in GetLoginData); keep it in sync with the published port below.
+      - --entrypoints.gateway.address=:${TCP_PORT:-10300}
+      # ALL HTTP domains are Cloudflare-proxied: Cloudflare terminates TLS with its
+      # own trusted cert and talks HTTP to the origin ("Flexible" SSL), so Traefik
+      # serves plain HTTP and needs NO ACME/Let's Encrypt at all (no rate limits, no
+      # renewals). The gateway (TCP_PORT) and match (UDP) stay grey/direct —
+      # Cloudflare can't proxy raw TCP/UDP without Spectrum.
+    ports:
+      - "80:80"
+      - "${TCP_PORT:-10300}:${TCP_PORT:-10300}"   # TCP gateway (raw AES passthrough)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ff}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-freefire}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  live:
+    <<: *node
+    command: ["node", "src/servers/live.js"]
+    deploy:
+      replicas: ${LIVE_REPLICAS:-1}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.live.rule=Host(`${LIVE_DOMAIN}`)
+      - traefik.http.routers.live.entrypoints=web
+      - traefik.http.services.live.loadbalancer.server.port=${LIVE_PORT:-3000}
+
+  login:
+    <<: *node
+    command: ["node", "src/servers/login.js"]
+    deploy:
+      replicas: ${LOGIN_REPLICAS:-1}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.login.rule=Host(`${LOGIN_DOMAIN}`)
+      - traefik.http.routers.login.entrypoints=web
+      - traefik.http.services.login.loadbalancer.server.port=${LOGIN_PORT:-3001}
+
+  main:
+    <<: *node
+    command: ["node", "src/servers/main.js"]
+    deploy:
+      replicas: ${MAIN_REPLICAS:-1}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.main.rule=Host(`${MAIN_DOMAIN}`)
+      - traefik.http.routers.main.entrypoints=web
+      - traefik.http.services.main.loadbalancer.server.port=${MAIN_PORT:-3002}
+
+  # TCP gateway: raw AES socket (app-layer crypto, NOT TLS) → Traefik TCP passthrough
+  # on its own entrypoint. HostSNI(`*`) matches non-TLS TCP.
+  gateway:
+    <<: *node
+    command: ["node", "src/servers/tcp.js"]
+    deploy:
+      replicas: ${GATEWAY_REPLICAS:-1}
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.gateway.rule=HostSNI(`*`)
+      - traefik.tcp.routers.gateway.entrypoints=gateway
+      - traefik.tcp.services.gateway.loadbalancer.server.port=${TCP_PORT:-10300}
+
+  # Settlement worker — consumes stream:match.result (published by the match server at
+  # match end) and persists rewards/stats to Postgres via the idempotent match_results
+  # ledger. Not client-facing (no Traefik/ports). Scale with replicas: the shared
+  # consumer group splits the work. Requires DATABASE_URL.
+  settlement:
+    <<: *node
+    command: ["node", "src/servers/settlement.js"]
+    depends_on: [redis, postgres]
+
+  # Matchmaker service — processor of the shared Redis queue (every gateway feeds it).
+  # Forms matches, allocates a fleet instance, and pushes each SussNtf via gw.push.
+  # HA: replicas elect a leader via a Redis lease (mm:leader) — exactly one is ACTIVE and
+  # the rest stand by, taking over automatically on failure. Set MATCHMAKER_REPLICAS>=2
+  # for no-SPOF failover; the default 1 keeps single-instance behaviour.
+  matchmaker:
+    <<: *node
+    command: ["node", "src/servers/matchmaker.js"]
+    deploy:
+      replicas: ${MATCHMAKER_REPLICAS:-1}
+    depends_on: [redis, postgres]
+
+  # Match instance — addressed DIRECTLY by the client (allocated by the matchmaker),
+  # never behind Traefik. Scale into a fleet by adding match-2, match-3 … on other ports.
+  match:
+    image: ghcr.io/foices/ff-match:latest
+    build:
+      context: .
+      dockerfile: docker/match.Dockerfile
+    restart: unless-stopped
+    # -addr is the listen flag; drive it from GAME_SERVER_PORT — the SAME port the
+    # client is told to dial (GetLoginData / matchmaker), so the two can't drift.
+    # For a multi-process match fleet later, add match-2/3 each with its own
+    # `command: ["-addr", ":<port>"]` + matching published port.
+    command: ["-addr", ":${GAME_SERVER_PORT:-10100}"]
+    environment:
+      REDIS_URL: redis://redis:6379
+      NODE_ID: ${NODE_ID:-match-1}
+      MATCH_JWT_SECRET: ${MATCH_JWT_SECRET:?set MATCH_JWT_SECRET in .env}
+      # This instance's PUBLIC host:port (what the client dials). Empty => not registered
+      # in the fleet (the matchmaker uses its static address). Single instance: set it to
+      # MATCH_PUBLIC_HOST:GAME_SERVER_PORT.
+      MATCH_ADVERTISE: ${MATCH_ADVERTISE:-}
+    ports:
+      - "${GAME_SERVER_PORT:-10100}:${GAME_SERVER_PORT:-10100}/udp"
+    depends_on: [redis]
+
+  # Fleet member example — uncomment + copy per extra instance to scale match capacity.
+  # Each needs a UNIQUE published UDP port and a matching MATCH_ADVERTISE (same public
+  # host, that port). The matchmaker spreads matches across every REGISTERED instance;
+  # a whole match always stays on ONE instance.
+  # match-2:
+  #   image: ghcr.io/foices/ff-match:latest
+  #   build: { context: ., dockerfile: docker/match.Dockerfile }
+  #   restart: unless-stopped
+  #   command: ["-addr", ":10101"]
+  #   environment:
+  #     REDIS_URL: redis://redis:6379
+  #     NODE_ID: match-2
+  #     MATCH_JWT_SECRET: ${MATCH_JWT_SECRET:?set MATCH_JWT_SECRET in .env}
+  #     MATCH_ADVERTISE: ${MATCH_PUBLIC_HOST:-}:10101
+  #   ports:
+  #     - "10101:10101/udp"
+  #   depends_on: [redis]
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongodata:/data/db
+
+  # Discord-OAuth "fbconnect" auth server: connect (SDK/token API) + login (the
+  # browser dialog). HTTP on the `web` entrypoint; Cloudflare fronts them with TLS.
+  auth-connect:
+    <<: *auth
+    command: ["npm", "run", "start:connect"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authconnect.rule=Host(`${AUTH_CONNECT_DOMAIN}`)
+      - traefik.http.routers.authconnect.entrypoints=web
+      - traefik.http.services.authconnect.loadbalancer.server.port=${CONNECT_PORT:-5000}
+
+  auth-login:
+    <<: *auth
+    command: ["npm", "run", "start:login"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authlogin.rule=Host(`${AUTH_LOGIN_DOMAIN}`)
+      - traefik.http.routers.authlogin.entrypoints=web
+      - traefik.http.services.authlogin.loadbalancer.server.port=${AUTH_LOGIN_PORT:-25565}
+
+volumes:
+  pgdata:
+  redisdata:
+  mongodata:

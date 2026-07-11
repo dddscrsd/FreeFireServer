@@ -282,10 +282,12 @@ type PRIState struct {
 	Sighting           uint32 // IS_SIGHTING (field 12) — remote ADS/scoped pose
 	CurEP              byte
 	Damage             uint32
+	SpeedScale         uint16 // GAMEMODE_SPEEDSCALE (field 50), percent (mul*100); 0 = omit (default 1.0x)
+	JumpScale          uint16 // GAMEMODE_JUMPHEIGHTSCALE (field 52), percent (mul*100); 0 = omit
 }
 
 func PRIHPBlock(st PRIState) []byte {
-	return ReplicationBlock([]RepEntry{
+	entries := []RepEntry{
 		{RepU16, 0, uint64(st.CurHP)},     // CUR_HP
 		{RepU16, 1, uint64(st.MaxHP)},     // MAX_HP
 		{RepU64, 2, uint64(st.VestDur)},   // VEST_DURABILITY
@@ -325,7 +327,17 @@ func PRIHPBlock(st PRIState) []byte {
 		{RepU32, 36, 0},                     // THROW_KNIFE_PHASE
 		{RepU8, 37, 0},                      // TRAINING_ZONE_TYPE
 		{RepU8, 38, 0},
-	})
+	}
+	// Custom-room move-speed / jump-height multipliers (percent). Emitted ONLY when set — the client
+	// reads field 50/52 / 100 into PlayerAttributes (local + remote CS pawns); a 0 would freeze/kill
+	// movement, so a default (1.0x) match simply omits the fields and keeps the client's own scale.
+	if st.SpeedScale != 0 {
+		entries = append(entries, RepEntry{RepU16, 50, uint64(st.SpeedScale)}) // GAMEMODE_SPEEDSCALE
+	}
+	if st.JumpScale != 0 {
+		entries = append(entries, RepEntry{RepU16, 52, uint64(st.JumpScale)}) // GAMEMODE_JUMPHEIGHTSCALE
+	}
+	return ReplicationBlock(entries)
 }
 
 // PackScore packs a CS round-win pair into field 28's u16, FROM THE OWNING ENTITY'S

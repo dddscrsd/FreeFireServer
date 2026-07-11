@@ -175,6 +175,21 @@ func (s *session) trackItem(it lootItem) {
 	s.clientUIDs[it.unique] = it
 }
 
+// trackedByData returns the tracked stack (unique + item) for a DataID, ignoring the unique
+// `skip` (pass 0 to ignore none). Stackable consumables (gloo/medkit/grenade/ammo) MUST live
+// as a SINGLE stack per data: callers merge a repeat add into the existing stack instead of
+// allocating a second data=X item. Duplicate same-data stacks desync count-based use — e.g.
+// gloo's glooCount() would decrement one of the duplicates at random, hit 0 early, and clear
+// SlotBuilding while the player still holds walls.
+func (s *session) trackedByData(data, skip uint32) (uint32, lootItem, bool) {
+	for u, it := range s.clientUIDs {
+		if u != skip && it.data == data {
+			return u, it, true
+		}
+	}
+	return 0, lootItem{}, false
+}
+
 // removeTrackedItem fully removes the item with the given unique from the loadout: drops
 // it from s.weapons + blanks its slot if it is a weapon, else blanks its equipment slot if it
 // occupies one, untracks it, clears itemOnHand if held, and queues a cmd 327 so the client drops
@@ -401,7 +416,24 @@ func (s *session) handlePickup(p *packet.Packet) {
 			out = s.dropToGround(*dropped, pos, out)
 		}
 	} else {
-		// Non-weapon (consumable/ammo/gloo): additive stack, no slot displacement.
+		// Non-weapon (consumable/ammo/gloo). A STACKABLE consumable must stay a SINGLE stack:
+		// if the player already holds this data under another unique, FOLD that stack into the
+		// freshly-picked unique (which the client keeps, like the weapon path above) and drop
+		// the old one. Otherwise gloo/medkits split into duplicate data=X stacks, which desyncs
+		// count-based use — gloo's glooCount() would decrement one stack at random and clear
+		// SlotBuilding while walls remain. This also naturally stacks picked-up ammo.
+		if u, existing, dup := s.trackedByData(it.data, it.unique); dup {
+			it.count += existing.count
+			heldSlot, _, hadSlot := s.equipSlotOf(u) // the slot the old stack occupied (e.g. SlotBuilding)
+			wasHeld := s.itemOnHand == u
+			out = s.removeTrackedItem(u, out) // cmd 327 the old stack + free its slot/held state
+			if hadSlot {
+				s.setEquip(heldSlot, it.data, it.unique) // re-point that slot at the surviving stack
+			}
+			if wasHeld {
+				s.itemOnHand = it.unique
+			}
+		}
 		inv := []message.InvItem{{Unique: it.unique, Data: it.data, Count: it.count, Runtime: it.runtime}}
 		s.trackItem(it)
 		equip := append([]message.Equipment(nil), s.equipment...)

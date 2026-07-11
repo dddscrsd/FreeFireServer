@@ -1,0 +1,221 @@
+// Node client for the Redis event bus: durable Streams for commands, PubSub for
+// ephemeral signals, and uid->node presence keys. Mirrors match-server/bus/bus.go
+// over the same bus.Envelope contract. Binary protobuf rides in Redis as raw
+// bytes, so reads use ioredis Buffer-variant commands (xreadgroupBuffer /
+// messageBuffer) to avoid UTF-8 corruption.
+const Redis = require('ioredis');
+
+const { Envelope, encode, decode } = require('./proto');
+const logger = require('../logger');
+
+const STREAM_MAXLEN = 100000;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+class Bus {
+  /** @param {{url:string, source:string, node?:string}} opts */
+  constructor({ url, source, node }) {
+    if (!url) throw new Error('bus: url (REDIS_URL) is required');
+    if (!source) throw new Error('bus: source (this layer name) is required');
+    this.url = url;
+    this.source = source;
+    this.node = node || source;
+    this._conns = [];
+    this.pub = this._connect(); // shared connection for publish / presence
+  }
+
+  _connect() {
+    const conn = new Redis(this.url);
+    conn.on('error', (err) => logger.error(`[bus] redis: ${err.message}`));
+    this._conns.push(conn);
+    return conn;
+  }
+
+  _wrap(type, payloadType, obj) {
+    const payload = encode(payloadType, obj);
+    return Buffer.from(
+      Envelope.encode(
+        Envelope.create({ type, source: this.source, correlation_id: '', ts_unix_ms: Date.now(), payload })
+      ).finish()
+    );
+  }
+
+  /** Publish a DURABLE event to stream:<type> (XADD). */
+  publish(type, payloadType, obj) {
+    return this.pub.xadd('stream:' + type, 'MAXLEN', '~', STREAM_MAXLEN, '*', 'env', this._wrap(type, payloadType, obj));
+  }
+
+  /** Publish an EPHEMERAL event to ps:<type> (PUBLISH). */
+  publishPS(type, payloadType, obj) {
+    return this.pub.publish('ps:' + type, this._wrap(type, payloadType, obj));
+  }
+
+  /**
+   * Join <group> on stream:<type>. handler(env) runs per message; the message is
+   * XACKed on success and left PENDING (for redelivery) if handler throws, so
+   * handlers must be idempotent. Uses a dedicated blocking connection.
+   */
+  subscribeStream(type, group, consumer, handler) {
+    const stream = 'stream:' + type;
+    const conn = this._connect();
+    conn.xgroup('CREATE', stream, group, '0', 'MKSTREAM').catch((err) => {
+      if (!String(err.message || err).includes('BUSYGROUP')) logger.warn(`[bus] group ${stream}/${group}: ${err.message}`);
+    });
+    (async () => {
+      for (;;) {
+        if (conn.status === 'end') return;
+        let res;
+        try {
+          res = await conn.xreadgroupBuffer('GROUP', group, consumer, 'COUNT', 32, 'BLOCK', 5000, 'STREAMS', stream, '>');
+        } catch (err) {
+          if (conn.status === 'end') return;
+          logger.error(`[bus] xreadgroup ${stream}: ${err.message}`);
+          await sleep(1000);
+          continue;
+        }
+        if (!res) continue;
+        for (const [, messages] of res) {
+          for (const [idBuf, fields] of messages) {
+            const id = idBuf.toString();
+            const env = this._envFromFields(fields, stream);
+            if (!env) {
+              await conn.xack(stream, group, id);
+              continue;
+            }
+            try {
+              await handler(env);
+              await conn.xack(stream, group, id);
+            } catch (err) {
+              logger.error(`[bus] handler ${env.type}: ${err.message} (left pending)`);
+            }
+          }
+        }
+      }
+    })();
+    return conn;
+  }
+
+  /** Run handler(env) for each ephemeral message on ps:<type>. Lossy by nature. */
+  subscribePS(type, handler) {
+    const conn = this._connect();
+    conn.subscribe('ps:' + type).catch((err) => logger.error(`[bus] subscribe ${type}: ${err.message}`));
+    conn.on('messageBuffer', (_channel, message) => {
+      let env;
+      try {
+        env = Envelope.decode(message);
+      } catch (err) {
+        logger.error(`[bus] bad ps envelope ${type}: ${err.message}`);
+        return;
+      }
+      Promise.resolve(handler(env)).catch((err) => logger.error(`[bus] ps handler ${type}: ${err.message}`));
+    });
+    return conn;
+  }
+
+  _envFromFields(fields, stream) {
+    for (let i = 0; i + 1 < fields.length; i += 2) {
+      if (fields[i].toString() === 'env') {
+        try {
+          return Envelope.decode(fields[i + 1]);
+        } catch (err) {
+          logger.error(`[bus] bad envelope on ${stream}: ${err.message}`);
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  // presence: uid -> this node, with a TTL any layer can read to route a push
+  setPresence(accountId, ttlSec) {
+    return this.pub.set(`presence:${accountId}`, this.node, 'EX', ttlSec);
+  }
+
+  clearPresence(accountId) {
+    return this.pub.del(`presence:${accountId}`);
+  }
+
+  getNode(accountId) {
+    return this.pub.get(`presence:${accountId}`);
+  }
+
+  /** Batch presence lookup — returns { accountId: node } for the ONLINE ids only. */
+  async getNodes(accountIds) {
+    if (!accountIds || !accountIds.length) return {};
+    const vals = await this.pub.mget(accountIds.map((id) => `presence:${id}`));
+    const out = {};
+    accountIds.forEach((id, i) => { if (vals[i]) out[id] = vals[i]; });
+    return out;
+  }
+
+  /** Refresh the presence TTL for many accounts in one round-trip (pipeline). */
+  async refreshPresence(accountIds, ttlSec) {
+    if (!accountIds || !accountIds.length) return;
+    const pipe = this.pub.pipeline();
+    for (const id of accountIds) pipe.set(`presence:${id}`, this.node, 'EX', ttlSec);
+    await pipe.exec();
+  }
+
+  /**
+   * Fleet registry: the PUBLIC addresses of match servers that have heartbeated within
+   * maxAgeSec. Match instances ZADD themselves into "matchservers" (score = unix
+   * seconds; see the Go match-server); the matchmaker reads this to allocate whole
+   * matches across the fleet. Stale members are pruned each call.
+   */
+  async getMatchServers(maxAgeSec = 30) {
+    const cutoff = Math.floor(Date.now() / 1000) - maxAgeSec;
+    await this.pub.zremrangebyscore('matchservers', '-inf', '(' + cutoff); // drop stale (score < cutoff)
+    return this.pub.zrangebyscore('matchservers', cutoff, '+inf');
+  }
+
+  // Generic Redis helpers backing the SHARED matchmaker queue (a hash) + the global
+  // match-id counter. Kept generic so the matchmaker owns its own key conventions.
+  hset(key, field, val) { return this.pub.hset(key, field, val); }
+  hget(key, field) { return this.pub.hget(key, field); }
+  // Plain string key with a TTL — the room START handoff writes match:<id>:settings for the
+  // match server to read at match creation.
+  setKey(key, val, ttlSec) { return this.pub.set(key, val, 'EX', ttlSec); }
+  getKey(key) { return this.pub.get(key); }
+  hdel(key, ...fields) { return this.pub.hdel(key, ...fields); }
+  hgetall(key) { return this.pub.hgetall(key); }
+  hlen(key) { return this.pub.hlen(key); }
+  incr(key) { return this.pub.incr(key); }
+
+  // --- distributed lock (leader election) -----------------------------------
+  // A single-holder lease: SET key=token NX PX ttl succeeds for exactly one caller;
+  // the holder RENEWs (extends the TTL) and RELEASEs, both compare-and-set on the token
+  // (Lua so the check+act is atomic) so a caller can never renew/free a lock it has lost.
+  // Used by the matchmaker service to run N replicas with one ACTIVE processor + instant
+  // failover: if the holder dies the lease simply expires and a standby acquires it.
+
+  /** Acquire the lock iff free. Returns true if THIS token now holds it. */
+  async acquireLock(key, token, ttlMs) {
+    return (await this.pub.set(key, token, 'PX', ttlMs, 'NX')) === 'OK';
+  }
+
+  /** Extend the lease iff we still hold it (compare-and-set). Returns true if renewed. */
+  async renewLock(key, token, ttlMs) {
+    const r = await this.pub.eval(
+      "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end",
+      1, key, token, ttlMs);
+    return r === 1;
+  }
+
+  /** Release the lock iff we hold it (so a lost lock isn't stolen back). */
+  async releaseLock(key, token) {
+    const r = await this.pub.eval(
+      "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+      1, key, token);
+    return r === 1;
+  }
+
+  /** Decode an envelope's inner payload into a plain object of the given type. */
+  static payload(env, payloadType) {
+    return decode(payloadType, env.payload);
+  }
+
+  async close() {
+    await Promise.allSettled(this._conns.map((c) => c.quit().catch(() => c.disconnect())));
+  }
+}
+
+module.exports = { Bus, Envelope, encode, decode };

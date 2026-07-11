@@ -1,0 +1,101 @@
+name: build-deploy
+
+# Build a per-module image, push to GHCR, then have the VPS pull + restart.
+# Secrets required (repo settings → Secrets and variables → Actions):
+#   VPS_HOST, VPS_USER, VPS_SSH_KEY   — SSH into the OCI VPS
+# GITHUB_TOKEN (auto) pushes to ghcr.io/foices/*.
+on:
+  push:
+    branches: [main, feat/infra-migration]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: foices
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - image: ff-node
+            dockerfile: docker/node.Dockerfile
+          - image: ff-match
+            dockerfile: docker/match.Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}:latest
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only deploy from main. Feature-branch pushes just build (validates the images)
+    # without touching the VPS.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Pull + gated migrate + drained restart on the VPS
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          MATCH_DRAIN_SECONDS: ${{ vars.MATCH_DRAIN_SECONDS || '90' }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: MATCH_DRAIN_SECONDS
+          script: |
+            set -eo pipefail
+            cd /opt/freefire
+            docker compose pull
+
+            # --- MIGRATION GATE ---------------------------------------------------
+            # Bring up the data stores, then run forward-only migrations in a one-off
+            # container BEFORE any app service is recreated. `set -e` aborts the whole
+            # deploy if a migration fails — the running (old) stack is left untouched, so
+            # a bad schema change never takes the site down. Skipped when DATABASE_URL is
+            # unset (SQLite mode), since migrate.js is Postgres-only and would exit 1.
+            docker compose up -d postgres redis
+            DB_URL=$(grep -E '^DATABASE_URL=' .env 2>/dev/null | head -n1 | cut -d= -f2- || true)
+            if [ -n "$DB_URL" ]; then
+              echo "[deploy] running gated DB migrations…"
+              docker compose run --rm --no-deps matchmaker npm run migrate
+            else
+              echo "[deploy] DATABASE_URL unset — SQLite mode, skipping migrations"
+            fi
+
+            # --- ROLL STATELESS TIERS --------------------------------------------
+            # HTTP tiers + gateway + settlement + auth are stateless (repo + bus); recreate
+            # them straight onto the new images. Traefik load-balances replicas during the
+            # rolling swap.
+            docker compose up -d --remove-orphans \
+              traefik live login main gateway settlement auth-connect auth-login
+
+            # --- MATCH DRAIN ------------------------------------------------------
+            # Stop FORMING new matches (halt every matchmaker replica), give in-flight CS
+            # matches a grace window to finish, THEN swap the match instances (recreating
+            # them SIGTERM-kicks any stragglers to the lobby). New matches resume once the
+            # matchmaker comes back and re-elects a leader.
+            echo "[deploy] draining matches (${MATCH_DRAIN_SECONDS}s)…"
+            docker compose stop matchmaker
+            sleep "${MATCH_DRAIN_SECONDS}"
+            docker compose up -d match matchmaker
+
+            docker image prune -f

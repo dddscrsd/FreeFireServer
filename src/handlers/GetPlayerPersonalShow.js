@@ -9,15 +9,15 @@
 
 'use strict';
 
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 const { requireAccount, buildAccountInfoBasic, selectedProfile } = require('./_shared');
 
-function handleGetPlayerPersonalShow(reqObj, ctx) {
+async function handleGetPlayerPersonalShow(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
 
   const targetId = reqObj.account_id || 0;
-  const acc = targetId ? player.getById(targetId) || account : account;
+  const acc = targetId ? (await getRepo().getById(targetId)) || account : account;
 
   const res = {
     basic_info: buildAccountInfoBasic(acc),

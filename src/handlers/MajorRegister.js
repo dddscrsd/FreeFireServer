@@ -7,10 +7,10 @@
 
 'use strict';
 
-const player = require('../db/player');
+const { getRepo } = require('../db/repo');
 
-function handleMajorRegister(reqObj, ctx) {
-  const account = player.createFromLogin(reqObj);
+async function handleMajorRegister(reqObj, ctx) {
+  const account = await getRepo().createFromLogin(reqObj);
   ctx.logger.info(`[login] MajorRegister uid=${account.uid} open_id=${account.open_id}`);
   return {
     account_id: account.uid,

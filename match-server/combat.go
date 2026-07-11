@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"log"
 
+	"libmadoka/match-server/message"
 	"libmadoka/match-server/packet"
 )
 
@@ -22,23 +23,23 @@ func (m *Match) initHP() {
 	m.damage = map[uint32]uint32{}
 	m.rescues = map[uint32]*rescueState{}
 	for _, p := range m.players {
-		m.hp[p.entityID] = maxHP
+		m.hp[p.entityID] = m.settings.maxHP
 		m.life[p.entityID] = lifeAlive
 		p.playerPos = p.player.SpawnPos // seed the tracked pos to the spawn (before the first cmd 1001)
 	}
 	if m.botEntity != 0 {
-		m.hp[m.botEntity] = maxHP
+		m.hp[m.botEntity] = m.settings.maxHP
 		m.life[m.botEntity] = lifeAlive
 	}
 }
 
-// entityHP returns an entity's current HP (maxHP if untracked / not yet seeded). It reads the
-// match's shared HP map, so it is a Match method — any entity, human or bot, keyed by id.
+// entityHP returns an entity's current HP (the match's full HP if untracked / not yet seeded). It
+// reads the match's shared HP map, so it is a Match method — any entity, human or bot, keyed by id.
 func (m *Match) entityHP(entity uint32) uint16 {
 	if hp, ok := m.hp[entity]; ok {
 		return hp
 	}
-	return maxHP
+	return m.settings.maxHP
 }
 
 // handleTakeDamage handles cmd 106 (RUDP_TAKE_DAMAGE): the shooter's client reports a
@@ -80,9 +81,12 @@ func (s *session) handleChangeHeldItem(p *packet.Packet) {
 		return
 	}
 	unique := binary.LittleEndian.Uint32(p.Payload[4:])
-	// Remember the weapon held right before switching TO the gloo wall, so gloo.go can auto-switch back
-	// to it once the last wall is thrown (the reference does this so the player isn't left empty-handed).
-	if s.isGloo(unique) && !s.isGloo(s.itemOnHand) {
+	// Remember the GUN held right before switching TO the gloo wall, so gloo.go can auto-switch back
+	// to it once the last wall is thrown (so the player isn't left empty-handed). Only capture a real
+	// weapon: if the player toggles gloo->fists->gloo (fists = a non-weapon), keep the last actual gun
+	// instead of overwriting heldBeforeGloo with fists — that overwrite was why the last-gloo swap
+	// broke after gloo became a single stack (the swap now fires several places later).
+	if s.isGloo(unique) && s.isWeaponUID(s.itemOnHand) {
 		s.heldBeforeGloo = s.itemOnHand
 	}
 	s.itemOnHand = unique
@@ -95,6 +99,33 @@ func (s *session) isGloo(unique uint32) bool {
 		return it.data == glooDataID
 	}
 	return false
+}
+
+// isWeaponUID reports whether a unique is one of the player's tracked GUNS (in s.weapons) — i.e.
+// a real weapon, not fists (unique 0), a consumable, or the gloo. Used to keep heldBeforeGloo and
+// the last-gloo auto-switch pointed at an actual weapon.
+func (s *session) isWeaponUID(unique uint32) bool {
+	if unique == 0 {
+		return false
+	}
+	for _, w := range s.weapons {
+		if w.unique == unique {
+			return true
+		}
+	}
+	return false
+}
+
+// bestWeaponUID returns the unique of the player's preferred fallback weapon — primary first,
+// then the secondary pistol — or 0 if they hold no gun. The last-gloo auto-switch uses this when
+// the gun held before the gloo wasn't captured or is gone.
+func (s *session) bestWeaponUID() uint32 {
+	for _, slot := range []byte{message.SlotPrimary1, message.SlotPrimary2, message.SlotSecondary} {
+		if w, ok := s.weapons[slot]; ok && w.unique != 0 {
+			return w.unique
+		}
+	}
+	return 0
 }
 
 // heldWeaponData returns the DataID of the item the local player currently holds (the

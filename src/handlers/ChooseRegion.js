@@ -7,7 +7,6 @@
 
 'use strict';
 
-const player = require('../db/player');
 const { requireAccount, DEFAULT_REGION } = require('./_shared');
 
 // CSChooseRegionReq -> CSChooseRegionRes (basic passthrough).
@@ -16,7 +15,7 @@ function handleChooseRegion(reqObj, ctx) {
   const region = reqObj.region || DEFAULT_REGION;
   if (account) {
     account.region = region;
-    player.save(account);
+    ctx.savePlayer();
   }
   return { region };
 }

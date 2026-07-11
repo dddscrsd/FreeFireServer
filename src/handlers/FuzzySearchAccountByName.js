@@ -10,25 +10,24 @@
 
 'use strict';
 
-const accounts = require('../db/accounts');
-const player = require('../db/player');
-const { requireAccount, accountToBasic } = require('./_shared');
+const { getRepo } = require('../db/repo');
+const { requireAccount, accountToBasic, DEFAULT_REGION } = require('./_shared');
 
-const searchByNicknameStmt = accounts.db.prepare(
-  'SELECT account_id FROM accounts WHERE nickname LIKE ? COLLATE NOCASE LIMIT 20'
-);
-
-function handleFuzzySearchAccountByName(reqObj, ctx) {
+async function handleFuzzySearchAccountByName(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {};
   const nickname = (reqObj.nickname || '').trim();
   if (!nickname) return { infos: [] };
 
-  const rows = searchByNicknameStmt.all(`%${nickname}%`);
+  const repo = getRepo();
+  const ids = await repo.searchByNickname(nickname);
   const infos = [];
-  for (const row of rows) {
-    const acc = player.getById(row.account_id);
-    if (acc) infos.push(accountToBasic(acc));
+  for (const acc of await repo.getByIds(ids)) {
+    if (!acc) continue;
+    const basic = accountToBasic(acc);
+    // Same-region so the client's add-friend gate passes (see GetAccountInfoByAccountID).
+    basic.region = account.region || DEFAULT_REGION;
+    infos.push(basic);
   }
   ctx.logger.info(`[ported] FuzzySearchAccountByName "${nickname}" -> ${infos.length} hits`);
   return { infos };
