@@ -585,19 +585,18 @@ func (m *Match) reseedJoinBurst() {
 		// alone can't (a replay has no local player, so the streamer-finished dismiss gate never trips).
 		recv.sendDataLog(packet.CmdObserverJoin, message.ObserverJoin(recv.player.AccountID, recv.entityID),
 			"cmd=230 replay observer-seed (EObserverType_Replay)")
+	}
 
-		// Loadout fidelity: each player's STARTER loadout (cmd 174 inventory + cmd 121 back-mount + cmd
-		// 124 attachments) is sent pre-scene and never recorded, so remote pawns' guns/attachments render
-		// wrong in the replay (their HELD gun rides the PRI stream, so it's only partly off). Re-send
-		// each player's current loadout to recv on a couple of mid-window passes so it lands post-scene.
-		// All idempotent on the live client (cmd 174 upserts by unique; 121 sets a slot; 124 re-mounts).
-		// Not every pass — these are reliable and would flood the channel at match start.
-		if m.reseedCount == 4 || m.reseedCount == 8 {
-			for _, p := range m.players {
-				recv.sendDataLog(packet.CmdSyncInventory, p.currentInventorySync(), "cmd=174 replay loadout-reseed")
-				p.resendEquipTo(recv)  // cmd 121 back-mounted weapons
-				p.resendAttachTo(recv) // cmd 124 attachments
-			}
+	// Loadout fidelity: each player's STARTER loadout (cmd 174 inventory + 121 back-mount + 124
+	// attachments) is sent once pre-scene and never recorded, so remote pawns render the wrong
+	// guns/attachments in a replay (the HELD gun rides the PRI stream, so it's only partly off). Re-sync
+	// every player's full loadout to all on EVEN reseed passes — spread across the window so at least one
+	// lands post-scene (the same reliability the cmd-101/230 reseed already achieves). Every part is
+	// idempotent on the live client, so this is a no-op there. NOT every pass (these are reliable sends).
+	// Once the base loadout is in the recording, per-mutation broadcastLoadout calls keep it current.
+	if m.reseedCount%2 == 0 {
+		for _, p := range m.players {
+			p.broadcastLoadout()
 		}
 	}
 	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))

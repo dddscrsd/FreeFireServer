@@ -257,6 +257,12 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	if len(outgoing) > 0 {
 		s.dropOverriddenAfterEquip(outgoing)
 	}
+
+	// Re-broadcast the FULL loadout after the buy (idempotent — no live change). The deltas above are
+	// enough for live rendering, but a full re-sync guarantees the complete post-buy loadout is in every
+	// client's replay recording, so a mutation is always fully captured (not just relative to a base the
+	// recording might have missed). See broadcastLoadout.
+	s.broadcastLoadout()
 }
 
 // purchase result codes (cmd 408 GGKOCCEOFJM): 0 shows the "purchase success" popup

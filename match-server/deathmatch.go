@@ -71,7 +71,9 @@ func (m *Match) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8)
 		// SHOOTER too (suppressed live via the own-shooter gate) — that puts it in the shooter's replay
 		// RECORDING, where the handler's replay branch shows it. Also relayed to spectators of the
 		// shooter (a dead teammate watching them). Not sent to unrelated players (it's the shooter's UI).
-		dmgBody := message.ShowDamage(attacker, victim, dmg, uint32(weapon))
+		// A head hit (bodyPart == bodyHead) flags it as a headshot so the number renders RED (critical) —
+		// the shooter's own local render knows this, but a spectator/replay only learns it from here.
+		dmgBody := message.ShowDamage(attacker, victim, dmg, uint32(weapon), bodyPart == bodyHead)
 		if as := m.sessionByEntity(attacker); as != nil {
 			as.sendData(packet.CmdShowDamage, dmgBody)
 		}
