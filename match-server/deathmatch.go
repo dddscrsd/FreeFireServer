@@ -67,10 +67,16 @@ func (m *Match) applyDamage(victim, attacker uint32, dmg uint16, bodyPart uint8)
 	weapon, _ := m.resolveKillWeapon(attacker) // for the hit-direction indicator + spectator relays
 	if attacker != 0 && m.teamOf(attacker) != m.teamOf(victim) {
 		m.damage[attacker] += uint32(dmg) // scoreboard total damage (PRI field 31)
-		// A spectator watching the SHOOTER sees the floating damage numbers (cmd 168) the shooter's own
-		// client renders locally — relay it so a dead teammate spectating the shooter sees them too.
+		// Floating damage numbers (cmd 168). The shooter renders its own locally, so send it to the
+		// SHOOTER too (suppressed live via the own-shooter gate) — that puts it in the shooter's replay
+		// RECORDING, where the handler's replay branch shows it. Also relayed to spectators of the
+		// shooter (a dead teammate watching them). Not sent to unrelated players (it's the shooter's UI).
+		dmgBody := message.ShowDamage(attacker, victim, dmg, uint32(weapon))
+		if as := m.sessionByEntity(attacker); as != nil {
+			as.sendData(packet.CmdShowDamage, dmgBody)
+		}
 		for _, sp := range m.spectatorsOf(attacker) {
-			sp.sendData(packet.CmdShowDamage, message.ShowDamage(attacker, victim, dmg, uint32(weapon)))
+			sp.sendData(packet.CmdShowDamage, dmgBody)
 		}
 	}
 	if vs := m.sessionByEntity(victim); vs != nil {
