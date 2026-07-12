@@ -37,11 +37,13 @@ func (s *session) stepEP(now time.Time) {
 		return
 	}
 	m := s.match
-	if m.lifeOf(s.entityID) != lifeAlive {
-		return // dead / knocked -> hold the buffer, don't drain
-	}
 	hp := m.hp[s.entityID]
-	if hp == 0 || hp >= m.settings.maxHP {
+	// Only ACCRUE regen time while actively healing (alive, 0 < hp < maxHP). When regen is blocked — dead/
+	// knocked, or already at FULL HP — anchor the clock to `now` and bail. Otherwise the elapsed time keeps
+	// banking while the player sits at max HP, and the moment they drop below max (take a hit) `steps` is
+	// huge and dumps a big chunk of EP into HP in one tick = the "full HP -> take damage -> instant heal" bug.
+	if m.lifeOf(s.entityID) != lifeAlive || hp == 0 || hp >= m.settings.maxHP {
+		s.epLast = now
 		return
 	}
 	steps := int(now.Sub(s.epLast) / epInterval)
