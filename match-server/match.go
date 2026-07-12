@@ -586,33 +586,12 @@ func (m *Match) reseedJoinBurst() {
 		recv.sendDataLog(packet.CmdObserverJoin, message.ObserverJoin(recv.player.AccountID, recv.entityID),
 			"cmd=230 replay observer-seed (EObserverType_Replay)")
 
-		// Loadout fidelity for the recording: re-send EVERY player's loadout to recv, INCLUDING recv's own
-		// pawn, EXACTLY ONCE — on the first reseed pass. The first cmd 1001 is already post-scene (the pawn
-		// controller must be live in the loaded battle scene to move), so a single pass lands in the
-		// recording; the windowing is only needed for the cmd-101/230 dismiss, not this. It MUST be once:
-		// cmd 174 ADDS to the client's item pool (re-sending duplicates weapons in the wheel) and each
-		// cmd 121 re-triggers an equip (the "items keep re-equipping" glitch). The starter loadout is sent
-		// pre-scene and never recorded, so a replayed pawn renders empty slots / a fallback fist and its
-		// held gun can't resolve. Three packets, ALL silent on the live client:
-		//   cmd 174 items-only (currentInventoryItemsOnly): registers each weapon's UNIQUE in the item
-		//     dict so the replay can resolve the held gun (PRI ref) and cmd 121's slot items. Silent — no
-		//     equipment list, so the sound-producing local-player equip loop never runs, and the item loop
-		//     is autoEquip=0. (For a remote pawn it's ignored live anyway — hard-gated to the local id.)
-		//   cmd 121 (resendEquipTo, OldUID=0): sets the loadout SLOTS + back-mount. SILENT live because a
-		//     FILLED slot mismatches OldUID=0 and the apply aborts before the equip SFX (JEBBNHIAIOA
-		//     @0x21af900: "Unmatched old equipment id" -> LogError + return); in a replay the slot is
-		//     EMPTY so it applies, and IsLocalPlayer is false there so no SFX. This is why self is now safe
-		//     — the earlier glitch was actually cmd 174 WITH an equipment list (LNHGBGNLNPJ(...,1,1) fires
-		//     SOUND_EQUIP for the local player), which we no longer send.
-		//   cmd 124 (resendAttachTo): attachments — the apply has no audio at all.
-		if m.reseedCount == 1 {
-			for _, p := range m.players {
-				recv.sendDataLog(packet.CmdSyncInventory, p.currentInventoryItemsOnly(),
-					fmt.Sprintf("cmd=174 replay items-only reseed ent=%#x", p.entityID))
-				p.resendEquipTo(recv)  // cmd 121: slots + back-mount (silent live: OldUID=0 aborts on a filled slot)
-				p.resendAttachTo(recv) // cmd 124: attachments (no audio)
-			}
-		}
+		// NOTE: no loadout re-sync here. The starter loadout's own cmd 174 (from giveLoadout at the buy
+		// phase) is broadcast post-scene and IS recorded WITH its equipment list, so the loadout data is
+		// already in the recording; re-sending it here only duplicated items (cmd 174 is additive) or,
+		// on the first pass, captured an empty loadout (the reseed fires ~3s before giveLoadout runs). The
+		// remaining replay-wheel gap (weapon HUD binds at this cmd-230 before the loadout arrives) is a
+		// separate observer-refresh problem, handled elsewhere.
 	}
 
 	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))
