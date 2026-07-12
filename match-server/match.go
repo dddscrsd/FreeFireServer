@@ -680,10 +680,22 @@ func (m *Match) enterPrepare(now time.Time) {
 		return
 	}
 	if !m.started && !m.teamsReady() {
+		if m.settings.isCustom {
+			// Custom room: the "enough players" wait/cancel is matchmaking-only. Start NOW instead of the
+			// 30s hold — filling the bot opponent immediately when MATCH_BOT is on (the match server is
+			// solo-vs-bot, so a lone host still needs an enemy). A balanced multi-human room already has
+			// teamsReady()==true and never reaches here.
+			if cfg.matchBot && m.botEntity == 0 {
+				m.spawnFallbackBot()
+			}
+			m.startBuyPhase(now)
+			return
+		}
+		// Matchmade CS: hold + "Waiting for players" until the teams balance, then bot-fill or cancel.
 		m.enter(now, phPrepare, waitPlayersDur) // hold Prepare + show the waiting overlay (field 5 = HalfwayJoin)
 		return
 	}
-	m.startBuyPhase(now) // enough players (or a later round): normal buy phase + lock the roster
+	m.startBuyPhase(now) // enough players (custom room, later round, or balanced matchmade teams): buy phase + lock
 }
 
 // startFight begins the Fight phase (ends on the enemy/player-dead condition, not the deadline)

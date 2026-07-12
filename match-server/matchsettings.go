@@ -19,6 +19,12 @@ type matchSettings struct {
 	maxHP       uint16   // per-player max/full HP (player.go maxHP by default)
 	noLoadout   bool     // NoLoadout flag: skip the free starter weapon (players buy everything)
 
+	// isCustom is true when this match came from a CUSTOM ROOM (the lobby wrote match:<id>:settings,
+	// which ONLY the room START handoff does — RoomStart.js). Normal matchmade CS matches leave it false.
+	// A custom room starts with whatever the host set up, so it SKIPS the "enough players" (balanced teams)
+	// waiting/cancel gate that only makes sense for matchmaking. See Match.enterPrepare.
+	isCustom bool
+
 	// unlimitedAmmo mirrors the room's UnlimitedAmmo flag (room_setting bit 0x2). The client
 	// enforces infinite gun ammo itself (reload is a pure relay), but GLOO WALLS are server-tracked
 	// and consumed via cmd 112 — so we must also skip the gloo deduction here, else the wall count
@@ -113,6 +119,7 @@ func (m *Match) loadMatchSettings(mid uint64) {
 	if err != nil || raw == "" {
 		return
 	}
+	m.settings.isCustom = true // only RoomStart.js (custom-room start) writes this key -> this is a custom room
 	var w wireSettings
 	if err := json.Unmarshal([]byte(raw), &w); err != nil {
 		log.Printf("[mm-udp] match %d: bad settings json: %v", mid, err)
