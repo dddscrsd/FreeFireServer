@@ -545,12 +545,16 @@ const (
 // reseed just once: we re-emit up to reseedMax times, throttled to reseedEvery, spanning the scene-load
 // boundary — the copies that arrive after OnSceneLoaded are recorded (the earlier ones are harmless).
 //
-// It is a NO-OP on the LIVE client every time: the roster-add (NFJPHMKKEBF::LONDNBHBPDO) early-returns
-// on an already-present entity — no re-spawn, no snap (true for the local pawn too), so duplicates are
-// free. Only cmd 101 is re-sent; NEVER cmd 100/145/900 (those reposition/re-init and are what actually
-// glitch a live pawn), and NOT cmd 130 (the dismiss is driven by cmd 101 via the streamer). In the
-// replay the FIRST recorded copy spawns the pawn + dismisses loading; the rest no-op (dict already has
-// the entity). Called on each cmd 1001 (handleClientPos).
+// Each pass re-emits cmd 101 (spawn the pawns) THEN cmd 230 (seed the replay observer). cmd 101 alone
+// is NOT enough to dismiss: a replay has no local player (Player::IsLocalPlayer is false in replay
+// state), so the streamer-finished dismiss gate never trips. cmd 230 (EObserverType_Replay) dismisses
+// via the unconditional OnAddObserver -> CloseMask path AND gives the camera/streamer a focus.
+//
+// Every packet here is a NO-OP on the LIVE client: the roster-add (NFJPHMKKEBF::LONDNBHBPDO) early-
+// returns on an already-present entity (no re-spawn/snap, local pawn too), and cmd 230 type 2 returns
+// immediately when not in replay state. NEVER cmd 100/145/900 (those reposition/re-init and DO glitch
+// a live pawn). In the replay the first recorded pass spawns the pawn + seeds the observer + dismisses
+// loading; the rest no-op. Called on each cmd 1001 (handleClientPos).
 func (m *Match) reseedJoinBurst() {
 	if m.reseedCount >= reseedMax {
 		return
@@ -575,6 +579,12 @@ func (m *Match) reseedJoinBurst() {
 		if m.botEntity != 0 {
 			recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, tick), "cmd=101 replay-reseed bot")
 		}
+		// AFTER the pawn(s) are spawned in the recording: seed the replay observer (cmd 230, type
+		// EObserverType_Replay). This is a LIVE no-op but is what makes the REPLAY dismiss its loading
+		// mask (OnAddObserver -> CloseMask, unconditional) + gives the camera/streamer a focus — cmd 101
+		// alone can't (a replay has no local player, so the streamer-finished dismiss gate never trips).
+		recv.sendDataLog(packet.CmdObserverJoin, message.ObserverJoin(recv.player.AccountID, recv.entityID),
+			"cmd=230 replay observer-seed (EObserverType_Replay)")
 	}
 	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))
 }
