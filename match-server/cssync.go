@@ -195,24 +195,6 @@ func (s *session) currentInventorySync() []byte {
 	return message.SyncInventory(s.player.EntityID, inv, nil, equip, s.itemOnHand)
 }
 
-// broadcastLoadout re-syncs this player's FULL current loadout to EVERY client: cmd 174 (inventory +
-// equipment), then cmd 121 back-mount + cmd 124 attachments per recipient. Every part is idempotent
-// (cmd 174 upserts by unique, 121 SETS a slot, 124 re-mounts), so it's a no-op on a client that
-// already holds the state — but it puts the full current loadout into every client's replay RECORDING.
-// The STARTER loadout is only ever sent once, pre-scene (before the client's recorder arms), so remote
-// pawns render the wrong guns/attachments in a replay; re-syncing the whole loadout whenever it changes
-// (and on the post-scene reseed) keeps the recording correct. Cheap + safe to call on any mutation.
-func (s *session) broadcastLoadout() {
-	s.match.broadcastData(packet.CmdSyncInventory, s.currentInventorySync(),
-		fmt.Sprintf("cmd=174 loadout re-sync ent=%#x", s.player.EntityID))
-	for _, recv := range s.match.players {
-		if recv.out != nil {
-			s.resendEquipTo(recv)  // cmd 121 back-mounted weapons
-			s.resendAttachTo(recv) // cmd 124 attachments
-		}
-	}
-}
-
 // reissueLoadout refills every weapon currently in the loadout to a full magazine (and
 // tops up reserve ammo) at the start of a new round for a SURVIVING player, WITHOUT
 // allocating new item instances: the cmd 174 handler upserts inventory by Unique

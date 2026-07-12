@@ -257,9 +257,9 @@ func (s *session) handleCSPurchase(p *packet.Packet) {
 	if len(outgoing) > 0 {
 		s.dropOverriddenAfterEquip(outgoing)
 	}
-	// NOTE: no full broadcastLoadout() here — re-sending cmd 121/124 replays the equip SFX on the live
-	// client. The delta cmd 174/121/124 above already sync the buy live (and into the recording); a
-	// silent full re-sync for replay fidelity is pending. See broadcastLoadout.
+	// No extra full-loadout re-sync here: broadcastEquipDiff above already sends the buyer's cmd 121 to
+	// the OTHER players (remote pawns → silent, and it lands in their replay recording), which is exactly
+	// what a replay needs. Re-sending the buyer its OWN cmd 121 would fire the equip SFX (IsLocalPlayer).
 }
 
 // purchase result codes (cmd 408 GGKOCCEOFJM): 0 shows the "purchase success" popup

@@ -585,13 +585,30 @@ func (m *Match) reseedJoinBurst() {
 		// alone can't (a replay has no local player, so the streamer-finished dismiss gate never trips).
 		recv.sendDataLog(packet.CmdObserverJoin, message.ObserverJoin(recv.player.AccountID, recv.entityID),
 			"cmd=230 replay observer-seed (EObserverType_Replay)")
+
+		// Loadout fidelity for the recording: re-send every OTHER player's cmd 121 (held + back-mounted
+		// weapon models) + cmd 124 (attachments) to recv, on even passes (spread so one lands post-scene).
+		// The starter loadout was sent pre-scene and never recorded, so remote pawns render the wrong guns
+		// in a replay. This is SILENT on the LIVE client: the equip SFX in the cmd-121 apply (SOUND_EQUIP
+		// @0x21a2914 / dual @0x21a41c0) is gated behind IsLocalPlayer(owner), which is FALSE for a REMOTE
+		// pawn, so re-applying another player's cmd 121 makes no sound; cmd 124's apply has no audio at
+		// all. We must NEVER re-send recv its OWN cmd 121 — that pawn IS the local player, so it fires the
+		// equip SFX every pass (the reported glitch), and there is no wire flag to suppress it. cmd 174 is
+		// omitted: its apply is hard-gated to the local player (msg.PlayerID == CurrentLocalPlayer), so it
+		// can't render a remote back-mount. In the replay itself IsLocalPlayer is false for every pawn, so
+		// each re-sent cmd 121 renders silently. (recv's OWN pawn back-mount can't be silently reseeded;
+		// its held gun still rides the PRI stream, which IS recorded.)
+		if m.reseedCount%2 == 0 {
+			for _, p := range m.players {
+				if p == recv {
+					continue // never a client's own cmd 121 — IsLocalPlayer(self)=true → SOUND_EQUIP
+				}
+				p.resendEquipTo(recv)  // cmd 121: p's held + back-mounted weapons (remote pawn → silent live)
+				p.resendAttachTo(recv) // cmd 124: p's attachments (no audio)
+			}
+		}
 	}
 
-	// NOTE: the loadout re-sync (cmd 174 + 121 + 124) that used to run here is DISABLED — re-applying
-	// those on the LIVE client replays the weapon-equip SFX every pass (a clear in-game glitch), and the
-	// replay records the live inbound stream so we can't target the replay alone. A silent re-sync is
-	// pending (see broadcastLoadout / the RE of which handler emits the sound). Until then remote loadout
-	// may look off in a replay, but live matches stay clean.
 	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))
 }
 
