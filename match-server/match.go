@@ -34,6 +34,7 @@ type Match struct {
 	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
 	lossStreak [2]uint8          // consecutive rounds LOST per team (drives the CS loss-bonus ladder)
 	firstBlood uint32            // entity that got THIS round's first cross-team kill (0 = none yet); reset each round in endFight
+	reseeded   bool              // guard: the cmd-101 roster has been re-emitted once for the replay recording (see reseedJoinBurst)
 	settings   matchSettings     // per-match CS config (round count / economy); defaults + custom-room overrides
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
@@ -497,9 +498,12 @@ func (m *Match) serverTick() uint32 {
 	return uint32(time.Since(m.matchStart).Seconds() / clientFixedDelta)
 }
 
-// streamMovement relays each human's latest cmd-1001 state to the OTHER players (Step 6): one batch
-// per sender, sent only to the others (no self-echo, so no skip-own is needed). The bot is static
-// and isn't relayed — the client keeps it at its cmd-101 spawn. The seq is the subtle part (below).
+// streamMovement relays each human's latest cmd-1001 state to EVERY player INCLUDING the sender (Step
+// 6): one batch per sender. The batch's skip-own byte is 1, so the LIVE sender DROPS its own entry
+// (its pawn stays 100% input-driven — no rubber-band), while every OTHER client applies it. Sending it
+// to the sender too is what puts the recorder's OWN motion into its replay recording: the replay apply
+// forces skip-own OFF (IsReplayState), so the recorder's own entry moves its pawn on playback. The bot
+// is static and isn't relayed — the client keeps it at its cmd-101 spawn. The seq is the subtle part.
 func (m *Match) streamMovement() {
 	matchTime := int32(time.Since(m.matchStart).Seconds() * 30)
 	for _, sender := range m.players {
@@ -517,11 +521,45 @@ func (m *Match) streamMovement() {
 		payload := message.MoveBatch(matchTime, seq, []message.MoveEntry{{Slot: sender.slot, Body: sender.moveBody}})
 		pkt := &packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdClientPos, Flags: 0, Payload: payload}
 		for _, recv := range m.players {
-			if recv != sender && recv.out != nil {
+			if recv.out != nil { // incl. the sender — skip-own drops its own entry live; the recording keeps it for replay
 				recv.out.send(pkt, "")
 			}
 		}
 	}
+}
+
+// reseedJoinBurst re-emits the cmd-101 roster ONCE, on the first post-join cmd 1001 — the earliest
+// packet the client can only send after its pawn exists in the loaded battle scene, i.e. AFTER
+// OnSceneLoaded armed the replay recorder. The ORIGINAL join burst (admitFirst, in reply to cmd 440)
+// is pulled + dispatched during the LOADING screen, BEFORE recording starts, so it never lands in the
+// recording — a client replay then spawns no pawn and hangs forever on the loading mask (the world-
+// streamer centers tile-loading on the local pawn). This re-emit is inside the recording window, so
+// replays spawn pawns + dismiss loading. It is a NO-OP on the LIVE client: the roster-add
+// (NFJPHMKKEBF::LONDNBHBPDO) early-returns on an already-present entity — no re-spawn, no snap (true
+// for the local pawn too). Only cmd 101 is re-sent; NEVER cmd 100/145/900 (those reposition/re-init
+// and are what actually glitch a live pawn), and NOT cmd 130 (the dismiss is driven by cmd 101 alone
+// via the streamer; cmd 130 could re-trigger one-shot post-join logic).
+func (m *Match) reseedJoinBurst() {
+	if m.reseeded {
+		return
+	}
+	m.reseeded = true
+	tick := m.serverTick()
+	for _, recv := range m.players {
+		if recv.out == nil {
+			continue
+		}
+		recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(recv.player, tick), "cmd=101 replay-reseed self")
+		for _, other := range m.players {
+			if other != recv {
+				recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(other.player, tick), "cmd=101 replay-reseed roster")
+			}
+		}
+		if m.botEntity != 0 {
+			recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, tick), "cmd=101 replay-reseed bot")
+		}
+	}
+	log.Printf("[mm-udp] replay-reseed: re-emitted cmd-101 roster to %d client(s) for the recording", len(m.players))
 }
 
 // rosterWriters returns the Writer of every human in the roster (bots have out==nil, skipped) —

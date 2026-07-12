@@ -12,15 +12,18 @@ type MoveEntry struct {
 
 // MoveBatch builds the cmd 1001 downstream batch broadcast (unreliable) to every client:
 //
-//	[i32 matchTime][i16 count][count× (u8 slot + 37B body)][u8 skipOwn=1][u32 tickSeq]
+//	[i32 matchTime][i16 count][count× (u8 slot + 37B body)][u8 skipOwn][u32 tickSeq]
 //
-// The SAME batch (every player, incl. the recipient) fans to everyone; skipOwn=1 makes each client
-// drop the entry whose slot == its own local slot (its entity-id low byte) and apply only the
-// others (skipOwn=0 would also rubber-band the local player to the server's position). tickSeq must
-// strictly increase (the client's per-player seq gate drops a stale/equal seq). Fixed little-endian.
-// CONFIRMED for FF 1.70.1 via CEJMAIHOFMM::UnSerialize (i16 count + a skip-own bool before the seq).
-// ⚠️ The reference udp.py targets a DIFFERENT client version (u32 count, no skip-own byte) — that
-// layout desyncs the entry stream on 1.70.1; do NOT use it here. See cs-movement-sync.
+// The SAME batch (every player, incl. the sender) fans to everyone. The skip-own byte is TRUTHY-means-
+// skip (IDA CEJMAIHOFMM apply @0x1936184): with skipOwn=1 each LIVE client drops the entry whose slot
+// == its own local slot (its entity-id low byte) and applies only the others — so streaming a sender
+// its OWN entry back doesn't rubber-band it (its pawn stays input-driven). In a REPLAY the apply forces
+// skip-own OFF (IsReplayState), so the recorder's own entry IS applied and its pawn moves on playback —
+// which is exactly why we self-echo (see match.go streamMovement). tickSeq must strictly increase (the
+// client's per-player seq gate drops a stale/equal seq). Fixed little-endian.
+// ⚠️ skipOwn is 1 (NOT 0): 0 means "apply own", which WOULD rubber-band the local player now that we
+// echo its own entry back. The reference udp.py targets a DIFFERENT client version (u32 count, no skip-
+// own byte) — that layout desyncs the entry stream on 1.70.1; do NOT use it here. See cs-movement-sync.
 func MoveBatch(matchTime int32, tickSeq uint32, entries []MoveEntry) []byte {
 	buf := make([]byte, 0, 11+38*len(entries))
 	buf = binary.LittleEndian.AppendUint32(buf, uint32(matchTime))    // i32 matchTime
@@ -29,7 +32,7 @@ func MoveBatch(matchTime int32, tickSeq uint32, entries []MoveEntry) []byte {
 		buf = append(buf, e.Slot)
 		buf = append(buf, e.Body...)
 	}
-	buf = append(buf, 0)                                 // skipOwn = true (client drops its own slot)
+	buf = append(buf, 1)                                 // skipOwn=1: LIVE client drops its OWN slot; REPLAY forces it off (applies own) -> recorder moves
 	buf = binary.LittleEndian.AppendUint32(buf, tickSeq) // u32 tickSeq
 	return buf
 }
