@@ -45,6 +45,11 @@ type PlayerInfo struct {
 	// serialized — it's a match-server placement hint consumed by allocSlot. 0 => server balance-fills.
 	PreferTeam uint8
 
+	// Shows are the player's showcase item ids (selected_items.shows). Written into the cmd-101
+	// cosmetics; the client buckets them by CollectionSubType into BaseProfileInfo.Shows, whose
+	// Shows[7] (weapon) is the DISPLAY weapon the result screen + lobby/profile render.
+	Shows []uint32
+
 	// Spawn transform, written into the OGJKHJAFNHB sub-object of cmd 101
 	// (CCIKDFGDBAM position ×1000 / CCDDHEBKMGD facing ×100). This is the
 	// AUTHORITATIVE spawn — the client places the local player here, so no
@@ -122,7 +127,11 @@ func (w *Writer) pkpamkedcdc(pi PlayerInfo) {
 	w.Str("")             // MFLBOPEBOKE
 	w.Str("")             // AIBGAEMOLAN
 	w.U32(0)              // LGFOLJMCMFH
-	w.U32List(pi.Slots)   // OJENBEIOBGL : List<u32> (count=0)
+	// OJENBEIOBGL : showcase list -> the client buckets it by CollectionSubType into BaseProfileInfo.Shows;
+	// Shows[7] (weapon) is the DISPLAY weapon on the result screen + lobby/profile. This is the LAST of the
+	// three list<u32> cosmetics fields, positionally matching Shows (the last collection dict, @0xe0). If the
+	// result weapon is still wrong in-client, move pi.Shows to CLJLCLADHNP or IOPNKHPNDDH (data-only, no crash).
+	w.U32List(pi.Shows)   // OJENBEIOBGL : showcase items (was mis-fed pi.Slots — the character-skill array)
 	w.I16(0)              // GLHCLEMMLDN : List<u32> (count=0)
 	w.U32(pi.BattleFlag)  // MDDDNKCOMDF : equipped BattleFlagID (@+0xB0) — NONZERO gates the flag-emote plant (client sends cmd 0x114)
 	w.U32(0)              // FHMMPDFIPMJ (pin id)

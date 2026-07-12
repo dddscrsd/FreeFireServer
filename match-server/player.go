@@ -107,6 +107,7 @@ func resolvePlayer(tok string) joinPlayer {
 		p.Avatar, p.Color, p.Head, p.Banner = s.Avatar, s.Color, s.Head, s.Banner
 		p.Clothes, p.Slots = s.Clothes, s.Slots
 		p.Emotes = s.Emotes
+		p.Shows = s.Shows // showcase items -> cmd-101 -> BaseProfileInfo.Shows[7] = result-screen display weapon
 		if s.BattleFlag != 0 { // the player's real equipped flag, if the token carries one
 			p.BattleFlag = s.BattleFlag
 		}

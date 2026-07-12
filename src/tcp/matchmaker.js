@@ -100,7 +100,11 @@ function buildPrepareToken(account, matchId, team = 0) {
       slots: Array.isArray(sel.slots) ? sel.slots : [],
       emotes: sel.emotes && Array.isArray(sel.emotes.emotes)
         ? sel.emotes.emotes.map((e) => e.emote_id)
-        : []
+        : [],
+      // Showcase items (selected_items.shows) — the client buckets these by CollectionSubType into
+      // BaseProfileInfo.Shows; Shows[7] (weapon) is the DISPLAY weapon the post-match result screen +
+      // the lobby/profile player-card render. Without it the result avatar falls back to a default gun.
+      shows: Array.isArray(sel.shows) ? sel.shows : []
     }
   };
   const token = jwt.sign(claims, config.match.jwtSecret, { expiresInSec: config.match.jwtTtlSec });
