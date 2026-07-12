@@ -108,6 +108,16 @@ func (s *session) syncArmor(slot byte) {
 	s.sendDataLog(packet.CmdRemoveInventoryList,
 		message.RemoveInventoryList(s.player.EntityID, []uint32{oldUID}),
 		fmt.Sprintf("cmd=327 remove stale armor uid=%d", oldUID))
+	// The re-create + remove churn above can kick the client out of a held CONSUMABLE's state — a gloo
+	// wall in build/placement mode — de-selecting it (armor slots 6/8 don't hit the cmd-121 SwapWeapon
+	// path, and the cmd-174 on-hand re-asserts the gloo, so it's the inventory shuffle itself). Re-assert
+	// a non-weapon held item so the player keeps holding it. A held WEAPON survives the churn and the
+	// client early-returns on an unchanged on-hand, so we only bother for a consumable (gloo/medkit).
+	if s.itemOnHand != 0 && !s.isWeaponUID(s.itemOnHand) {
+		s.sendDataLog(packet.CmdChangeHeldItem,
+			message.ChangeInventoryOnHand(s.player.EntityID, s.itemOnHand),
+			fmt.Sprintf("cmd=108 re-assert held consumable uid=%d after armor refresh", s.itemOnHand))
+	}
 }
 
 // wearDown returns dur reduced by the absorbed damage = net * r/(1-r), clamped at 0 (>=1 per hit so
