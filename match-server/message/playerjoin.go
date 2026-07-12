@@ -123,16 +123,12 @@ func (w *Writer) pkpamkedcdc(pi PlayerInfo) {
 	w.U32(0)              // CFOEDHFJKCJ (badge id)
 	w.U32(0)              // NBDEAJJACBM
 	w.Bool(false)         // AKGKHJLNBHK
-	w.U32List(pi.Slots)   // IOPNKHPNDDH : List<u32> (count=0)
+	w.U32List(pi.Shows)   // IOPNKHPNDDH : List<u32> (count=0) // THIS IS THE SHOWS LIST!
 	w.Str("")             // MFLBOPEBOKE
 	w.Str("")             // AIBGAEMOLAN
 	w.U32(0)              // LGFOLJMCMFH
-	// OJENBEIOBGL : showcase list -> the client buckets it by CollectionSubType into BaseProfileInfo.Shows;
-	// Shows[7] (weapon) is the DISPLAY weapon on the result screen + lobby/profile. This is the LAST of the
-	// three list<u32> cosmetics fields, positionally matching Shows (the last collection dict, @0xe0). If the
-	// result weapon is still wrong in-client, move pi.Shows to CLJLCLADHNP or IOPNKHPNDDH (data-only, no crash).
-	w.U32List(pi.Shows)   // OJENBEIOBGL : showcase items (was mis-fed pi.Slots — the character-skill array)
-	w.I16(0)              // GLHCLEMMLDN : List<u32> (count=0)
+	w.U32List(pi.Slots)   // OJENBEIOBGL : In-Game Skins
+	w.U32List(pi.Emotes)  // GLHCLEMMLDN : List<u32> (count=0)
 	w.U32(pi.BattleFlag)  // MDDDNKCOMDF : equipped BattleFlagID (@+0xB0) — NONZERO gates the flag-emote plant (client sends cmd 0x114)
 	w.U32(0)              // FHMMPDFIPMJ (pin id)
 	w.U32(0)              // ALELGKLAAOK
