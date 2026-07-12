@@ -195,6 +195,21 @@ func (s *session) currentInventorySync() []byte {
 	return message.SyncInventory(s.player.EntityID, inv, nil, equip, s.itemOnHand)
 }
 
+// currentInventoryItemsOnly builds a cmd 174 carrying ONLY this player's items (no equipment list, no
+// itemOnHand). It is SILENT even when applied to the recipient's OWN pawn: SyncInventoryInfo's item loop
+// registers items with autoEquip=0 (no equip SFX), and with an EMPTY equipment list the local-player
+// equip loop (NHOFHHFEFMA -> LNHGBGNLNPJ(...,1,1), which DOES play SOUND_EQUIP) never runs. It exists so
+// the replay recording learns each weapon's UNIQUE, which the held-weapon PRI reference and the cmd-121
+// slot fill both resolve against — without it a replayed pawn falls back to fists. The loadout SLOTS +
+// back-mount come from the (also silent) cmd 121 sent alongside it. See reseedJoinBurst.
+func (s *session) currentInventoryItemsOnly() []byte {
+	inv := make([]message.InvItem, 0, len(s.clientUIDs))
+	for _, it := range s.clientUIDs {
+		inv = append(inv, message.InvItem{Unique: it.unique, Data: it.data, Count: it.count, Runtime: it.runtime})
+	}
+	return message.SyncInventory(s.player.EntityID, inv, nil, nil, 0) // no equipment, no onHand -> no equip SFX
+}
+
 // reissueLoadout refills every weapon currently in the loadout to a full magazine (and
 // tops up reserve ammo) at the start of a new round for a SURVIVING player, WITHOUT
 // allocating new item instances: the cmd 174 handler upserts inventory by Unique

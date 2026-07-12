@@ -586,25 +586,27 @@ func (m *Match) reseedJoinBurst() {
 		recv.sendDataLog(packet.CmdObserverJoin, message.ObserverJoin(recv.player.AccountID, recv.entityID),
 			"cmd=230 replay observer-seed (EObserverType_Replay)")
 
-		// Loadout fidelity for the recording: re-send every OTHER player's cmd 121 (held + back-mounted
-		// weapon models) + cmd 124 (attachments) to recv, on even passes (spread so one lands post-scene).
-		// The starter loadout was sent pre-scene and never recorded, so remote pawns render the wrong guns
-		// in a replay. This is SILENT on the LIVE client: the equip SFX in the cmd-121 apply (SOUND_EQUIP
-		// @0x21a2914 / dual @0x21a41c0) is gated behind IsLocalPlayer(owner), which is FALSE for a REMOTE
-		// pawn, so re-applying another player's cmd 121 makes no sound; cmd 124's apply has no audio at
-		// all. We must NEVER re-send recv its OWN cmd 121 — that pawn IS the local player, so it fires the
-		// equip SFX every pass (the reported glitch), and there is no wire flag to suppress it. cmd 174 is
-		// omitted: its apply is hard-gated to the local player (msg.PlayerID == CurrentLocalPlayer), so it
-		// can't render a remote back-mount. In the replay itself IsLocalPlayer is false for every pawn, so
-		// each re-sent cmd 121 renders silently. (recv's OWN pawn back-mount can't be silently reseeded;
-		// its held gun still rides the PRI stream, which IS recorded.)
+		// Loadout fidelity for the recording: re-send EVERY player's loadout to recv, INCLUDING recv's own
+		// pawn, on even passes (spread so one lands post-scene). The starter loadout is sent pre-scene and
+		// never recorded, so a replayed pawn renders empty slots / a fallback fist and its held gun can't
+		// resolve. Three packets, ALL silent on the live client:
+		//   cmd 174 items-only (currentInventoryItemsOnly): registers each weapon's UNIQUE in the item
+		//     dict so the replay can resolve the held gun (PRI ref) and cmd 121's slot items. Silent — no
+		//     equipment list, so the sound-producing local-player equip loop never runs, and the item loop
+		//     is autoEquip=0. (For a remote pawn it's ignored live anyway — hard-gated to the local id.)
+		//   cmd 121 (resendEquipTo, OldUID=0): sets the loadout SLOTS + back-mount. SILENT live because a
+		//     FILLED slot mismatches OldUID=0 and the apply aborts before the equip SFX (JEBBNHIAIOA
+		//     @0x21af900: "Unmatched old equipment id" -> LogError + return); in a replay the slot is
+		//     EMPTY so it applies, and IsLocalPlayer is false there so no SFX. This is why self is now safe
+		//     — the earlier glitch was actually cmd 174 WITH an equipment list (LNHGBGNLNPJ(...,1,1) fires
+		//     SOUND_EQUIP for the local player), which we no longer send.
+		//   cmd 124 (resendAttachTo): attachments — the apply has no audio at all.
 		if m.reseedCount%2 == 0 {
 			for _, p := range m.players {
-				if p == recv {
-					continue // never a client's own cmd 121 — IsLocalPlayer(self)=true → SOUND_EQUIP
-				}
-				p.resendEquipTo(recv)  // cmd 121: p's held + back-mounted weapons (remote pawn → silent live)
-				p.resendAttachTo(recv) // cmd 124: p's attachments (no audio)
+				recv.sendDataLog(packet.CmdSyncInventory, p.currentInventoryItemsOnly(),
+					fmt.Sprintf("cmd=174 replay items-only reseed ent=%#x", p.entityID))
+				p.resendEquipTo(recv)  // cmd 121: slots + back-mount (silent live: OldUID=0 aborts on a filled slot)
+				p.resendAttachTo(recv) // cmd 124: attachments (no audio)
 			}
 		}
 	}
