@@ -587,18 +587,11 @@ func (m *Match) reseedJoinBurst() {
 			"cmd=230 replay observer-seed (EObserverType_Replay)")
 	}
 
-	// Loadout fidelity: each player's STARTER loadout (cmd 174 inventory + 121 back-mount + 124
-	// attachments) is sent once pre-scene and never recorded, so remote pawns render the wrong
-	// guns/attachments in a replay (the HELD gun rides the PRI stream, so it's only partly off). Re-sync
-	// every player's full loadout to all on EVEN reseed passes — spread across the window so at least one
-	// lands post-scene (the same reliability the cmd-101/230 reseed already achieves). Every part is
-	// idempotent on the live client, so this is a no-op there. NOT every pass (these are reliable sends).
-	// Once the base loadout is in the recording, per-mutation broadcastLoadout calls keep it current.
-	if m.reseedCount%2 == 0 {
-		for _, p := range m.players {
-			p.broadcastLoadout()
-		}
-	}
+	// NOTE: the loadout re-sync (cmd 174 + 121 + 124) that used to run here is DISABLED — re-applying
+	// those on the LIVE client replays the weapon-equip SFX every pass (a clear in-game glitch), and the
+	// replay records the live inbound stream so we can't target the replay alone. A silent re-sync is
+	// pending (see broadcastLoadout / the RE of which handler emits the sound). Until then remote loadout
+	// may look off in a replay, but live matches stay clean.
 	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))
 }
 
