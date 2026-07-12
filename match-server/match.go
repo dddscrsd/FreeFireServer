@@ -34,7 +34,8 @@ type Match struct {
 	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
 	lossStreak [2]uint8          // consecutive rounds LOST per team (drives the CS loss-bonus ladder)
 	firstBlood uint32            // entity that got THIS round's first cross-team kill (0 = none yet); reset each round in endFight
-	reseeded   bool              // guard: the cmd-101 roster has been re-emitted once for the replay recording (see reseedJoinBurst)
+	reseedCount int              // how many times the cmd-101 roster has been re-emitted for the replay recording (see reseedJoinBurst)
+	lastReseed  time.Time        // throttle marker for the reseed window
 	settings   matchSettings     // per-match CS config (round count / economy); defaults + custom-room overrides
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
@@ -528,22 +529,38 @@ func (m *Match) streamMovement() {
 	}
 }
 
-// reseedJoinBurst re-emits the cmd-101 roster ONCE, on the first post-join cmd 1001 — the earliest
-// packet the client can only send after its pawn exists in the loaded battle scene, i.e. AFTER
-// OnSceneLoaded armed the replay recorder. The ORIGINAL join burst (admitFirst, in reply to cmd 440)
-// is pulled + dispatched during the LOADING screen, BEFORE recording starts, so it never lands in the
-// recording — a client replay then spawns no pawn and hangs forever on the loading mask (the world-
-// streamer centers tile-loading on the local pawn). This re-emit is inside the recording window, so
-// replays spawn pawns + dismiss loading. It is a NO-OP on the LIVE client: the roster-add
-// (NFJPHMKKEBF::LONDNBHBPDO) early-returns on an already-present entity — no re-spawn, no snap (true
-// for the local pawn too). Only cmd 101 is re-sent; NEVER cmd 100/145/900 (those reposition/re-init
-// and are what actually glitch a live pawn), and NOT cmd 130 (the dismiss is driven by cmd 101 alone
-// via the streamer; cmd 130 could re-trigger one-shot post-join logic).
+// reseed tuning: re-emit the roster up to reseedMax times, >= reseedEvery apart, so the burst reliably
+// lands INSIDE the replay recording window regardless of how long the client's scene load takes.
+const (
+	reseedMax   = 12
+	reseedEvery = 1 * time.Second
+)
+
+// reseedJoinBurst re-emits the cmd-101 roster into the replay recording window. The ORIGINAL join burst
+// (admitFirst, in reply to cmd 440) is pulled + dispatched during the LOADING screen, BEFORE the client
+// arms its recorder at OnSceneLoaded, so it never lands in the recording — a client replay then spawns
+// no pawn and hangs forever on the loading mask (the world-streamer centers tile-loading on the local
+// pawn). We can't observe OnSceneLoaded server-side, and the client may emit its first cmd 1001 (the
+// trigger) DURING loading (its pawn already exists), which would be BEFORE recording arms. So we don't
+// reseed just once: we re-emit up to reseedMax times, throttled to reseedEvery, spanning the scene-load
+// boundary — the copies that arrive after OnSceneLoaded are recorded (the earlier ones are harmless).
+//
+// It is a NO-OP on the LIVE client every time: the roster-add (NFJPHMKKEBF::LONDNBHBPDO) early-returns
+// on an already-present entity — no re-spawn, no snap (true for the local pawn too), so duplicates are
+// free. Only cmd 101 is re-sent; NEVER cmd 100/145/900 (those reposition/re-init and are what actually
+// glitch a live pawn), and NOT cmd 130 (the dismiss is driven by cmd 101 via the streamer). In the
+// replay the FIRST recorded copy spawns the pawn + dismisses loading; the rest no-op (dict already has
+// the entity). Called on each cmd 1001 (handleClientPos).
 func (m *Match) reseedJoinBurst() {
-	if m.reseeded {
+	if m.reseedCount >= reseedMax {
 		return
 	}
-	m.reseeded = true
+	now := time.Now()
+	if m.reseedCount > 0 && now.Sub(m.lastReseed) < reseedEvery {
+		return
+	}
+	m.lastReseed = now
+	m.reseedCount++
 	tick := m.serverTick()
 	for _, recv := range m.players {
 		if recv.out == nil {
@@ -559,7 +576,7 @@ func (m *Match) reseedJoinBurst() {
 			recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, tick), "cmd=101 replay-reseed bot")
 		}
 	}
-	log.Printf("[mm-udp] replay-reseed: re-emitted cmd-101 roster to %d client(s) for the recording", len(m.players))
+	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))
 }
 
 // rosterWriters returns the Writer of every human in the roster (bots have out==nil, skipped) —
