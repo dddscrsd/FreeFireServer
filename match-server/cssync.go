@@ -195,19 +195,33 @@ func (s *session) currentInventorySync() []byte {
 	return message.SyncInventory(s.player.EntityID, inv, nil, equip, s.itemOnHand)
 }
 
-// currentInventoryItemsOnly builds a cmd 174 carrying ONLY this player's items (no equipment list, no
-// itemOnHand). It is SILENT even when applied to the recipient's OWN pawn: SyncInventoryInfo's item loop
-// registers items with autoEquip=0 (no equip SFX), and with an EMPTY equipment list the local-player
-// equip loop (NHOFHHFEFMA -> LNHGBGNLNPJ(...,1,1), which DOES play SOUND_EQUIP) never runs. It exists so
-// the replay recording learns each weapon's UNIQUE, which the held-weapon PRI reference and the cmd-121
-// slot fill both resolve against — without it a replayed pawn falls back to fists. The loadout SLOTS +
-// back-mount come from the (also silent) cmd 121 sent alongside it. See reseedJoinBurst.
-func (s *session) currentInventoryItemsOnly() []byte {
-	inv := make([]message.InvItem, 0, len(s.clientUIDs))
-	for _, it := range s.clientUIDs {
-		inv = append(inv, message.InvItem{Unique: it.unique, Data: it.data, Count: it.count, Runtime: it.runtime})
+// kickObserverWheel forces a replay's weapon-wheel HUD to repaint the observed pawn's EQUIPPED slots.
+// In a replay the wheel's slot buttons only re-activate when the observed pawn's ON-HAND changes
+// (OBSERVER_INVENTORY_ITEM_ON_HAND_CHANGED sets m_weaponChanged -> RefreshUIByWeaponOnHand SetActives the
+// buttons -> their per-frame Update repaints from the slot array cmd 174 filled). cmd 174 loads that data
+// but never fires the on-hand event, so a replay shows only the held weapon + fallback fists until the
+// recorder's first real weapon switch. We simulate that switch: a cmd-108 on-hand TOGGLE to another
+// equipped item and straight back. Each change fires the event; the two packets go back-to-back in one
+// tick so the LIVE client's NET held item is unchanged (both apply the same frame). See match-replays.
+func (s *session) kickObserverWheel() {
+	held := s.itemOnHand
+	other := uint32(0) // the melee fist (unique 0) — a valid on-hand distinct from any held weapon
+	if held == 0 {     // already on fists: toggle through an equipped WEAPON instead
+		for _, e := range s.equipment {
+			if e.Unique != 0 {
+				other = e.Unique
+				break
+			}
+		}
 	}
-	return message.SyncInventory(s.player.EntityID, inv, nil, nil, 0) // no equipment, no onHand -> no equip SFX
+	if other == held {
+		return // nothing distinct to toggle through (e.g. a truly empty loadout)
+	}
+	ent := s.player.EntityID
+	s.sendDataLog(packet.CmdChangeHeldItem, message.ChangeInventoryOnHand(ent, other),
+		fmt.Sprintf("cmd=108 replay wheel-kick ent=%#x -> other=%d", ent, other))
+	s.sendDataLog(packet.CmdChangeHeldItem, message.ChangeInventoryOnHand(ent, held),
+		fmt.Sprintf("cmd=108 replay wheel-kick ent=%#x -> back=%d", ent, held))
 }
 
 // reissueLoadout refills every weapon currently in the loadout to a full magazine (and

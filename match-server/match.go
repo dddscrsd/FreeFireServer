@@ -36,6 +36,7 @@ type Match struct {
 	firstBlood uint32            // entity that got THIS round's first cross-team kill (0 = none yet); reset each round in endFight
 	reseedCount int              // how many times the cmd-101 roster has been re-emitted for the replay recording (see reseedJoinBurst)
 	lastReseed  time.Time        // throttle marker for the reseed window
+	wheelKicked bool             // whether the one-shot replay weapon-wheel kick (cmd-108 on-hand toggle) has fired (see kickObserverWheel)
 	settings   matchSettings     // per-match CS config (round count / economy); defaults + custom-room overrides
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
@@ -589,9 +590,22 @@ func (m *Match) reseedJoinBurst() {
 		// NOTE: no loadout re-sync here. The starter loadout's own cmd 174 (from giveLoadout at the buy
 		// phase) is broadcast post-scene and IS recorded WITH its equipment list, so the loadout data is
 		// already in the recording; re-sending it here only duplicated items (cmd 174 is additive) or,
-		// on the first pass, captured an empty loadout (the reseed fires ~3s before giveLoadout runs). The
-		// remaining replay-wheel gap (weapon HUD binds at this cmd-230 before the loadout arrives) is a
-		// separate observer-refresh problem, handled elsewhere.
+		// on the first pass, captured an empty loadout (the reseed fires ~3s before giveLoadout runs).
+	}
+
+	// Replay weapon-wheel kick (ONCE, after the loadout is recorded). The observer HUD's slot buttons only
+	// re-activate when the observed pawn's ON-HAND changes (OBSERVER_INVENTORY_ITEM_ON_HAND_CHANGED sets
+	// m_weaponChanged -> RefreshUIByWeaponOnHand); cmd 174 fills the slot data but never fires it, so a
+	// replay shows only the held weapon + fists until the recorder's first weapon switch. m.started means
+	// giveLoadout already ran + its cmd 174 is recorded, so this cmd-108 on-hand toggle lands AFTER the
+	// loadout in the recording and forces the wheel to repaint the equipped slots. See kickObserverWheel.
+	if !m.wheelKicked && m.started {
+		m.wheelKicked = true
+		for _, recv := range m.players {
+			if recv.out != nil {
+				recv.kickObserverWheel()
+			}
+		}
 	}
 
 	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))
