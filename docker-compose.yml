@@ -49,6 +49,11 @@ x-auth: &auth
     TRUST_PROXY: "true"
     CONNECT_PORT: ${CONNECT_PORT:-5000}
     LOGIN_PORT: ${AUTH_LOGIN_PORT:-25565}
+    # Storage: when DATABASE_URL is set the auth server stores accounts in Postgres
+    # (own `auth` schema, so no clash with the game's public.accounts); MONGO_URI/
+    # DB_NAME are the fallback used only when DATABASE_URL is empty.
+    DATABASE_URL: ${DATABASE_URL:-}
+    AUTH_PG_SCHEMA: ${AUTH_PG_SCHEMA:-auth}
     MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017}
     DB_NAME: ${DB_NAME:-libmadoka_auth}
     APP_ID: ${APP_ID:?set APP_ID in .env}
@@ -57,7 +62,9 @@ x-auth: &auth
     DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:?set DISCORD_CLIENT_SECRET in .env}
     DISCORD_REDIRECT_URI: https://${AUTH_LOGIN_DOMAIN}/oauth/discord/callback
     OAUTH_STATE_SECRET: ${OAUTH_STATE_SECRET:?set OAUTH_STATE_SECRET in .env}
-  depends_on: [mongo]
+  # Depend on both backends so whichever DATABASE_URL selects is up first. (Compose
+  # only starts services that are actually referenced; both are defined below.)
+  depends_on: [postgres, mongo]
 
 services:
   traefik:

@@ -25,15 +25,17 @@ async function nextUid(guests) {
   return String(max + 1);
 }
 
-// Retry a fn if it fails with a MongoDB duplicate-key error, typically caused
-// by two concurrent registrations racing to insert the same uid or dc_id.
+// Retry a fn if it fails with a duplicate-key error, typically caused by two
+// concurrent registrations racing to insert the same uid or dc_id. Handles both
+// backends: MongoDB signals it with err.code === 11000, PostgreSQL with the
+// unique-violation SQLSTATE '23505'.
 async function withUidRetry(fn, { attempts = 5 } = {}) {
   let lastErr;
   for (let i = 0; i < attempts; i++) {
     try {
       return await fn();
     } catch (err) {
-      if (err && err.code === 11000) {
+      if (err && (err.code === 11000 || err.code === '23505')) {
         lastErr = err;
         continue;
       }
