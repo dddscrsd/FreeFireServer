@@ -78,11 +78,14 @@ async function ensureSchema() {
   await p.query(`CREATE INDEX IF NOT EXISTS guests_refresh_token_idx ON ${schema}.guests (refresh_token)`);
 
   // accounts: game-facing data + moderation flags. The game server reads
-  // `banned`/`authorized` here to gate login (see src/db/authStore.js).
+  // `banned`/`authorized` here to gate login (see src/db/authStore.js). `uid` is
+  // indexed but NOT unique: it's keyed by open_id everywhere, and the source
+  // (Mongo, game-written) can hold the same uid under two open_ids as mixed
+  // string/number types that a BIGINT column would otherwise reject on migrate.
   await p.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.accounts (
       open_id        TEXT PRIMARY KEY,
-      uid            BIGINT UNIQUE,
+      uid            BIGINT,
       nickname       TEXT,
       banned         BOOLEAN NOT NULL DEFAULT FALSE,
       ban_reason     TEXT,
@@ -90,6 +93,7 @@ async function ensureSchema() {
       under_analysis BOOLEAN NOT NULL DEFAULT FALSE,
       created_at     TEXT
     )`);
+  await p.query(`CREATE INDEX IF NOT EXISTS accounts_uid_idx ON ${schema}.accounts (uid)`);
 
   // pairings: short-lived OAuth bridges. Mongo auto-expired these with a TTL
   // index; Postgres has none, so reads filter on expires_at and a sweeper deletes

@@ -83,7 +83,34 @@ async function migrateCollection({ db, pool, schema, name, cols, toValues, valid
   return { ok, skipped, failed };
 }
 
+// Preflight: report uids shared by more than one open_id. In Mongo a string
+// "10000001" and a number 10000001 are distinct (so its unique index allowed
+// both), but the Postgres BIGINT column collapses them — surfacing here as either
+// a relaxed accounts row (fine) or, for guests (uid stays UNIQUE), a hard failure
+// worth cleaning up. Best-effort: never blocks the migration.
+async function reportDupUids(db, name, log) {
+  try {
+    const dups = await db.collection(name).aggregate([
+      { $group: {
+        _id: { $convert: { input: '$uid', to: 'long', onError: null, onNull: null } },
+        open_ids: { $addToSet: '$open_id' }, n: { $sum: 1 } } },
+      { $match: { _id: { $ne: null }, n: { $gt: 1 } } },
+      { $sort: { n: -1 } },
+    ]).toArray();
+    if (!dups.length) return dups;
+    log(`[auth-migrate] NOTE: ${name} has ${dups.length} uid(s) shared by >1 open_id (Mongo string/number uids collapse in BIGINT):`);
+    for (const d of dups.slice(0, 20)) log(`  uid=${d._id} <- open_ids ${JSON.stringify(d.open_ids)}`);
+    if (dups.length > 20) log(`  ...and ${dups.length - 20} more`);
+    return dups;
+  } catch (e) {
+    log(`[auth-migrate] dup-uid preflight for ${name} skipped: ${e.message}`);
+    return [];
+  }
+}
+
 async function migrateAll({ db, pool, schema, log = console.log, dryRun = false }) {
+  await reportDupUids(db, 'guests', log);
+  await reportDupUids(db, 'accounts', log);
   const guests = await migrateCollection({
     db, pool, schema, name: 'guests', cols: GUEST_COLS, toValues: guestValues,
     valid: (d) => d.open_id && uidOf(d) != null, log, dryRun,
