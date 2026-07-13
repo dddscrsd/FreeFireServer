@@ -45,12 +45,30 @@ function isEnabled() {
   return enabled;
 }
 
+// Run a query, but if the auth schema/tables don't exist yet (the operator hasn't
+// switched the auth server onto Postgres, or hasn't started it), self-disable so
+// we don't throw + log on every single login. Other errors propagate to the
+// caller, which fails open. 42P01 = undefined_table, 3F000 = invalid_schema_name.
+async function runQuery(sql, params) {
+  try {
+    return await pool.query(sql, params);
+  } catch (e) {
+    if (e && (e.code === '42P01' || e.code === '3F000')) {
+      enabled = false;
+      logger.warn(`[authStore] auth schema '${schema}' not present — disabling auth-store gates (${e.code}). ` +
+        'Run the auth server on this Postgres to create it, or unset the enforce flags.');
+      return { rows: [] };
+    }
+    throw e;
+  }
+}
+
 // The guests row (identity) for an open_id, or null. `access_token` is the game
-// client's login_token. Throws on DB error.
+// client's login_token. Throws on DB error (except schema-missing -> self-disable).
 async function guestByOpenId(openId) {
   ensure();
   if (!enabled || !openId) return null;
-  const { rows } = await pool.query(
+  const { rows } = await runQuery(
     `SELECT open_id, uid, access_token, renovation, access_expiry
        FROM ${schema}.guests WHERE open_id = $1`,
     [openId]
@@ -59,11 +77,11 @@ async function guestByOpenId(openId) {
 }
 
 // The accounts row (game data + moderation flags) for an open_id, or null.
-// Throws on DB error.
+// Throws on DB error (except schema-missing -> self-disable).
 async function accountByOpenId(openId) {
   ensure();
   if (!enabled || !openId) return null;
-  const { rows } = await pool.query(
+  const { rows } = await runQuery(
     `SELECT open_id, uid, banned, ban_reason, authorized
        FROM ${schema}.accounts WHERE open_id = $1`,
     [openId]
