@@ -82,12 +82,17 @@ func main() {
 		go watchStopFile(p)
 	}
 
+	go guardMaintenance() // aggregate the dropped-packet log + prune the DoS-guard source table
+
 	serve(conn, key)
 }
 
 // serve is the receive loop: decode each datagram, look up (or create) its session,
 // and dispatch it.
 func serve(conn *net.UDPConn, key []byte) {
+	if err := conn.SetReadBuffer(1 << 20); err != nil { // 1 MiB kernel recv buffer to ride out bursts (best-effort)
+		log.Printf("[mm-udp] SetReadBuffer: %v", err)
+	}
 	buf := make([]byte, 8192)
 	for {
 		n, remote, err := conn.ReadFromUDP(buf)
@@ -95,9 +100,20 @@ func serve(conn *net.UDPConn, key []byte) {
 			log.Printf("[mm-udp] read err: %v", err)
 			continue
 		}
+		// DoS guard (see guard.go): rate-limit per source IP and reject junk (wrong msg-key / too short)
+		// BEFORE copying the datagram or logging — so a flood of ErrMsgKey packets is nearly free. Bad
+		// datagrams count 4x toward the per-source limit, so a flooding host is blocked within ~1s. Drops
+		// are aggregated (guardMaintenance logs a 5s total) instead of one log line per packet.
+		ip := remote.IP.String()
+		badHeader := n < 8 || buf[0] != packet.MsgKey
+		if !allowSource(ip, badHeader) || badHeader {
+			droppedPackets.Add(1)
+			continue
+		}
 		p, err := packet.Decode(append([]byte(nil), buf[:n]...), key)
 		if err != nil {
-			log.Printf("[mm-udp] drop from %v (%dB): %v", remote, n, err)
+			allowSource(ip, true) // valid header but undecodable (bad CRC etc.) — penalize the source too
+			droppedPackets.Add(1)
 			continue
 		}
 		raddr := remote.String()
