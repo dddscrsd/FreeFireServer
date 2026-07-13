@@ -14,8 +14,10 @@
  */
 
 const net = require('net');
+const config = require('../../config/default');
 const logger = require('../logger');
 const { getRepo } = require('../db/repo');
+const authStore = require('../db/authStore');
 const { lookup } = require('../protocol/protos');
 const { CMD, INIT_ACK, decrypt, parseClientFrames, encodeServerFrame } = require('./framing');
 const tcpRouter = require('./router');
@@ -42,6 +44,22 @@ function markOnline(uid) {
 function markOffline(uid) {
   const bus = getBus();
   if (bus) bus.clearPresence(uid).catch((e) => logger.warn(`[tcp] presence clear uid=${uid}: ${e.message}`));
+}
+
+// True if `account` is banned per the game store's flag or the auth store
+// (auth.accounts.banned / authorized=false). Fails open on a DB error. Gated by
+// config.auth.enforceBans.
+async function isBanned(account) {
+  if (!config.auth || !config.auth.enforceBans || !account) return false;
+  if (account.banned === true) return true;
+  if (!authStore.isEnabled() || !account.open_id) return false;
+  try {
+    const a = await authStore.accountByOpenId(account.open_id);
+    return !!(a && (a.banned === true || a.authorized === false));
+  } catch (e) {
+    logger.warn(`[tcp] ban check uid=${account.uid}: ${e.message}`);
+    return false;
+  }
 }
 
 function register(entry) {
@@ -125,6 +143,16 @@ async function handleFrame(socket, f, entry, peer) {
     if (!account) {
       logger.warn(`[tcp] ${peer}: unknown/expired token -> closing`);
       socket.destroy();
+      return;
+    }
+    // Ban gate (defense in depth): a banned account must not hold a live
+    // notification channel even if it somehow obtained a token. Checks the game
+    // store's flag + the auth store; OFF/safe by default (config.auth.enforceBans
+    // is on, but no account is banned until an operator flags it).
+    if (await isBanned(account)) {
+      logger.warn(`[tcp] ${peer}: banned account uid=${account.uid} -> kick+close`);
+      try { socket.write(encodeServerFrame(CMD.KICK, Buffer.from([0]))); } catch (e) { /* ignore */ }
+      setTimeout(() => { try { socket.destroy(); } catch (e) { /* ignore */ } }, 100);
       return;
     }
     const newEntry = { socket, account, region: f.region, lastSeen: Date.now() };
@@ -311,6 +339,17 @@ function startBusSubscriptions() {
     logger.info(`[tcp] relay gw.push -> uid=${target} protocol=${m.protocol} cmd=${m.cmd} (${content.length}B)`);
   });
 
+  // session.revoke: the login/main tier (or a moderator action) asks us to kick a
+  // specific account — bad signature_md5, ban, forced logout. Kick it if it's
+  // connected HERE; another gateway node handles its own sessions.
+  bus.subscribePS('session.revoke', (env) => {
+    const m = Bus.payload(env, 'SessionRevoke');
+    const uid = Number(m.account_id);
+    if (!sessions.has(uid)) return;
+    logger.info(`[tcp] session.revoke uid=${uid} reason="${m.reason || ''}" -> kick`);
+    kick(uid);
+  });
+
   bus.subscribePS('player.updated', async (env) => {
     const m = Bus.payload(env, 'PlayerUpdated');
     const uid = Number(m.account_id);
@@ -326,7 +365,7 @@ function startBusSubscriptions() {
       logger.warn(`[tcp] player.updated refresh uid=${uid}: ${e.message}`);
     }
   });
-  logger.info('[tcp] bus subscriptions up (gw.push, player.updated)');
+  logger.info('[tcp] bus subscriptions up (gw.push, session.revoke, player.updated)');
 }
 
 function createGateway() {

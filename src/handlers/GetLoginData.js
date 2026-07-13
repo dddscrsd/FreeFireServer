@@ -15,11 +15,20 @@
 
 const config = require('../../config/default');
 const { getLocalIp } = require('../utils/address');
+const gate = require('./_authGate');
 const { requireAccount, nowSecs, serverUrl, DEFAULT_REGION } = require('./_shared');
 
 async function handleGetLoginData(reqObj, ctx) {
   const account = requireAccount(ctx);
   if (!account) return {}; // router already guards, but stay defensive.
+
+  // Enforce the signature_md5 allow-list + account bans here too (the user asked
+  // for signature_md5 checks on both /MajorLogin and /GetLoginData). Both gates
+  // are OFF/safe by default — see config.auth.
+  const sig = gate.checkSignature(reqObj);
+  if (sig) return gate.reject(ctx, sig, account.uid);
+  const banned = await gate.checkBan(account.open_id, account);
+  if (banned) return gate.reject(ctx, banned, account.uid);
 
   const localIp = await getLocalIp();
   const region = account.region || DEFAULT_REGION;

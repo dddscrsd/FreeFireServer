@@ -18,16 +18,31 @@
 
 const player = require('../db/player');
 const { getRepo } = require('../db/repo');
+const gate = require('./_authGate');
 const { DEFAULT_REGION, TOKEN_TTL, nowSecs, newToken, serverUrl } = require('./_shared');
 
 async function handleMajorLogin(reqObj, ctx) {
   const openId = player.deriveOpenId(reqObj);
+
+  // Login hardening (all gates OFF/safe by default — see config.auth): reject a
+  // bad client_version / signature_md5, or an open_id not registered on the auth
+  // server, with 403 (+ TCP kick for a forged build) BEFORE touching the store.
+  ctx.logger.info(
+    `[login] MajorLogin open_id=${openId} client_version="${reqObj.client_version || ''}" signature_md5="${reqObj.signature_md5 || ''}"`
+  );
+  const gated = await gate.runLoginGate(reqObj, openId);
+  if (gated) return gate.reject(ctx, gated);
+
   const account = await getRepo().getByOpenId(openId);
   if (!account) {
     ctx.logger.info(`[login] MajorLogin open_id=${openId} -> 404 (not registered, client will register)`);
     ctx.res.status(404).type('text/plain').end();
     return undefined;
   }
+
+  // Ban gate (checks the game store + auth store). 403 + TCP kick when banned.
+  const banned = await gate.checkBan(openId, account);
+  if (banned) return gate.reject(ctx, banned, account.uid);
 
   const token = newToken();
   account.token = token;
