@@ -246,6 +246,51 @@ func (m *Match) removePlayer(s *session) {
 	log.Printf("[mm-udp] roster- slot=%d ent=%#x (roster=%d) %v", s.slot, s.entityID, len(m.players), s.remote)
 }
 
+// Disconnect handling. There is no TCP-style FIN on the UDP match socket, so a client that closes the
+// app / loses network just stops sending. disconnectTimeout is how much silence marks a client dropped;
+// reconnectGrace is how long its pawn is then KEPT for a reconnect (the client relaunches, re-logs in on
+// TCP, the lobby pushes a reconnect handoff, and it re-joins on a NEW UDP connection) before removal.
+const (
+	disconnectTimeout = 10 * time.Second
+	reconnectGrace    = 45 * time.Second
+)
+
+// sweepDisconnects removes the frozen pawn of a client that dropped and did not reconnect within the
+// grace window. Without it a dropped player sits at their last position forever: their team still counts
+// a live member so the round can't resolve, and everyone else sees them stuck — usually just outside the
+// shrunk zone, unreachable. (A dropped player OUTSIDE the zone is already killed by stepZone; this catches
+// the ones frozen INSIDE it and bounds how long any frozen pawn lingers.) Runs each tick on run()'s
+// goroutine, so mutating m.players here is safe. On reconnect the resumed session updates lastSeen, which
+// clears the disconnected flag before the grace elapses (see resumeReconnect).
+func (m *Match) sweepDisconnects(now time.Time) {
+	for _, p := range m.players {
+		if p.out == nil {
+			continue // the fill bot has no connection to time out
+		}
+		last := p.lastSeen.Load()
+		if last == 0 {
+			continue // no packet recorded yet
+		}
+		if now.Sub(time.Unix(0, last)) < disconnectTimeout {
+			if p.disconnected { // packets resumed on this same session -> back online
+				p.disconnected = false
+				log.Printf("[mm-udp] player ent=%#x reconnected (same session) %v", p.entityID, p.remote)
+			}
+			continue
+		}
+		if !p.disconnected {
+			p.disconnected = true
+			p.disconnectedAt = now
+			log.Printf("[mm-udp] player ent=%#x went silent -> disconnected; %s reconnect grace %v", p.entityID, reconnectGrace, p.remote)
+		}
+		if now.Sub(p.disconnectedAt) >= reconnectGrace {
+			log.Printf("[mm-udp] player ent=%#x reconnect grace expired -> removing frozen pawn %v", p.entityID, p.remote)
+			m.removePlayer(p)
+			return // removePlayer rebuilt m.players; stop iterating the stale slice, resume next tick
+		}
+	}
+}
+
 // admitFirst runs the join handshake for the FIRST player of a fresh match: pick the arena/spawn,
 // seed the round + enemy bot, answer the join (cmd 100 + cmd 101 self + cmd 101 bot + cmd 130),
 // draw the zone, and start the match loop. m.arena/round/bot are the match's — set once here. Later
@@ -422,6 +467,7 @@ func (m *Match) run() {
 				lastStream = now
 			}
 			m.stepZone(now)
+			m.sweepDisconnects(now) // remove pawns of clients that closed the app + never reconnected
 			m.stepKnock(now)   // bleed any downed players; a bleed-out finalizes a cmd-107 death
 			m.stepRescue(now)  // complete / cancel in-progress teammate revives
 			m.stepFlags(now)   // despawn emote-planted battle flags past their 60s lifetime

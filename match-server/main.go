@@ -158,6 +158,7 @@ func (s *session) dispatch(p *packet.Packet) {
 			log.Printf("[mm-udp] dispatch panic: %v", r)
 		}
 	}()
+	s.lastSeen.Store(time.Now().UnixNano()) // heard from the client — feeds the disconnect sweep (sweepDisconnects)
 	if p.Cmd == packet.CmdAck { // the client ACKing one of OUR reliable sends -> stop retransmitting it
 		if seq, ok := parseAckSeq(p.Payload); ok {
 			s.out.onAck(seq)

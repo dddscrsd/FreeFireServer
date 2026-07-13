@@ -39,6 +39,15 @@ type session struct {
 	stopped     atomic.Bool // set on player quit (cmd 191); the match loop exits when true
 	player      joinPlayer  // resolved from the prepare_token (cmd 439/440)
 
+	// lastSeen is the UnixNano of the most recent inbound packet from this client. Written in dispatch on
+	// the RECEIVE goroutine (atomic — the match loop reads it in sweepDisconnects). disconnected/
+	// disconnectedAt are the sweep's own state (run() goroutine only): a client that goes silent past
+	// disconnectTimeout is flagged, and if it doesn't reconnect within reconnectGrace its frozen pawn is
+	// removed so the round can resolve and others stop seeing it stuck outside the zone.
+	lastSeen       atomic.Int64
+	disconnected   bool
+	disconnectedAt time.Time
+
 	// Allocated per-participant ids (Step 4b, via Match.allocSlot): entity id = team<<24 | slot,
 	// PRI RepID, CS faction, team (the entity hibyte), and roster slot. For the first human these
 	// equal the playerEntityID / playerRepID / localFaction constants the game logic still reads;
