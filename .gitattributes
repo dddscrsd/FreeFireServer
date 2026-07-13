@@ -1,0 +1,8 @@
+# Keep Unix-toolchain files LF regardless of the checkout platform (a Windows dev box would otherwise
+# rewrite them to CRLF, which breaks make / the shell / the BPF build on the Linux server).
+*.sh        text eol=lf
+*.c         text eol=lf
+*.h         text eol=lf
+Makefile    text eol=lf
+makefile    text eol=lf
+*.mk        text eol=lf
