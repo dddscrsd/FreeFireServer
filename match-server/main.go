@@ -85,6 +85,7 @@ func main() {
 	}
 
 	go guardMaintenance() // aggregate the dropped-packet log + prune the DoS-guard source table
+	startAdminKick()      // subscribe to session.revoke so admin/ban kicks eject a mid-match player
 
 	// One receive loop per socket. With SO_REUSEPORT the kernel load-balances datagrams across them, so a
 	// flood is processed on many cores at once. serve()'s shared state (the sessions map, the DoS guard)

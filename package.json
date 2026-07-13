@@ -20,6 +20,7 @@
     "tcp": "node src/servers/tcp.js",
     "settlement": "node src/servers/settlement.js",
     "matchmaker": "node src/servers/matchmaker.js",
+    "admin": "node scripts/admin.js",
     "dev": "nodemon --watch src --watch config --exec node src/server.js",
     "migrate": "node src/db/migrate.js",
     "migrate-data": "node src/db/migrate-data.js",
