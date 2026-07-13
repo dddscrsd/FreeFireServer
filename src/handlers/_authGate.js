@@ -25,17 +25,29 @@ const A = config.auth || {};
 
 function checkVersion(reqObj) {
   const allowed = A.allowedVersions || [];
-  if (!allowed.length) return null; // gate off
+  if (!allowed.length) {
+    logger.warn(`[gate] no versions allowed, disabling`)
+    return null; // gate off
+  }
   const v = String((reqObj && reqObj.client_version) || '');
-  if (allowed.includes(v)) return null;
+  if (allowed.includes(v)) {
+    logger.info(`[gate] client_version '${v}' is allowed`);
+    return null;
+  }
   return { status: 403, reason: `client_version '${v}' not in allow-list` };
 }
 
 function checkSignature(reqObj) {
   const allowed = A.allowedSignatures || [];
-  if (!allowed.length) return null; // gate off
+  if (!allowed.length) {
+    logger.warn(`[gate] no signatures allowed, disabling`)
+    return null; // gate off
+  }
   const sig = String((reqObj && reqObj.signature_md5) || '');
-  if (allowed.includes(sig)) return null;
+  if (allowed.includes(sig)) {
+    logger.info(`[gate] signature_md5 '${sig}' is allowed`);
+    return null;
+  }
   // A forged/unknown client build: refuse AND kick + force-close, per spec.
   return { status: 403, reason: `signature_md5 '${sig}' not in allow-list`, kick: true, forceClose: true };
 }
