@@ -11,9 +11,11 @@
 #   Debian/Ubuntu: sudo apt install clang llvm libbpf-dev linux-headers-$(uname -r) iproute2
 #   RHEL/Fedora:   sudo dnf install clang llvm libbpf-devel kernel-headers iproute
 
-CLANG ?= clang
-IFACE ?= eth0
-MODE  ?= native            # native | skb | hw
+CLANG     ?= clang
+IFACE     ?= eth0
+MODE      ?= native        # native | skb | hw
+GAME_PORT ?= 10100         # must match the server's -addr port; from the env: GAME_PORT=12345 make load
+RATE_MAX  ?= 100           # per-source packets/sec before XDP_DROP
 OBJ    = xdp_ratelimit.o
 SRC    = xdp_ratelimit.c
 SEC    = xdp
@@ -21,12 +23,17 @@ SEC    = xdp
 # ip link's mode flag: native driver=xdpdrv, generic/skb=xdpgeneric, hardware offload=xdpoffload.
 XDPMODE = $(if $(filter skb generic,$(MODE)),xdpgeneric,$(if $(filter hw,$(MODE)),xdpoffload,xdpdrv))
 
-.PHONY: all load unload status dump clean
+.PHONY: all load unload status dump clean FORCE
 
 all: $(OBJ)
 
-$(OBJ): $(SRC)
-	$(CLANG) -O2 -g -Wall -target bpf -c $(SRC) -o $(OBJ)
+# Depend on FORCE so the object is always recompiled — GAME_PORT/RATE_MAX are -D build params from the
+# env, and Make wouldn't otherwise notice they changed while the .c is untouched (stale baked-in port).
+# The BPF compile is trivial, so always rebuilding is cheap and avoids a confusing wrong-port load.
+$(OBJ): $(SRC) FORCE
+	$(CLANG) -O2 -g -Wall -DGAME_PORT=$(GAME_PORT) -DRATE_MAX=$(RATE_MAX) -target bpf -c $(SRC) -o $(OBJ)
+
+FORCE:
 
 load: $(OBJ)
 	ip link set dev $(IFACE) $(XDPMODE) obj $(OBJ) sec $(SEC)

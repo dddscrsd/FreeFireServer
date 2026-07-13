@@ -20,9 +20,16 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
 
+/* GAME_PORT / RATE_MAX are overridable at build time via -D (the Makefile passes them from the env, e.g.
+ * `GAME_PORT=12345 make`). A BPF program can't read the process env at runtime — it runs in the kernel —
+ * so these are baked in at compile time; changing them means rebuild + reload. See the Makefile / README. */
+#ifndef GAME_PORT
 #define GAME_PORT      10100         /* the UDP port the match server listens on */
-#define RATE_WINDOW_NS 1000000000ULL /* 1 second window */
+#endif
+#ifndef RATE_MAX
 #define RATE_MAX       100           /* packets/window per source before dropping (a legit client is ~35/s) */
+#endif
+#define RATE_WINDOW_NS 1000000000ULL /* 1 second window */
 
 struct src_rate {
 	__u64 window_start; /* ktime of the current window */

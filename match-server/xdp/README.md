@@ -30,7 +30,15 @@ Find your interface with `ip -br link` / `ethtool -i <iface>`. On cloud VMs the 
 universal fallback.
 
 ## Tuning
-Edit the `#define`s at the top of `xdp_ratelimit.c` and rebuild + reload:
+`GAME_PORT` and `RATE_MAX` are **build params from the env** — the Makefile passes them to clang as `-D`,
+so you don't edit the `.c`:
+```bash
+GAME_PORT=12345 RATE_MAX=150 sudo make load IFACE=eth0
+```
+The object is always recompiled, so the values can't go stale. A BPF program **can't read the env at
+runtime** (it runs in the kernel), so these are baked in at build — changing them means rebuild + reload.
+To change them *without* reloading you'd add a config BPF map read per-packet + a `bpftool map update`
+step; ask if you want that.
 - `GAME_PORT` — must match the server's `-addr` port.
 - `RATE_MAX` — packets/sec per source before dropping. **Lower = more aggressive** (catches moderate
   multi-source floods) but risks dropping a legit client's burst; **higher = only heavy floods**. Keep it
