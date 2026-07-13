@@ -60,16 +60,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("bad secret: %v", err)
 	}
-	udpAddr, err := net.ResolveUDPAddr("udp", *addr)
-	if err != nil {
-		log.Fatalf("resolve: %v", err)
-	}
-	conn, err := net.ListenUDP("udp", udpAddr)
+	// Open one receive socket per core with SO_REUSEPORT (Linux) so the kernel spreads inbound datagrams
+	// across cores — without it a single receive goroutine is the bottleneck under a multi-source flood.
+	// Off Linux this is a single plain socket (unchanged behaviour). See reuseport.go.
+	conns, err := listenUDPMulti(*addr, reusePortSockets())
 	if err != nil {
 		log.Fatalf("listen: %v", err)
 	}
-	defer conn.Close()
-	log.Printf("[mm-udp] match server listening on %s (udp)", conn.LocalAddr())
+	for _, c := range conns {
+		defer c.Close()
+	}
+	log.Printf("[mm-udp] match server listening on %s (udp) — %d receive socket(s), SO_REUSEPORT=%v",
+		conns[0].LocalAddr(), len(conns), reusePortSupported)
 
 	// On shutdown, kick every client so they drop to the lobby instead of reconnecting
 	// into a dead/stale match. Triggered by a signal (Ctrl+C / SIGTERM) or, for the
@@ -84,7 +86,15 @@ func main() {
 
 	go guardMaintenance() // aggregate the dropped-packet log + prune the DoS-guard source table
 
-	serve(conn, key)
+	// One receive loop per socket. With SO_REUSEPORT the kernel load-balances datagrams across them, so a
+	// flood is processed on many cores at once. serve()'s shared state (the sessions map, the DoS guard)
+	// is already mutex/atomic-guarded, so running several in parallel is safe.
+	var wg sync.WaitGroup
+	for _, c := range conns {
+		wg.Add(1)
+		go func(c *net.UDPConn) { defer wg.Done(); serve(c, key) }(c)
+	}
+	wg.Wait()
 }
 
 // serve is the receive loop: decode each datagram, look up (or create) its session,
