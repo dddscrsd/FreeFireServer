@@ -16,7 +16,21 @@ module.exports = {
   version: '1.70.1',
   security: {
     cors: { origin: '*' },
-    rateLimit: { windowMs: 15 * 60 * 1000, max: 100 }
+    rateLimit: { windowMs: 15 * 60 * 1000, max: 100 },
+    // HTTP replay guard: drop a byte-identical resend of a recent request body to
+    // the same endpoint (a captured-and-replayed packet). A genuine client
+    // regenerates each request (event_time / sensor / storage fields vary), so
+    // exact duplicates within the window are replays — but this can't catch a
+    // forger who holds the static AES key (the signature_md5 + auth-token gates
+    // cover that). OFF by default so a client that legitimately resends identical
+    // bytes for some endpoint isn't broken; enable + test per deployment.
+    replay: {
+      enabled: _bool(process.env.REPLAY_GUARD, false),
+      windowMs: Number(process.env.REPLAY_WINDOW_MS || 30000),
+      max: Number(process.env.REPLAY_MAX_ENTRIES || 100000),
+      // Endpoints never deduped (retry-prone telemetry). Comma-separated.
+      exclude: _list(process.env.REPLAY_EXCLUDE || 'LogEvent,NetworkLogEvent'),
+    },
   },
   protocol: {
     // How the AES ciphertext is carried in the HTTP body:

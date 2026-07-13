@@ -5,6 +5,7 @@ const express = require('express');
 const logger = require('../logger');
 const { lookup } = require('./protos');
 const { encrypt, decrypt, BODY_ENCODING } = require('./aes');
+const replayGuard = require('./replayGuard');
 const { getRepo } = require('../db/repo');
 const { getBus } = require('../bus/instance');
 
@@ -192,6 +193,15 @@ function createProtocolRouter({ filter } = {}) {
       req.endpointName = cmd;
       logger.info(`[router] ${cmd} (plaintext JSON) -> 200 ack`);
       return res.status(200).type('application/octet-stream').end();
+    }
+
+    // Replay guard (opt-in): drop a byte-identical resend of a recent body to the
+    // same endpoint — a captured-and-replayed packet. OFF by default; see
+    // config.security.replay and src/protocol/replayGuard.js.
+    if (replayGuard.enabled && Buffer.isBuffer(req.body) && req.body.length &&
+        replayGuard.isReplay(cmd, req.body)) {
+      logger.warn(`[router] ${cmd}: replay dropped (duplicate body within window)`);
+      return res.status(409).type('text/plain').end();
     }
 
     const reqTypeName = (handler && handler.reqType) || (entry && entry.reqType);
