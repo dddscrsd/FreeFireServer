@@ -25,6 +25,14 @@ func (m *Match) broadcastData(cmd uint16, payload []byte, what string) {
 	}
 }
 
+func (m *Match) broadcastDataUnreliable(cmd uint16, payload []byte, what string) {
+	for _, p := range m.players {
+		if p.out != nil {
+			p.out.send(&packet.Packet{SendOption: packet.SendUnreliable, Cmd: cmd, Flags: packet.FlagEncrypted, Payload: payload}, what)
+		}
+	}
+}
+
 // deathPos returns the world position to report an entity died / was knocked at: a human's
 // last-known position (it moves — e.g. a zone death where it wandered), or the bot's static spawn.
 func (m *Match) deathPos(entity uint32) message.Vec3 {

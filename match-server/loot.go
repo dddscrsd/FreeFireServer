@@ -75,15 +75,20 @@ func (s *session) dropOverriddenAfterEquip(outgoing []lootItem) {
 // them in order — a tidy batch kept from when sends couldn't happen inside the old locked
 // sections (run() owns the state now, so it is purely for readable ordering).
 type outPkt struct {
-	cmd     uint16
-	payload []byte
-	label   string
+	cmd        uint16
+	payload    []byte
+	label      string
+	unreliable bool
 }
 
 // flush sends every queued packet in order.
 func (m *Match) flushBroadcast(out []outPkt) {
 	for _, o := range out {
-		m.broadcastData(o.cmd, o.payload, o.label)
+		if o.unreliable {
+			m.broadcastDataUnreliable(o.cmd, o.payload, o.label)
+		} else {
+			m.broadcastData(o.cmd, o.payload, o.label)
+		}
 	}
 }
 
@@ -213,7 +218,7 @@ func (s *session) removeTrackedItem(unique uint32, out []outPkt) []outPkt {
 	}
 	out = append(out, outPkt{packet.CmdRemoveInventoryList,
 		message.RemoveInventoryList(s.player.EntityID, []uint32{unique}),
-		fmt.Sprintf("cmd=327 remove dropped uid=%d", unique)})
+		fmt.Sprintf("cmd=327 remove dropped uid=%d", unique), true})
 	return out
 }
 
@@ -254,7 +259,7 @@ func (s *session) dropToGround(it lootItem, pos message.Vec3, out []outPkt) []ou
 		out = append(out,
 			outPkt{packet.CmdAddPickup,
 				message.AddPickup(it.pickupItem(id), box.pos, box.ctype),
-				fmt.Sprintf("cmd=114 AddPickup uid=%d data=%d -> box %d (new)", it.unique, it.data, id)})
+				fmt.Sprintf("cmd=114 AddPickup uid=%d data=%d -> box %d (new)", it.unique, it.data, id), false})
 		return out
 	}
 	// Merge into the existing box (snap the item to the box position).
@@ -262,7 +267,7 @@ func (s *session) dropToGround(it lootItem, pos message.Vec3, out []outPkt) []ou
 	out = append(out,
 		outPkt{packet.CmdAddPickup,
 			message.AddPickup(it.pickupItem(box.id), box.pos, box.ctype),
-			fmt.Sprintf("cmd=114 AddPickup uid=%d data=%d -> box %d (merge)", it.unique, it.data, box.id)})
+			fmt.Sprintf("cmd=114 AddPickup uid=%d data=%d -> box %d (merge)", it.unique, it.data, box.id), false})
 	return out
 }
 
@@ -329,7 +334,7 @@ func (s *session) removeLoadoutWeapon(slot byte, out []outPkt) ([]outPkt, csWeap
 	}
 	out = append(out, outPkt{packet.CmdRemoveInventoryList,
 		message.RemoveInventoryList(s.player.EntityID, []uint32{w.unique}),
-		fmt.Sprintf("cmd=327 remove weapon uid=%d slot=%d (dropped)", w.unique, slot)})
+		fmt.Sprintf("cmd=327 remove weapon uid=%d slot=%d (dropped)", w.unique, slot), false})
 	return out, w, true
 }
 
@@ -408,7 +413,7 @@ func (s *session) handlePickup(p *packet.Packet) {
 		equip := append([]message.Equipment(nil), s.equipment...)
 		out = append(out, outPkt{packet.CmdSyncInventory,
 			message.SyncInventory(s.player.EntityID, inv, pickAttach, equip, s.itemOnHand),
-			fmt.Sprintf("cmd=174 SyncInventory (pickup data=%d uid=%d slot=%d, +%d attach)", it.data, it.unique, slot, len(pickAttach))})
+			fmt.Sprintf("cmd=174 SyncInventory (pickup data=%d uid=%d slot=%d, +%d attach)", it.data, it.unique, slot, len(pickAttach)), false})
 
 		// Now spawn the displaced weapon on the ground (may merge into the box we just took
 		// from, which then survives). Done after the 174 so its 327 already freed the unique.
@@ -439,13 +444,13 @@ func (s *session) handlePickup(p *packet.Packet) {
 		equip := append([]message.Equipment(nil), s.equipment...)
 		out = append(out, outPkt{packet.CmdSyncInventory,
 			message.SyncInventory(s.player.EntityID, inv, nil, equip, s.itemOnHand),
-			fmt.Sprintf("cmd=174 SyncInventory (pickup item data=%d uid=%d)", it.data, it.unique)})
+			fmt.Sprintf("cmd=174 SyncInventory (pickup item data=%d uid=%d)", it.data, it.unique), false})
 	}
 
 	// Remove the picked item from the ground for the client.
 	out = append(out, outPkt{packet.CmdDelPickup,
 		message.DelPickup(it.pickupItem(box.id), box.ctype),
-		fmt.Sprintf("cmd=115 DelPickup uid=%d box=%d", it.unique, box.id)})
+		fmt.Sprintf("cmd=115 DelPickup uid=%d box=%d", it.unique, box.id), false})
 
 	// Delete the container if it is now empty (a displaced weapon may have re-merged into it,
 	// in which case it survives).
@@ -453,7 +458,7 @@ func (s *session) handlePickup(p *packet.Packet) {
 		delete(s.match.containers, box.id)
 		out = append(out, outPkt{packet.CmdDelContainer,
 			message.DelContainer(box.id, box.ctype),
-			fmt.Sprintf("cmd=228 DelContainer box=%d (empty)", box.id)})
+			fmt.Sprintf("cmd=228 DelContainer box=%d (empty)", box.id), false})
 	}
 
 	s.flush(out)
