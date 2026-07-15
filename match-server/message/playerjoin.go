@@ -40,7 +40,15 @@ type PlayerInfo struct {
 	// it into Player.BattleFlagID; NONZERO is what lets it plant a flag emote (send cmd 0x114). The flag's
 	// actual model resolves from the emote link_id, so any nonzero value enables all flag emotes. See [[cs-emotes]].
 	BattleFlag uint32
-	TeamIdx    uint8 // the player's index on the team
+	TeamIdx    uint8 // the player's index on the team (on-wire cmd-101 field CPDNBJNLAIM)
+	// PreferTeam is the custom-room team the host arranged (1 or 2), from the prepare_token. NOT
+	// serialized — it's a match-server placement hint consumed by allocSlot. 0 => server balance-fills.
+	PreferTeam uint8
+
+	// Shows are the player's showcase item ids (selected_items.shows). Written into the cmd-101
+	// cosmetics; the client buckets them by CollectionSubType into BaseProfileInfo.Shows, whose
+	// Shows[7] (weapon) is the DISPLAY weapon the result screen + lobby/profile render.
+	Shows []uint32
 
 	// Spawn transform, written into the OGJKHJAFNHB sub-object of cmd 101
 	// (CCIKDFGDBAM position ×1000 / CCDDHEBKMGD facing ×100). This is the
@@ -115,12 +123,12 @@ func (w *Writer) pkpamkedcdc(pi PlayerInfo) {
 	w.U32(0)              // CFOEDHFJKCJ (badge id)
 	w.U32(0)              // NBDEAJJACBM
 	w.Bool(false)         // AKGKHJLNBHK
-	w.U32List(pi.Slots)   // IOPNKHPNDDH : List<u32> (count=0)
+	w.U32List(pi.Shows)   // IOPNKHPNDDH : List<u32> (count=0) // THIS IS THE SHOWS LIST!
 	w.Str("")             // MFLBOPEBOKE
 	w.Str("")             // AIBGAEMOLAN
 	w.U32(0)              // LGFOLJMCMFH
-	w.U32List(pi.Slots)   // OJENBEIOBGL : List<u32> (count=0)
-	w.I16(0)              // GLHCLEMMLDN : List<u32> (count=0)
+	w.U32List(pi.Slots)   // OJENBEIOBGL : In-Game Skins
+	w.U32List(pi.Emotes)  // GLHCLEMMLDN : List<u32> (count=0)
 	w.U32(pi.BattleFlag)  // MDDDNKCOMDF : equipped BattleFlagID (@+0xB0) — NONZERO gates the flag-emote plant (client sends cmd 0x114)
 	w.U32(0)              // FHMMPDFIPMJ (pin id)
 	w.U32(0)              // ALELGKLAAOK

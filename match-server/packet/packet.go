@@ -64,6 +64,9 @@ const (
 	CmdAddContainer         = 227  // server -> client: GONMBPDMEBE — RUDP_ADD_CONTAINER ([i16 count]{u32,f32,bool}; no position)
 	CmdDelContainer         = 228  // server -> client: OPNFJLJGPFC — RUDP_DEL_CONTAINER ([u16 containerID][u8 containerType])
 	CmdTakeDamage           = 106  // client -> server: hit report (victim u32, damage u16, attacker u32, ...); server applies HP
+	CmdShowDamage           = 168  // server -> client: RUDP_SHOW_DAMAGE — floating damage numbers; relayed to a spectator of the shooter
+	CmdSwitchObserve        = 149  // server -> client: RUDP_SWITCH_OBSERVE — re-point a spectator to a new target ([bool apply][u32 entity])
+	CmdObserverJoin         = 230  // server -> client: RUDP_OBSERVER_JOIN (ILIKAAODPKH) — type=2 EObserverType_Replay: LIVE no-op, seeds the replay observer + dismisses its loading mask
 	CmdWeaponAction         = 104  // client -> server: MFCMPPGIMNH — weapon action (u32 pid, u32 weapon, u32 tick, u32 actionType[2=START FIRE], f32 turn); relay to others for the fire visual
 	CmdStopFire             = 105  // client -> server: FCHFNBNCJLB — stop firing (u32 pid, u32 weapon, ...); relay to others
 	CmdReloadStart          = 133  // client -> server: DAGDONBPDDC — reload started (u32 pid, f32 time, bool, u32 weapon); relay to others
@@ -85,8 +88,9 @@ const (
 	CmdSyncInventory        = 174  // server -> client: BGKCMKNDAGA (typed) — player inventory/equipment sync (additive; send once)
 	CmdSyncRegionActivities = 176  // server -> client: DKKNMJDABAC — RUDP_SYNC_REGION_ACTIVITIES; triggers the dynamic-prefab visibility pass (jump pads / invisible boxes). Send once on join.
 	CmdRemoveInventoryList  = 327  // server -> client: ABJFDIFIILN (typed) — REMOVE items by unique from a player's inventory (the only remove path)
+	CmdPlayerQuit           = 102  // server -> client: RUDP_PLAYER_QUIT — ANOTHER player left (u32 entity); the client removes just that player
 	CmdPlayerQuitReq        = 191
-	CmdPlayerQuitRes        = 192  // server -> client: typed — player quit
+	CmdPlayerQuitRes        = 192  // server -> client: RUDP_PLAYER_QUIT_RES — the server's ack of the RECIPIENT's OWN quit (makes THEM leave)
 	CmdCSShop               = 407  // server -> client: NDBLNLLMMJA (typed) — Contra Squad buy-phase shop (LOJA) item list
 	CmdCSPurchase           = 408  // client <-> server: IIOCLGDNBBB (typed) — buy request / result (result carries new coin balance)
 	CmdShopPurchaseCount    = 533  // server -> client: JOOMADHAPPD (typed) — per-round PURCHASE COUNT per limited shop item ([i16 count]{u32 itemID,u32 count,u32 limit}); drives the shop cell's "N/limit" label (m_PurchaseCnt). NOT carried by the cmd 408 result.

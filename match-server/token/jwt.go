@@ -29,6 +29,9 @@ type Show struct {
 	Clothes []uint32 `json:"clothes"`
 	Slots   []uint32 `json:"slots"`
 	Emotes  []uint32 `json:"emotes"`
+	// Shows are the account's showcase item ids; the client buckets them by CollectionSubType into
+	// BaseProfileInfo.Shows. Shows[7] (weapon) is the DISPLAY weapon on the post-match result screen.
+	Shows []uint32 `json:"shows"`
 	// BattleFlag is the player's equipped battle-flag config id (BattleFlag.csv Id). Nonzero lets the client
 	// plant flag emotes (it gates the cmd 0x114 send). Optional — 0/absent means no equipped flag.
 	BattleFlag uint32 `json:"battle_flag"`
@@ -41,6 +44,7 @@ type Claims struct {
 	Region    string `json:"region"`
 	Role      uint32 `json:"role"`
 	MatchID   uint64 `json:"mid"`
+	Team      uint8  `json:"team"` // custom-room team (group_id 1/2); 0/absent => the match server chooses (balance-fill)
 	Show      *Show  `json:"show,omitempty"`
 	IssuedAt  int64  `json:"iat"`
 	Expiry    int64  `json:"exp"`

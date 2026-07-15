@@ -3,6 +3,7 @@
 const config = require('./config');
 const { logger, childForRequest } = require('./logger');
 const mongo = require('./mongo');
+const store = require('./store');
 const ids = require('./ids');
 const tokens = require('./tokens');
 const signedRequest = require('./signed-request');
@@ -19,6 +20,7 @@ module.exports = {
   logger,
   childForRequest,
   mongo,
+  store,
 
   // ids
   generateOpenId: ids.generateOpenId,

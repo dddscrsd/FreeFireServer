@@ -1,3 +1,7 @@
+// Small env helpers for the auth-gate knobs below.
+const _bool = (v, d) => (v == null || v === '' ? d : (v === '1' || String(v).toLowerCase() === 'true'));
+const _list = (v) => String(v || '').split(',').map((s) => s.trim()).filter(Boolean);
+
 module.exports = {
   port: 3000,
   ports: {
@@ -12,7 +16,21 @@ module.exports = {
   version: '1.70.1',
   security: {
     cors: { origin: '*' },
-    rateLimit: { windowMs: 15 * 60 * 1000, max: 100 }
+    rateLimit: { windowMs: 15 * 60 * 1000, max: 100 },
+    // HTTP replay guard: drop a byte-identical resend of a recent request body to
+    // the same endpoint (a captured-and-replayed packet). A genuine client
+    // regenerates each request (event_time / sensor / storage fields vary), so
+    // exact duplicates within the window are replays — but this can't catch a
+    // forger who holds the static AES key (the signature_md5 + auth-token gates
+    // cover that). OFF by default so a client that legitimately resends identical
+    // bytes for some endpoint isn't broken; enable + test per deployment.
+    replay: {
+      enabled: _bool(process.env.REPLAY_GUARD, false),
+      windowMs: Number(process.env.REPLAY_WINDOW_MS || 30000),
+      max: Number(process.env.REPLAY_MAX_ENTRIES || 100000),
+      // Endpoints never deduped (retry-prone telemetry). Comma-separated.
+      exclude: _list(process.env.REPLAY_EXCLUDE || 'LogEvent,NetworkLogEvent'),
+    },
   },
   protocol: {
     // How the AES ciphertext is carried in the HTTP body:
@@ -48,6 +66,36 @@ module.exports = {
   redis: { url: process.env.REDIS_URL || 'redis://127.0.0.1:6379' },
   // PostgreSQL (Phase 1+). Empty keeps the SQLite path (db.file) in use.
   postgres: { url: process.env.DATABASE_URL || process.env.DB_URL || '' },
+  // --- auth / login hardening ----------------------------------------------
+  // Gates the game login/register against the auth server's store + the client's
+  // signature/version. Every gate is OFF or safe by default so the live (incl.
+  // guest) client keeps working; turn them on per-deployment once the exact
+  // client values are known. See src/handlers/_authGate.js and src/db/authStore.js.
+  auth: {
+    // Postgres schema the auth server writes to (must match AUTH_PG_SCHEMA there).
+    pgSchema: process.env.AUTH_PG_SCHEMA || 'auth',
+    // Only accounts registered on the auth server (open_id present in auth.guests)
+    // may log in / register. OFF by default: enabling it blocks any client whose
+    // open_id isn't provisioned by the auth server (including the dev guest unless
+    // allowGuest is on). Requires DATABASE_URL to point at the auth Postgres.
+    enforceRegistration: _bool(process.env.AUTH_ENFORCE_REGISTRATION, false),
+    // When enforcing registration, also require the presented login_token to equal
+    // the auth store's access_token (not just that the open_id exists).
+    enforceLoginToken: _bool(process.env.AUTH_ENFORCE_LOGIN_TOKEN, false),
+    // Let the deterministic dev guest (GUEST_OPEN_ID) bypass the registration gate
+    // so guest testing still works while enforcement is on for real accounts.
+    allowGuest: _bool(process.env.AUTH_ALLOW_GUEST, true),
+    guestOpenId: process.env.GUEST_OPEN_ID || 'guest-default',
+    // client_version allow-list. Empty => gate OFF (any version). Set to the exact
+    // string(s) your client sends (logged at login) to reject wrong versions.
+    allowedVersions: _list(process.env.ALLOWED_CLIENT_VERSIONS),
+    // signature_md5 allow-list. Empty => gate OFF. When set, a login whose
+    // signature_md5 isn't listed is refused (403) AND the account is TCP-kicked.
+    allowedSignatures: _list(process.env.ALLOWED_SIGNATURE_MD5),
+    // Enforce account bans (auth.accounts.banned / authorized=false, or the game
+    // store's state.banned). ON by default — harmless until an account is flagged.
+    enforceBans: _bool(process.env.AUTH_ENFORCE_BANS, true),
+  },
   // Per-module public domains: routed by the edge proxy and handed to the client
   // (server_url / GetLoginData / match handoff). Empty => derive from request host.
   domains: {

@@ -14,7 +14,8 @@
     "dev:login": "nodemon --watch login-server/src --watch shared/src login-server/src/index.js",
     "start": "run-p start:connect start:login",
     "start:connect": "node connect-server/src/index.js",
-    "start:login": "node login-server/src/index.js"
+    "start:login": "node login-server/src/index.js",
+    "migrate:pg": "node scripts/migrate-mongo-to-pg.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.7",

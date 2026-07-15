@@ -21,16 +21,29 @@
 
 const player = require('../db/player');
 const { getRepo } = require('../db/repo');
+const gate = require('./_authGate');
 const { DEFAULT_REGION, TOKEN_TTL, nowSecs, newToken, serverUrl } = require('./_shared');
 
 async function handleMajorLogin(reqObj, ctx) {
   const openId = player.deriveOpenId(reqObj);
+
+  // Same login hardening as MajorLogin (this is the deprecated alias). All gates
+  // OFF/safe by default — see config.auth.
+  ctx.logger.info(
+    `[login] PlatformLogin open_id=${openId} client_version="${reqObj.client_version || ''}" signature_md5="${reqObj.signature_md5 || ''}"`
+  );
+  const gated = await gate.runLoginGate(reqObj, openId);
+  if (gated) return gate.reject(ctx, gated);
+
   const account = await getRepo().getByOpenId(openId);
   if (!account) {
     ctx.logger.info(`[login] MajorLogin open_id=${openId} -> 404 (not registered, client will register)`);
     ctx.res.status(404).type('text/plain').end();
     return undefined;
   }
+
+  const banned = await gate.checkBan(openId, account);
+  if (banned) return gate.reject(ctx, banned, account.uid);
 
   const token = newToken();
   account.token = token;

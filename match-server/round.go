@@ -33,7 +33,9 @@ const (
 // roundResult sends the cmd 409 round-result crediting winnerTeam — this raises the
 // VICTORY/DEFEAT banner and (with the field-28 PRI score) the scoreboard.
 func (s *session) roundResult(winnerTeam byte) {
-	s.match.broadcastData(packet.CmdCSRoundResult, message.CSRoundResult(winnerTeam, playerEntityID),
+	// MVP display id: use the primary human's REAL entity (== playerEntityID for a team-1-first match,
+	// but a valid team-2 entity when a room put a team-2 player in first) rather than the fixed const.
+	s.match.broadcastData(packet.CmdCSRoundResult, message.CSRoundResult(winnerTeam, s.entityID),
 		fmt.Sprintf("cmd=409 round result: team %d wins round %d (score %d-%d)",
 			winnerTeam, s.match.round, s.match.teamScore[0], s.match.teamScore[1]))
 }

@@ -7,3 +7,6 @@ original_to_read/
 test_logs/
 tools/
 .refactor_backup/
+# exported client replay files (local diagnosis only)
+*_rep.bin
+*_rep.json

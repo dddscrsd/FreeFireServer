@@ -21,18 +21,20 @@ const (
 	bodyChest uint8 = 2
 )
 
-// equipMaxDur is each armor DataID's full durability. Our shop stocks vest 302/303 + helmet 305 (see
-// purchase.go armorSlot); values from the reference EQUIP_MAX_DURABILITY.
+// equipMaxDur is each armor DataID's full durability. The default shop stocks vest 302/303 + helmet
+// 305 (see purchase.go armorSlot); a custom room's advanced shop can also stock lvl4 (309/310). lvl4
+// values extrapolate the tier progression — the exact number only sets the bar's drain rate (the
+// client owns the actual HP reduction), not correctness.
 var equipMaxDur = map[uint32]uint16{
-	301: 120, 302: 220, 303: 300, // vest lvl1 / lvl2 / lvl3
-	304: 120, 305: 220, 306: 300, // helmet lvl1 / lvl2 / lvl3
+	301: 120, 302: 220, 303: 300, 309: 400, // vest lvl1 / lvl2 / lvl3 / lvl4
+	304: 120, 305: 220, 306: 300, 310: 400, // helmet lvl1 / lvl2 / lvl3 / lvl4
 }
 
 // armorReduction is the fraction of HP damage each piece absorbs — used to back the absorbed amount
 // out of the net damage for the durability drop (the client owns the actual HP reduction).
 var armorReduction = map[uint32]float64{
-	301: 0.25, 302: 0.35, 303: 0.45, // vest
-	304: 0.30, 305: 0.40, 306: 0.50, // helmet
+	301: 0.25, 302: 0.35, 303: 0.45, 309: 0.55, // vest
+	304: 0.30, 305: 0.40, 306: 0.50, 310: 0.55, // helmet
 }
 
 // equipArmor records a bought vest/helmet + seeds its durability to full.
@@ -106,6 +108,16 @@ func (s *session) syncArmor(slot byte) {
 	s.sendDataLog(packet.CmdRemoveInventoryList,
 		message.RemoveInventoryList(s.player.EntityID, []uint32{oldUID}),
 		fmt.Sprintf("cmd=327 remove stale armor uid=%d", oldUID))
+	// The re-create + remove churn above can kick the client out of a held CONSUMABLE's state — a gloo
+	// wall in build/placement mode — de-selecting it (armor slots 6/8 don't hit the cmd-121 SwapWeapon
+	// path, and the cmd-174 on-hand re-asserts the gloo, so it's the inventory shuffle itself). Re-assert
+	// a non-weapon held item so the player keeps holding it. A held WEAPON survives the churn and the
+	// client early-returns on an unchanged on-hand, so we only bother for a consumable (gloo/medkit).
+	if s.itemOnHand != 0 && !s.isWeaponUID(s.itemOnHand) {
+		s.sendDataLog(packet.CmdChangeHeldItem,
+			message.ChangeInventoryOnHand(s.player.EntityID, s.itemOnHand),
+			fmt.Sprintf("cmd=108 re-assert held consumable uid=%d after armor refresh", s.itemOnHand))
+	}
 }
 
 // wearDown returns dur reduced by the absorbed damage = net * r/(1-r), clamped at 0 (>=1 per hit so

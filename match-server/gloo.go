@@ -233,7 +233,7 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 		if autoSwitch != 0 { // after the consume: switch the placer's hand back to their last weapon (all clients)
 			out = append(out, outPkt{packet.CmdChangeHeldItem,
 				message.ChangeInventoryOnHand(s.player.EntityID, autoSwitch),
-				fmt.Sprintf("cmd=108 auto-switch to uid=%d after last gloo thrown", autoSwitch)})
+				fmt.Sprintf("cmd=108 auto-switch to uid=%d after last gloo thrown", autoSwitch), false})
 		}
 	}
 
@@ -249,7 +249,7 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 	s.match.walls = append(s.match.walls, w)
 	out = append(out, outPkt{packet.CmdAddIcewall,
 		message.AddIcewall(w.iceWallState(), 0),
-		fmt.Sprintf("cmd=218 ADD_ICEWALL id=%d rep=%d hp=%d", w.id, w.repID, w.hp)})
+		fmt.Sprintf("cmd=218 ADD_ICEWALL id=%d rep=%d hp=%d", w.id, w.repID, w.hp), true})
 
 	// 3) FIFO-TRIM active walls down to the cap (oldest first). One place normally trims
 	//    at most one; the loop robustly enforces active <= cap.
@@ -259,7 +259,7 @@ func (s *session) handlePlaceIcewall(p *packet.Packet) {
 			break
 		}
 		out = append(out, outPkt{packet.CmdRemoveIcewall, message.RemoveIcewall(oldest.id),
-			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (FIFO cap=%d)", oldest.id, glooWallCap)})
+			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (FIFO cap=%d)", oldest.id, glooWallCap), true})
 	}
 
 	s.match.flushBroadcast(out)                           // flush the built batch (outPkt/flush pattern)
@@ -293,7 +293,7 @@ func (s *session) handleIcewallDamage(p *packet.Packet) {
 	if w.hp == 0 { // broken -> remove
 		s.removeWallByID(w.id)
 		out = append(out, outPkt{packet.CmdRemoveIcewall, message.RemoveIcewall(w.id),
-			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (destroyed, weapon=%d)", w.id, req.Weapon)})
+			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (destroyed, weapon=%d)", w.id, req.Weapon), true})
 	} else {
 		w.state = wallStateForHP(w.hp) // crack; the eager PRI below replicates it
 		log.Printf("Updated wall state for wall id=%d", w.id)
@@ -313,7 +313,7 @@ func (s *session) sweepWalls() {
 	for _, w := range s.match.walls {
 		if now.Sub(w.placedAt) >= glooLifetime {
 			out = append(out, outPkt{packet.CmdRemoveIcewall, message.RemoveIcewall(w.id),
-				fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (lifetime)", w.id)})
+				fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (lifetime)", w.id), true})
 		} else {
 			kept = append(kept, w)
 		}
@@ -329,7 +329,7 @@ func (s *session) clearWalls() {
 	var out []outPkt
 	for _, w := range s.match.walls {
 		out = append(out, outPkt{packet.CmdRemoveIcewall, message.RemoveIcewall(w.id),
-			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (round reset)", w.id)})
+			fmt.Sprintf("cmd=221 REMOVE_ICEWALL id=%d (round reset)", w.id), true})
 	}
 	s.match.walls = nil
 	s.match.flushBroadcast(out) // break/remove must reach EVERY client, not just the reporter

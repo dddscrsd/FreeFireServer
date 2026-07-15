@@ -156,6 +156,26 @@ class Bus {
   }
 
   /**
+   * Enumerate every ONLINE account: SCAN the presence:<uid> keyspace (non-blocking
+   * cursor, so it's safe on a live server) and MGET the values. Returns
+   * { uid(string): node }. Used by the admin console's online/stats commands.
+   */
+  async scanPresence(count = 500) {
+    const keys = [];
+    await new Promise((resolve, reject) => {
+      const stream = this.pub.scanStream({ match: 'presence:*', count });
+      stream.on('data', (batch) => { for (const k of batch) keys.push(k); });
+      stream.on('end', resolve);
+      stream.on('error', reject);
+    });
+    if (!keys.length) return {};
+    const vals = await this.pub.mget(keys);
+    const out = {};
+    keys.forEach((k, i) => { if (vals[i]) out[k.slice('presence:'.length)] = vals[i]; });
+    return out;
+  }
+
+  /**
    * Fleet registry: the PUBLIC addresses of match servers that have heartbeated within
    * maxAgeSec. Match instances ZADD themselves into "matchservers" (score = unix
    * seconds; see the Go match-server); the matchmaker reads this to allocate whole

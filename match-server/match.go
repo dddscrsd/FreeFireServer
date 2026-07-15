@@ -33,6 +33,10 @@ type Match struct {
 	round      int               // 1-based CS round
 	teamScore  [2]uint8          // rounds won: [0]=local (faction 0), [1]=enemy (faction 1)
 	lossStreak [2]uint8          // consecutive rounds LOST per team (drives the CS loss-bonus ladder)
+	firstBlood uint32            // entity that got THIS round's first cross-team kill (0 = none yet); reset each round in endFight
+	reseedCount int              // how many times the cmd-101 roster has been re-emitted for the replay recording (see reseedJoinBurst)
+	lastReseed  time.Time        // throttle marker for the reseed window
+	wheelKicked bool             // whether the one-shot replay weapon-wheel kick (cmd-108 on-hand toggle) has fired (see kickObserverWheel)
 	settings   matchSettings     // per-match CS config (round count / economy); defaults + custom-room overrides
 	matchStart time.Time         // CS clock origin (phase countdowns read param - secondsSinceMatchStart)
 	tpSeq      uint32            // force-teleport token sequence (round-transition repositions)
@@ -155,16 +159,20 @@ func newMatch(s *session) *Match {
 // bot isn't in m.players, so it doesn't skew the count: the 1st human -> team 1, the bot slot -> team
 // 2, and a 2nd human -> team 2 (opposite the 1st). (Was odd/even, which put both humans on team 1.)
 // entity id = team<<24 | slot; RepID = playerRepID + slot - 1.
-func (m *Match) allocSlot() (entityID, repID uint32, faction, team, idx, slot byte) {
+func (m *Match) allocSlot(prefer byte) (entityID, repID uint32, faction, team, idx, slot byte) {
 	m.nextSlot++
 	slot = m.nextSlot
 	var human [3]int // human[1], human[2] = humans currently on team 1 / team 2
 	for _, p := range m.players {
 		human[p.team]++
 	}
-	team = 1
-	if human[2] < human[1] {
-		team = 2
+	if prefer == 1 || prefer == 2 {
+		team = prefer // custom room: honor the host's arrangement (deterministic team)
+	} else {
+		team = 1 // matchmaker/queue: balance-fill the emptier team (tie -> team 1)
+		if human[2] < human[1] {
+			team = 2
+		}
 	}
 	faction = team - 1
 	idx = byte(human[team]) // 0-based index among CURRENT teammates (the retired bot isn't counted)
@@ -197,7 +205,7 @@ func (m *Match) retireBot() {
 // first human these ids equal the playerEntityID / playerRepID / localFaction constants the game
 // logic still reads (the switch to per-session ids is a later step); m.s stays the primary human.
 func (m *Match) addPlayer(s *session) {
-	s.entityID, s.repID, s.faction, s.team, s.player.TeamIdx, s.slot = m.allocSlot()
+	s.entityID, s.repID, s.faction, s.team, s.player.TeamIdx, s.slot = m.allocSlot(s.player.PreferTeam)
 	s.player.EntityID = s.entityID
 	m.players = append(m.players, s)
 	log.Printf("[mm-udp] roster+ slot=%d entity=%#08x rep=%d faction=%d team=%d (roster=%d) %v",
@@ -212,8 +220,11 @@ func (m *Match) removePlayer(s *session) {
 	if m.sessionByEntity(s.entityID) == nil {
 		return // already gone
 	}
-	m.broadcastData(packet.CmdPlayerQuitRes, message.PlayerAlternateQuit(s.entityID),
-		fmt.Sprintf("cmd=191 PLAYER_QUIT ent=%#x %q", s.entityID, s.player.Name))
+	// Tell the OTHERS "this player left" via cmd 102 (RUDP_PLAYER_QUIT) — the client removes just that
+	// entity. This was cmd 192 (PLAYER_QUIT_RES), the server's ack of the recipient's OWN quit, so every
+	// remaining client read it as "my quit was accepted" and left too — the mass disconnect.
+	m.broadcastData(packet.CmdPlayerQuit, message.PlayerAlternateQuit(s.entityID),
+		fmt.Sprintf("cmd=102 PLAYER_QUIT ent=%#x %q -> others", s.entityID, s.player.Name))
 	m.emitDeath(s.entityID, 0, 1, 0, 0, 2, m.deathPos(s.entityID), false, false)
 	kept := m.players[:0]
 	for _, p := range m.players {
@@ -228,7 +239,56 @@ func (m *Match) removePlayer(s *session) {
 	if m.s == s && len(m.players) > 0 {
 		m.s = m.players[0] // promote a survivor so run()'s primary reads stay valid
 	}
+	// Re-point anyone who was spectating the player who just left (the quitter is already out of
+	// m.players, so spectateFor picks a still-present live teammate). cmd 149 keeps their view + our
+	// OB_COUNT/relays in sync instead of stuck on the removed entity.
+	m.repointSpectators(s.entityID, 0)
 	log.Printf("[mm-udp] roster- slot=%d ent=%#x (roster=%d) %v", s.slot, s.entityID, len(m.players), s.remote)
+}
+
+// Disconnect handling. There is no TCP-style FIN on the UDP match socket, so a client that closes the
+// app / loses network just stops sending. disconnectTimeout is how much silence marks a client dropped;
+// reconnectGrace is how long its pawn is then KEPT for a reconnect (the client relaunches, re-logs in on
+// TCP, the lobby pushes a reconnect handoff, and it re-joins on a NEW UDP connection) before removal.
+const (
+	disconnectTimeout = 10 * time.Second
+	reconnectGrace    = 45 * time.Second
+)
+
+// sweepDisconnects removes the frozen pawn of a client that dropped and did not reconnect within the
+// grace window. Without it a dropped player sits at their last position forever: their team still counts
+// a live member so the round can't resolve, and everyone else sees them stuck — usually just outside the
+// shrunk zone, unreachable. (A dropped player OUTSIDE the zone is already killed by stepZone; this catches
+// the ones frozen INSIDE it and bounds how long any frozen pawn lingers.) Runs each tick on run()'s
+// goroutine, so mutating m.players here is safe. On reconnect the resumed session updates lastSeen, which
+// clears the disconnected flag before the grace elapses (see resumeReconnect).
+func (m *Match) sweepDisconnects(now time.Time) {
+	for _, p := range m.players {
+		if p.out == nil {
+			continue // the fill bot has no connection to time out
+		}
+		last := p.lastSeen.Load()
+		if last == 0 {
+			continue // no packet recorded yet
+		}
+		if now.Sub(time.Unix(0, last)) < disconnectTimeout {
+			if p.disconnected { // packets resumed on this same session -> back online
+				p.disconnected = false
+				log.Printf("[mm-udp] player ent=%#x reconnected (same session) %v", p.entityID, p.remote)
+			}
+			continue
+		}
+		if !p.disconnected {
+			p.disconnected = true
+			p.disconnectedAt = now
+			log.Printf("[mm-udp] player ent=%#x went silent -> disconnected; %s reconnect grace %v", p.entityID, reconnectGrace, p.remote)
+		}
+		if now.Sub(p.disconnectedAt) >= reconnectGrace {
+			log.Printf("[mm-udp] player ent=%#x reconnect grace expired -> removing frozen pawn %v", p.entityID, p.remote)
+			m.removePlayer(p)
+			return // removePlayer rebuilt m.players; stop iterating the stale slice, resume next tick
+		}
+	}
 }
 
 // admitFirst runs the join handshake for the FIRST player of a fresh match: pick the arena/spawn,
@@ -283,8 +343,15 @@ func (m *Match) setupMatch(s *session) {
 	m.arena = choosePlayerSpawn(&s.player, m.arenasUsed)
 	m.arenasUsed[m.arena] = true
 	m.addPlayer(s)
+	// choosePlayerSpawn placed the first player at the LEFT fence (localFaction=0); once addPlayer has
+	// assigned the real faction (a room can put a team-2 player in first), re-anchor to the correct
+	// fence — matching admitLater. Skipped under the fixed-spawn test override (empty arena).
+	if cfg.spawn == nil {
+		s.player.SpawnPos, s.player.SpawnFace = m.arena.spawnFor(s.faction)
+		s.playerPos = s.player.SpawnPos
+	}
 	m.round = 1
-	m.allocSlot()
+	m.allocSlot(0) // reserve slot 2 for the filler bot (return discarded; only bumps nextSlot)
 	m.botEntity = 0
 }
 
@@ -400,6 +467,7 @@ func (m *Match) run() {
 				lastStream = now
 			}
 			m.stepZone(now)
+			m.sweepDisconnects(now) // remove pawns of clients that closed the app + never reconnected
 			m.stepKnock(now)   // bleed any downed players; a bleed-out finalizes a cmd-107 death
 			m.stepRescue(now)  // complete / cancel in-progress teammate revives
 			m.stepFlags(now)   // despawn emote-planted battle flags past their 60s lifetime
@@ -478,9 +546,12 @@ func (m *Match) serverTick() uint32 {
 	return uint32(time.Since(m.matchStart).Seconds() / clientFixedDelta)
 }
 
-// streamMovement relays each human's latest cmd-1001 state to the OTHER players (Step 6): one batch
-// per sender, sent only to the others (no self-echo, so no skip-own is needed). The bot is static
-// and isn't relayed — the client keeps it at its cmd-101 spawn. The seq is the subtle part (below).
+// streamMovement relays each human's latest cmd-1001 state to EVERY player INCLUDING the sender (Step
+// 6): one batch per sender. The batch's skip-own byte is 1, so the LIVE sender DROPS its own entry
+// (its pawn stays 100% input-driven — no rubber-band), while every OTHER client applies it. Sending it
+// to the sender too is what puts the recorder's OWN motion into its replay recording: the replay apply
+// forces skip-own OFF (IsReplayState), so the recorder's own entry moves its pawn on playback. The bot
+// is static and isn't relayed — the client keeps it at its cmd-101 spawn. The seq is the subtle part.
 func (m *Match) streamMovement() {
 	matchTime := int32(time.Since(m.matchStart).Seconds() * 30)
 	for _, sender := range m.players {
@@ -498,11 +569,92 @@ func (m *Match) streamMovement() {
 		payload := message.MoveBatch(matchTime, seq, []message.MoveEntry{{Slot: sender.slot, Body: sender.moveBody}})
 		pkt := &packet.Packet{SendOption: packet.SendUnreliable, Cmd: packet.CmdClientPos, Flags: 0, Payload: payload}
 		for _, recv := range m.players {
-			if recv != sender && recv.out != nil {
+			if recv.out != nil { // incl. the sender — skip-own drops its own entry live; the recording keeps it for replay
 				recv.out.send(pkt, "")
 			}
 		}
 	}
+}
+
+// reseed tuning: re-emit the roster up to reseedMax times, >= reseedEvery apart, so the burst reliably
+// lands INSIDE the replay recording window regardless of how long the client's scene load takes.
+const (
+	reseedMax   = 12
+	reseedEvery = 1 * time.Second
+)
+
+// reseedJoinBurst re-emits the cmd-101 roster into the replay recording window. The ORIGINAL join burst
+// (admitFirst, in reply to cmd 440) is pulled + dispatched during the LOADING screen, BEFORE the client
+// arms its recorder at OnSceneLoaded, so it never lands in the recording — a client replay then spawns
+// no pawn and hangs forever on the loading mask (the world-streamer centers tile-loading on the local
+// pawn). We can't observe OnSceneLoaded server-side, and the client may emit its first cmd 1001 (the
+// trigger) DURING loading (its pawn already exists), which would be BEFORE recording arms. So we don't
+// reseed just once: we re-emit up to reseedMax times, throttled to reseedEvery, spanning the scene-load
+// boundary — the copies that arrive after OnSceneLoaded are recorded (the earlier ones are harmless).
+//
+// Each pass re-emits cmd 101 (spawn the pawns) THEN cmd 230 (seed the replay observer). cmd 101 alone
+// is NOT enough to dismiss: a replay has no local player (Player::IsLocalPlayer is false in replay
+// state), so the streamer-finished dismiss gate never trips. cmd 230 (EObserverType_Replay) dismisses
+// via the unconditional OnAddObserver -> CloseMask path AND gives the camera/streamer a focus.
+//
+// Every packet here is a NO-OP on the LIVE client: the roster-add (NFJPHMKKEBF::LONDNBHBPDO) early-
+// returns on an already-present entity (no re-spawn/snap, local pawn too), and cmd 230 type 2 returns
+// immediately when not in replay state. NEVER cmd 100/145/900 (those reposition/re-init and DO glitch
+// a live pawn). In the replay the first recorded pass spawns the pawn + seeds the observer + dismisses
+// loading; the rest no-op. Called on each cmd 1001 (handleClientPos).
+func (m *Match) reseedJoinBurst() {
+	if m.reseedCount >= reseedMax {
+		return
+	}
+	now := time.Now()
+	if m.reseedCount > 0 && now.Sub(m.lastReseed) < reseedEvery {
+		return
+	}
+	m.lastReseed = now
+	m.reseedCount++
+	tick := m.serverTick()
+	for _, recv := range m.players {
+		if recv.out == nil {
+			continue
+		}
+		recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(recv.player, tick), "cmd=101 replay-reseed self")
+		for _, other := range m.players {
+			if other != recv {
+				recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(other.player, tick), "cmd=101 replay-reseed roster")
+			}
+		}
+		if m.botEntity != 0 {
+			recv.sendDataLog(packet.CmdPlayerJoin, message.PlayerJoin(m.bot, tick), "cmd=101 replay-reseed bot")
+		}
+		// AFTER the pawn(s) are spawned in the recording: seed the replay observer (cmd 230, type
+		// EObserverType_Replay). This is a LIVE no-op but is what makes the REPLAY dismiss its loading
+		// mask (OnAddObserver -> CloseMask, unconditional) + gives the camera/streamer a focus — cmd 101
+		// alone can't (a replay has no local player, so the streamer-finished dismiss gate never trips).
+		recv.sendDataLog(packet.CmdObserverJoin, message.ObserverJoin(recv.player.AccountID, recv.entityID),
+			"cmd=230 replay observer-seed (EObserverType_Replay)")
+
+		// NOTE: no loadout re-sync here. The starter loadout's own cmd 174 (from giveLoadout at the buy
+		// phase) is broadcast post-scene and IS recorded WITH its equipment list, so the loadout data is
+		// already in the recording; re-sending it here only duplicated items (cmd 174 is additive) or,
+		// on the first pass, captured an empty loadout (the reseed fires ~3s before giveLoadout runs).
+	}
+
+	// Replay weapon-wheel kick (ONCE, after the loadout is recorded). The observer HUD's slot buttons only
+	// re-activate when the observed pawn's ON-HAND changes (OBSERVER_INVENTORY_ITEM_ON_HAND_CHANGED sets
+	// m_weaponChanged -> RefreshUIByWeaponOnHand); cmd 174 fills the slot data but never fires it, so a
+	// replay shows only the held weapon + fists until the recorder's first weapon switch. m.started means
+	// giveLoadout already ran + its cmd 174 is recorded, so this cmd-108 on-hand toggle lands AFTER the
+	// loadout in the recording and forces the wheel to repaint the equipped slots. See kickObserverWheel.
+	if !m.wheelKicked && m.started {
+		m.wheelKicked = true
+		for _, recv := range m.players {
+			if recv.out != nil {
+				recv.kickObserverWheel()
+			}
+		}
+	}
+
+	log.Printf("[mm-udp] replay-reseed #%d/%d: re-emitted cmd-101 roster to %d client(s) for the recording", m.reseedCount, reseedMax, len(m.players))
 }
 
 // rosterWriters returns the Writer of every human in the roster (bots have out==nil, skipped) —
@@ -574,10 +726,22 @@ func (m *Match) enterPrepare(now time.Time) {
 		return
 	}
 	if !m.started && !m.teamsReady() {
+		if m.settings.isCustom {
+			// Custom room: the "enough players" wait/cancel is matchmaking-only. Start NOW instead of the
+			// 30s hold — filling the bot opponent immediately when MATCH_BOT is on (the match server is
+			// solo-vs-bot, so a lone host still needs an enemy). A balanced multi-human room already has
+			// teamsReady()==true and never reaches here.
+			if cfg.matchBot && m.botEntity == 0 {
+				m.spawnFallbackBot()
+			}
+			m.startBuyPhase(now)
+			return
+		}
+		// Matchmade CS: hold + "Waiting for players" until the teams balance, then bot-fill or cancel.
 		m.enter(now, phPrepare, waitPlayersDur) // hold Prepare + show the waiting overlay (field 5 = HalfwayJoin)
 		return
 	}
-	m.startBuyPhase(now) // enough players (or a later round): normal buy phase + lock the roster
+	m.startBuyPhase(now) // enough players (custom room, later round, or balanced matchmade teams): buy phase + lock
 }
 
 // startFight begins the Fight phase (ends on the enemy/player-dead condition, not the deadline)
@@ -767,16 +931,21 @@ func (m *Match) endFight(now time.Time) {
 	// running balance += base[round] + a win/loss event (loss stacks with the team's streak) +
 	// per-kill. base[round] holds 3000 from round 7 on. (First-blood bonus: TODO, not tracked yet.)
 	base := csRoundIncome(m.round, m.settings.baseCoins)
+	ev := m.settings.events // event bonuses: economy.go defaults, or the advanced room's overrides
 	for _, p := range m.players {
-		aw := base + csKillBonus*p.roundKills.Swap(0)
+		aw := base + ev.perKill*p.roundKills.Swap(0)
 		if p.team == winnerTeam {
-			aw += csWinRoundBonus
+			aw += ev.winRound
 		} else {
-			aw += csLossBonus(m.lossStreak[p.team-1])
+			aw += ev.lossBonus(m.lossStreak[p.team-1])
+		}
+		if p.entityID == m.firstBlood { // the human who drew first blood this round
+			aw += ev.firstBlood
 		}
 		p.coins += aw
 		p.award = aw
 	}
+	m.firstBlood = 0 // reset for the next round (endFight is the once-per-round funnel that resets roundKills too)
 	log.Printf("[mm-udp] ROUND %d won by team %d (score %d-%d)", m.round, winnerTeam, m.teamScore[0], m.teamScore[1])
 
 	if m.teamScore[0] >= m.settings.roundsToWin || m.teamScore[1] >= m.settings.roundsToWin || m.round >= int(m.settings.maxRound) {

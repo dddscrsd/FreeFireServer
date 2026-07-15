@@ -60,16 +60,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("bad secret: %v", err)
 	}
-	udpAddr, err := net.ResolveUDPAddr("udp", *addr)
-	if err != nil {
-		log.Fatalf("resolve: %v", err)
-	}
-	conn, err := net.ListenUDP("udp", udpAddr)
+	// Open one receive socket per core with SO_REUSEPORT (Linux) so the kernel spreads inbound datagrams
+	// across cores — without it a single receive goroutine is the bottleneck under a multi-source flood.
+	// Off Linux this is a single plain socket (unchanged behaviour). See reuseport.go.
+	conns, err := listenUDPMulti(*addr, reusePortSockets())
 	if err != nil {
 		log.Fatalf("listen: %v", err)
 	}
-	defer conn.Close()
-	log.Printf("[mm-udp] match server listening on %s (udp)", conn.LocalAddr())
+	for _, c := range conns {
+		defer c.Close()
+	}
+	log.Printf("[mm-udp] match server listening on %s (udp) — %d receive socket(s), SO_REUSEPORT=%v",
+		conns[0].LocalAddr(), len(conns), reusePortSupported)
 
 	// On shutdown, kick every client so they drop to the lobby instead of reconnecting
 	// into a dead/stale match. Triggered by a signal (Ctrl+C / SIGTERM) or, for the
@@ -82,12 +84,26 @@ func main() {
 		go watchStopFile(p)
 	}
 
-	serve(conn, key)
+	go guardMaintenance() // aggregate the dropped-packet log + prune the DoS-guard source table
+	startAdminKick()      // subscribe to session.revoke so admin/ban kicks eject a mid-match player
+
+	// One receive loop per socket. With SO_REUSEPORT the kernel load-balances datagrams across them, so a
+	// flood is processed on many cores at once. serve()'s shared state (the sessions map, the DoS guard)
+	// is already mutex/atomic-guarded, so running several in parallel is safe.
+	var wg sync.WaitGroup
+	for _, c := range conns {
+		wg.Add(1)
+		go func(c *net.UDPConn) { defer wg.Done(); serve(c, key) }(c)
+	}
+	wg.Wait()
 }
 
 // serve is the receive loop: decode each datagram, look up (or create) its session,
 // and dispatch it.
 func serve(conn *net.UDPConn, key []byte) {
+	if err := conn.SetReadBuffer(1 << 20); err != nil { // 1 MiB kernel recv buffer to ride out bursts (best-effort)
+		log.Printf("[mm-udp] SetReadBuffer: %v", err)
+	}
 	buf := make([]byte, 8192)
 	for {
 		n, remote, err := conn.ReadFromUDP(buf)
@@ -95,9 +111,20 @@ func serve(conn *net.UDPConn, key []byte) {
 			log.Printf("[mm-udp] read err: %v", err)
 			continue
 		}
+		// DoS guard (see guard.go): rate-limit per source IP and reject junk (wrong msg-key / too short)
+		// BEFORE copying the datagram or logging — so a flood of ErrMsgKey packets is nearly free. Bad
+		// datagrams count 4x toward the per-source limit, so a flooding host is blocked within ~1s. Drops
+		// are aggregated (guardMaintenance logs a 5s total) instead of one log line per packet.
+		ip := remote.IP.String()
+		badHeader := n < 8 || buf[0] != packet.MsgKey
+		if !allowSource(ip, badHeader) || badHeader {
+			droppedPackets.Add(1)
+			continue
+		}
 		p, err := packet.Decode(append([]byte(nil), buf[:n]...), key)
 		if err != nil {
-			log.Printf("[mm-udp] drop from %v (%dB): %v", remote, n, err)
+			allowSource(ip, true) // valid header but undecodable (bad CRC etc.) — penalize the source too
+			droppedPackets.Add(1)
 			continue
 		}
 		raddr := remote.String()
@@ -158,6 +185,7 @@ func (s *session) dispatch(p *packet.Packet) {
 			log.Printf("[mm-udp] dispatch panic: %v", r)
 		}
 	}()
+	s.lastSeen.Store(time.Now().UnixNano()) // heard from the client — feeds the disconnect sweep (sweepDisconnects)
 	if p.Cmd == packet.CmdAck { // the client ACKing one of OUR reliable sends -> stop retransmitting it
 		if seq, ok := parseAckSeq(p.Payload); ok {
 			s.out.onAck(seq)

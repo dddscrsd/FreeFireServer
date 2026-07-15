@@ -14,6 +14,7 @@
 const { EProtocol, ECustomRoom } = require('../protocol');
 const rooms = require('../rooms');
 const roomsettings = require('../roomsettings');
+const csadvanced = require('../csadvanced');
 const matchmaker = require('../matchmaker');
 const fleet = require('../fleet');
 const { getBus } = require('../../bus/instance');
@@ -28,16 +29,20 @@ async function handler(reqObj, ctx) {
     const matchId = await matchmaker.nextMatchId();
     const serverAddr = fleet.pickServer() || matchmaker.staticAddr();
 
-    // Decode the host's simple-mode room_setting/room_setting2 and hand them to the match server via
-    // Redis (match:<id>:settings), so it applies the round count / HP / economy / flags for THIS
-    // match. Best-effort: the match keeps its const defaults when this is absent or a field is unset.
-    // (Advanced-mode cs_advanced_setting is not decoded yet — a later phase.)
+    // Decode the host's settings and hand them to the match server via Redis (match:<id>:settings),
+    // so it applies the round count / HP / economy / shop / flags for THIS match. Best-effort: the
+    // match keeps its const defaults when this is absent or a field is unset.
+    //
+    // Simple mode (room_setting/room_setting2 bitfields) always decodes — it carries HP, speed, jump,
+    // the raw bitfields the client re-applies, and the round count / economy for non-advanced rooms.
+    // When the room is ADVANCED (is_cs_advanced + a cs_advanced_setting blob), the blob OVERRIDES the
+    // round count + per-round economy and additionally supplies the shop allow-list (+ host prices)
+    // and the economy event bonuses. The blob is decoded once here so the Go side stays free of the
+    // byte-layout / indexid->itemId translation.
     try {
       const s = roomsettings.decodeRoomSettings(room);
       const payload = { flags: s.flags };
-      if (s.roundCount) payload.round_count = s.roundCount;
       if (s.maxHP) payload.max_hp = s.maxHP;
-      if (Array.isArray(s.economyTable)) payload.economy = s.economyTable;
       // Pass the RAW bitfields too: the match server echoes them into JoinMatchRes (cmd 100) so the
       // client applies its own client-side flags (UnlimitedAmmo/NoHud/NoAuxAim/NoSkill/FriendDmg/…).
       if (s.roomSetting) payload.room_setting = s.roomSetting;
@@ -45,9 +50,27 @@ async function handler(reqObj, ctx) {
       // Move-speed / jump-height multipliers -> PRI fields 50/52 (percent-encoded match-side).
       if (s.speedMul) payload.speed_mul = s.speedMul;
       if (s.jumpMul) payload.jump_mul = s.jumpMul;
+
+      // Round count + economy come from simple mode by default; the advanced blob overrides them.
+      let roundCount = s.roundCount;
+      let economy = s.economyTable;
+      let advNote = '';
+      if (room.is_cs_advanced && room.cs_advanced_b64) {
+        const adv = csadvanced.decodeAdvanced(Buffer.from(room.cs_advanced_b64, 'base64'));
+        if (adv) {
+          if (adv.roundCount) roundCount = adv.roundCount;
+          if (adv.perRoundBase && adv.perRoundBase.length) economy = adv.perRoundBase;
+          if (adv.shopItems && adv.shopItems.length) payload.shop_items = adv.shopItems;
+          if (adv.events) payload.events = adv.events;
+          advNote = ` adv[shop=${adv.shopItems.length} dropped=${adv.dropped.join('/') || 'none'}]`;
+        }
+      }
+      if (roundCount) payload.round_count = roundCount;
+      if (Array.isArray(economy)) payload.economy = economy;
+
       const bus = getBus();
       if (bus) await bus.setKey(`match:${matchId}:settings`, JSON.stringify(payload), 3600);
-      ctx.logger.info(`[room] START settings match=${matchId} rounds=${s.roundCount || 'default'} hp=${s.maxHP || 'default'} speed=${s.speedMul || 'default'} jump=${s.jumpMul || 'default'} rs=0x${(s.roomSetting || 0).toString(16)}/0x${(s.roomSetting2 || 0).toString(16)} flags=${Object.entries(s.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none'}`);
+      ctx.logger.info(`[room] START settings match=${matchId} rounds=${roundCount || 'default'} hp=${s.maxHP || 'default'} speed=${s.speedMul || 'default'} jump=${s.jumpMul || 'default'} economy=${economy ? `[${economy.join(',')}]` : 'default'} rs=0x${(s.roomSetting || 0).toString(16)}/0x${(s.roomSetting2 || 0).toString(16)} flags=${Object.entries(s.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none'}${advNote}`);
     } catch (e) {
       ctx.logger.warn(`[room] start settings write match=${matchId}: ${e.message}`);
     }
@@ -59,7 +82,9 @@ async function handler(reqObj, ctx) {
         ? ctx.account
         : await getRepo().getById(m.account_id).catch(() => null);
       if (!account) { ctx.logger.warn(`[room] start uid=${m.account_id} not found — skipping their handoff`); continue; }
-      const prepareToken = matchmaker.buildPrepareToken(account, matchId);
+      // Pass the member's room team (group_id 1/2) so the match server puts them on the host-arranged
+      // team (deterministic faction), instead of balance-filling by non-deterministic UDP arrival order.
+      const prepareToken = matchmaker.buildPrepareToken(account, matchId, m.group_id || 0);
       rooms.pushToAccount(m.account_id, ECustomRoom.MATCHMAKINGSUSS_NTF, 'MatchmakingSussNtf', {
         match_id: matchId,
         server_addr: serverAddr,

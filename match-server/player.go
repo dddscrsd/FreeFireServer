@@ -95,7 +95,8 @@ func resolvePlayer(tok string) joinPlayer {
 	if claims.AccountID != 0 {
 		p.AccountID = claims.AccountID
 	}
-	p.MatchID = claims.MatchID // shared match id (settlement idempotency key)
+	p.MatchID = claims.MatchID   // shared match id (settlement idempotency key)
+	p.PreferTeam = claims.Team   // custom-room team (1/2); 0 => allocSlot balance-fills
 	if claims.Role != 0 {
 		p.Role = claims.Role
 	}
@@ -106,6 +107,7 @@ func resolvePlayer(tok string) joinPlayer {
 		p.Avatar, p.Color, p.Head, p.Banner = s.Avatar, s.Color, s.Head, s.Banner
 		p.Clothes, p.Slots = s.Clothes, s.Slots
 		p.Emotes = s.Emotes
+		p.Shows = s.Shows // showcase items -> cmd-101 -> BaseProfileInfo.Shows[7] = result-screen display weapon
 		if s.BattleFlag != 0 { // the player's real equipped flag, if the token carries one
 			p.BattleFlag = s.BattleFlag
 		}

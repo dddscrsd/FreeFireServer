@@ -213,6 +213,13 @@ func (s *session) handleClientPos(p *packet.Packet) {
 	if cfg.debugPos {
 		log.Printf("[mm-udp] POS cmd=1001 -> (%.1f,%.1f,%.1f)", pos.X, pos.Y, pos.Z)
 	}
+	// The first cmd 1001 is the earliest packet guaranteed to be AFTER the client's OnSceneLoaded (its
+	// pawn must exist to report position), i.e. inside the replay recording window. Re-emit the cmd-101
+	// roster ONCE so client replays spawn pawns + dismiss the loading mask. No-op on the live client
+	// (idempotent). Runs on run()'s mailbox (cmd 1001 is enqueued once syncStarted). See reseedJoinBurst.
+	if s.match != nil {
+		s.match.reseedJoinBurst()
+	}
 }
 
 // handlePlayerQuit handles cmd 191 (RUDP_PLAYER_QUIT_REQ): acknowledge with the quit

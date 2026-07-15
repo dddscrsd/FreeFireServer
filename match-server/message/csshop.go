@@ -15,13 +15,24 @@ package message
 //	locKey : string (i32 UTF-8 byte count + bytes)  -- shop title / localization key
 //	flag   : u8 (bool)                              -- unknown (probably a display flag)
 
-// ShopItem is one CS shop entry (BENHAIGLOGI).
+// ShopItem is one CS shop entry (BENHAIGLOGI). ItemID/Price/Filter/Limitation/Bonus are the wire
+// fields serialized into cmd 407 (CSShop). SlotKind + Ammo are NOT sent to the client — they carry
+// the loadout-placement metadata a CUSTOM-ROOM advanced shop resolves lobby-side (see the settings
+// pipeline / purchase.placeItem); they are empty/0 for the default package catalogue, which keeps
+// using the legacy hardcoded placement maps.
 type ShopItem struct {
 	ItemID     uint32
 	Price      uint32
 	Filter     byte
 	Limitation byte
 	Bonus      bool
+
+	// SlotKind (advanced custom-room items only): "primary" | "secondary" | "melee" | "vest" |
+	// "helmet" | "grenade" | "building" | "consumable". Empty => placeItem uses the legacy maps.
+	SlotKind string
+	// Ammo is the weapon's ammo DataID (201 rifle / 202 pistol / 203 sniper / 204 shotgun / 205 SMG),
+	// resolved lobby-side from the shop CSV so placement needn't hardcode a per-gun ammo map.
+	Ammo uint32
 }
 
 // PurchaseCount is one limited item's per-round buy count (CHEEGFNLIOE): the count the player has bought
