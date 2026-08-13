@@ -10,7 +10,7 @@ const { encrypt, decrypt } = require('./src/protocol/aes');
 const { lookup } = require('./src/protocol/protos');
 
 const HOST = '127.0.0.1';
-const PORT = 3000;
+const PORT = 8080;
 
 function post(endpoint, cipher, token) {
   return new Promise((resolve, reject) => {
@@ -64,7 +64,7 @@ function pick(obj, keys) {
     open_id_type: 1,
     nickname: 'BootTester',
     device_id: 'dev-boot-001',
-    client_version: '1.70.4'
+    client_version: '1.69.1'
   }, 'MajorLoginRes', null);
   console.log('MajorLogin   status=%d len=%d err=%s', login.status, login.rawLen, login.err);
   console.log('  ->', JSON.stringify(pick(login.decoded, ['account_id', 'token', 'ttl', 'server_url', 'ip_region', 'recommend_regions'])));
